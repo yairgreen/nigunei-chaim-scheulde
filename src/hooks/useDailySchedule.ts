@@ -46,8 +46,10 @@ export function useDailySchedule(): DailyScheduleData {
       const dayOfWeek = now.getDay(); // 0 is Sunday
       const classes = [];
       
-      // Daily class
-      classes.push({ name: 'שיעור הדף היומי מפי הרב דוד קלופפר', time: '20:00-20:45' });
+      // Daily class (Sunday-Thursday)
+      if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+        classes.push({ name: 'שיעור הדף היומי מפי הרב דוד קלופפר', time: '20:00-20:45' });
+      }
       
       // Tuesday class
       if (dayOfWeek === 2) { // Tuesday
