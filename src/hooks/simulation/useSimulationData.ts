@@ -38,7 +38,7 @@ export function useSimulationData(date: Date): SimulationData {
       console.log("Simulating data for date:", date);
       simulateDataForDate(date);
     }
-  }, [date, shabbatData]); // React to changes in date and shabbatData
+  }, [date]); // Only react to changes in date, not shabbatData
 
   const simulateDataForDate = (selectedDate: Date) => {
     if (!selectedDate) return;
@@ -66,7 +66,7 @@ export function useSimulationData(date: Date): SimulationData {
     setSimulatedDailyPrayers(newSimulatedPrayers);
     console.log("Simulated prayer times:", newSimulatedPrayers);
     
-    // Update simulated Shabbat data
+    // Update simulated Shabbat data using current shabbatData as a template
     const newSimulatedShabbatData = simulateShabbatData(selectedDate, shabbatData);
     setSimulatedShabbatData(newSimulatedShabbatData);
     console.log("Simulated Shabbat data:", newSimulatedShabbatData);

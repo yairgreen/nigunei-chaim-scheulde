@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import Header from '@/components/Header';
@@ -7,6 +7,7 @@ import TimeSelector from '@/components/simulation/TimeSelector';
 import { useSimulationData } from '@/hooks/simulation';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const Simulation = () => {
   // Keep track of both selected date and applied date
@@ -24,8 +25,14 @@ const Simulation = () => {
   
   // Apply the selected date
   const applyDate = () => {
-    setAppliedDate(selectedDate);
+    setAppliedDate(new Date(selectedDate));
+    toast.success('סימולציה עודכנה בהצלחה');
   };
+
+  // Ensure initial simulation is run
+  useEffect(() => {
+    setAppliedDate(new Date(selectedDate));
+  }, []);
   
   return (
     <Layout hideLogin={true}>
@@ -44,7 +51,7 @@ const Simulation = () => {
         </div>
         
         <Header 
-          shabbatName='סימולציית לוח זמנים'
+          shabbatName={simulatedShabbatData.title}
           hebrewDate={simulatedHebrewDate}
           gregorianDate={simulatedGregorianDate}
         />

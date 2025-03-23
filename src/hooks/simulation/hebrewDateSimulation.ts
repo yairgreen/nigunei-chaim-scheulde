@@ -18,15 +18,12 @@ export const simulateHebrewDate = (selectedDate: Date): string => {
   
   // Determine Hebrew month based on Gregorian date (very simplified)
   // In reality, this requires complex calculations with the Hebrew calendar
-  // This better simulates Hebrew date variations based on selected date
-  const hebrewMonthIndex = (month + Math.floor(day / 10)) % 12;
+  // Using a more reliable algorithm for simulation
+  const hebrewMonthIndex = (month + Math.floor(day / 30)) % 12;
   const hebrewMonth = hebrewMonths[hebrewMonthIndex];
   
   // Adjust Hebrew day based on selected date for better simulation
-  const hebrewDay = ((day + selectedDate.getDay()) % 29) + 1;
-  
-  // Current Hebrew year (approximation)
-  const hebrewYear = year + 3761;
+  const hebrewDay = ((day + month) % 29) + 1;
   
   // Format the Hebrew date (this is a very simplified representation)
   // Hebrew dates use different formats for different day numbers
