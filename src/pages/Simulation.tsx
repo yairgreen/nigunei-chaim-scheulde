@@ -14,7 +14,10 @@ const Simulation = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [appliedDate, setAppliedDate] = useState<Date>(new Date());
   
+  // Get real schedule data for the daily classes
   const { dailyClasses, isRoshChodesh } = useScheduleData();
+  
+  // Get simulated data based on the applied date
   const { 
     simulatedDailyTimes, 
     simulatedDailyPrayers, 

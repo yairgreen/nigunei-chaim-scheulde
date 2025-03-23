@@ -14,6 +14,13 @@ export const simulatePrayerTimes = (selectedDate: Date): Array<{ name: string; t
   const startOfWeek = new Date(selectedDate);
   startOfWeek.setDate(selectedDate.getDate() - dayOfWeek);
   
+  // Check if it's Shabbat (dayOfWeek === 6)
+  if (dayOfWeek === 6) {
+    // For Shabbat, we'll use the Shabbat prayers from the Shabbat simulation
+    // Just return an empty array here as the Shabbat schedule will be displayed separately
+    return [];
+  }
+  
   // Get this week's days (Sun-Thu)
   const weekDays = [];
   for (let i = 0; i < 5; i++) {
@@ -83,7 +90,18 @@ const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[])
   // Check if selected date is Rosh Chodesh (simplified for simulation)
   const isSelectedDateRoshChodesh = selectedDate.getDate() === 1;
   
-  // Simulate prayer times
+  // Friday has different times
+  if (selectedDate.getDay() === 5) { // Friday
+    return [
+      { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
+      { name: 'שחרית ב׳', time: '07:00' },
+      { name: 'שחרית ג׳', time: '08:00' },
+      { name: 'מנחה גדולה', time: '12:30' },
+      { name: 'מנחה ערב שבת', time: '13:30' }
+    ];
+  }
+  
+  // Regular weekday
   return [
     { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
     { name: 'שחרית ב׳', time: '07:00' },

@@ -12,18 +12,19 @@ export const simulateHebrewDate = (selectedDate: Date): string => {
   
   // Hebrew month names (simplified)
   const hebrewMonths = [
-    'ניסן', 'אייר', 'סיון', 'תמוז', 'אב', 'אלול',
-    'תשרי', 'חשון', 'כסלו', 'טבת', 'שבט', 'אדר'
+    'טבת', 'שבט', 'אדר', 'ניסן', 'אייר', 'סיון', 
+    'תמוז', 'אב', 'אלול', 'תשרי', 'חשון', 'כסלו'
   ];
   
-  // Determine Hebrew month based on Gregorian date (very simplified)
-  // In reality, this requires complex calculations with the Hebrew calendar
-  // Using a more reliable algorithm for simulation
-  const hebrewMonthIndex = (month + Math.floor(day / 30)) % 12;
+  // Better approximation of Hebrew month based on Gregorian date
+  // This is still a simplified approach but gives more realistic results
+  const hebrewMonthIndex = (month + 3) % 12;
   const hebrewMonth = hebrewMonths[hebrewMonthIndex];
   
   // Adjust Hebrew day based on selected date for better simulation
-  const hebrewDay = ((day + month) % 29) + 1;
+  // The Hebrew date is usually 10-12 days ahead of the Gregorian date
+  // But we need to wrap around at the end of the month
+  const hebrewDay = ((day + 11) % 30) + 1;
   
   // Format the Hebrew date (this is a very simplified representation)
   // Hebrew dates use different formats for different day numbers
@@ -40,10 +41,21 @@ export const simulateHebrewDate = (selectedDate: Date): string => {
     hebrewDayStr = getHebrewDayChar(hebrewDay);
   }
   
-  // Use a different Hebrew year abbreviation for simulation
-  const hebrewYearCode = getHebrewYearCode(selectedDate);
+  // Hebrew year changes around Rosh Hashanah (Sep-Oct)
+  // Determine which Hebrew year to use based on current month
+  const currentYear = new Date().getFullYear();
+  const hebrewYearOffset = 5785 - 2025; // Difference between Hebrew 5785 and Gregorian 2025
   
-  return `${hebrewDayStr} ${hebrewMonth} ${hebrewYearCode}`;
+  // Determine Hebrew year based on month
+  // After September (month 8), we're in the next Hebrew year
+  const hebrewYear = (month >= 8) ? 
+    currentYear + hebrewYearOffset + 1 : 
+    currentYear + hebrewYearOffset;
+  
+  // Format Hebrew year (only show the last two digits with geresh)
+  const hebrewYearStr = 'תשפ״' + getHebrewYearLastLetter(hebrewYear);
+  
+  return `${hebrewDayStr} ${hebrewMonth} ${hebrewYearStr}`;
 };
 
 // Helper to convert digit to Hebrew character
@@ -52,11 +64,10 @@ const getHebrewDayChar = (digit: number): string => {
   return hebrewChars[digit - 1] || '';
 };
 
-// Generate different Hebrew year codes based on the date for better simulation
-const getHebrewYearCode = (date: Date): string => {
-  const hebrewYearCodes = ['תשפ״ג', 'תשפ״ד', 'תשפ״ה', 'תשפ״ו'];
-  const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
-  
-  // Use the day of year to select a Hebrew year code for variety
-  return hebrewYearCodes[dayOfYear % hebrewYearCodes.length];
+// Helper to get the last letter of the Hebrew year (for 5785-5789)
+const getHebrewYearLastLetter = (year: number): string => {
+  const lastDigit = year % 10;
+  // Map 5-9 to ה-ט
+  const hebrewLastDigits = ['ה', 'ו', 'ז', 'ח', 'ט'];
+  return hebrewLastDigits[lastDigit - 5] || 'ה';
 };

@@ -80,17 +80,18 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     { name: 'ערבית מוצ״ש', time: havdalaTime }
   ];
   
-  // Generate simulated Shabbat classes - Limited to standard ones with fixed times
-  const shabbatClasses = [
-    { name: 'שיעור הלכה לפני מנחה', time: `${(parseInt(minchaTime.split(':')[0]) - 1)}:00` }
-  ];
+  // No Shabbat classes as requested
+  const shabbatClasses = [];
   
   // Check if the Shabbat has a special name (מברכין, החודש, etc)
   const specialShabbat = getSpecialShabbatName(shabbatDate);
   
+  // Generate title based on parasha
+  const title = parashatName ? `שבת פרשת ${parashatName}` : 'שבת';
+  
   // Generate simulated Shabbat data using current data as template
   return {
-    title: `שבת פרשת ${parashatName}`,
+    title: title,
     subtitle: specialShabbat,
     candlesPT: candleLightingPT,
     candlesTA: candleLightingTA,
