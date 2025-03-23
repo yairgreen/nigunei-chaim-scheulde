@@ -1,4 +1,3 @@
-
 import { getLastUpdated, setLastUpdated } from './core';
 import { fetchZmanim, getTodayZmanim, getZmanimDatabase } from './zmanim';
 import { fetchHolidays, getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
@@ -116,10 +115,10 @@ export const updateShabbatInfo = async () => {
 export const recalculatePrayerTimes = () => {
   try {
     const today = new Date();
-    const startOfWeek = new Date(today);
     const dayOfWeek = today.getDay(); // 0 is Sunday
     
     // Set to start of current week (Sunday)
+    const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - dayOfWeek);
     
     // Get this week's days (Sun-Thu)
@@ -131,16 +130,27 @@ export const recalculatePrayerTimes = () => {
     }
     
     // Get zmanim for these days
-    const zmanimForWeek = getZmanimDatabase()
-      .filter(item => weekDays.some(day => item.date.startsWith(day)));
+    const zmanimDatabase = getZmanimDatabase();
+    console.log('Week days:', weekDays);
+    console.log('Zmanim database size:', zmanimDatabase.length);
+    
+    const zmanimForWeek = zmanimDatabase
+      .filter(item => weekDays.includes(item.date));
+    
+    console.log('Zmanim for this week:', zmanimForWeek);
     
     // If no data available, use default values
     if (zmanimForWeek.length === 0) {
+      console.log('No zmanim data for this week, using defaults');
       return { minchaTime: '17:45', arvitTime: '18:25' };
     }
     
+    // Calculate times based on the week's data
     const minchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
     const arvitTime = calculateWeeklyArvitTime(zmanimForWeek);
+    
+    console.log('Calculated mincha time:', minchaTime);
+    console.log('Calculated arvit time:', arvitTime);
     
     return { minchaTime, arvitTime };
   } catch (error) {

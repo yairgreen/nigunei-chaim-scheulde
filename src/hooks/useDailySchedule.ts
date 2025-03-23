@@ -24,11 +24,11 @@ export function useDailySchedule(): DailyScheduleData {
       console.log('Is Rosh Chodesh:', roshChodesh);
       setIsRoshChodesh(roshChodesh);
       
-      // Get prayer times from the updated calculation function
+      // Get prayer times from the calculation function
       const { minchaTime, arvitTime } = recalculatePrayerTimes();
-      console.log('Calculated prayer times - Mincha:', minchaTime, 'Arvit:', arvitTime);
+      console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime, 'Arvit:', arvitTime);
       
-      // Set daily prayers
+      // Set daily prayers based on calculated times and Rosh Chodesh status
       const prayers = [
         { name: 'שחרית א׳', time: roshChodesh ? '06:00' : '06:15' },
         { name: 'שחרית ב׳', time: '07:00' },
