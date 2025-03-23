@@ -66,6 +66,12 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           </div>
         </div>
       )}
+      
+      <div className="mt-6 pt-2 border-t border-gray-200">
+        <p className="text-sm text-gray-600 text-center">
+          הזמנים הקובעים לתפילות הם אלה המופיעים בלוח המודעות של בית הכנסת ומפורסמים במייל ובווטסאפ
+        </p>
+      </div>
     </div>
   );
 };

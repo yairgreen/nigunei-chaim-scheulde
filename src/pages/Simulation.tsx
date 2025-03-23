@@ -31,15 +31,8 @@ const Simulation = () => {
   
   useEffect(() => {
     // Update the simulated data when the date changes
-    if (!isEqual(date, new Date())) {
-      simulateDataForDate(date);
-    } else {
-      // Reset to original data for today
-      setSimulatedDailyTimes(dailyTimes);
-      setSimulatedDailyPrayers(dailyPrayers);
-      setSimulatedShabbatData(shabbatData);
-    }
-  }, [date, dailyTimes, dailyPrayers, shabbatData]);
+    simulateDataForDate(date);
+  }, [date]);
   
   const simulateDataForDate = (selectedDate: Date) => {
     const zmanimDatabase = getZmanimDatabase();
@@ -65,6 +58,41 @@ const Simulation = () => {
         { name: 'צאת הכוכבים', time: selectedDateZmanim.beinHaShmashos }
       ];
       setSimulatedDailyTimes(simulatedTimes);
+    } else {
+      // If no zmanim data is found for this date, use default values with adjustments
+      // These values are just for simulation purposes
+      const day = selectedDate.getDate();
+      const month = selectedDate.getMonth();
+      
+      // Simulate seasonal changes - earlier sunrise in summer, later in winter
+      let sunriseHour = 5;
+      let sunsetHour = 17;
+      
+      // Simple seasonal adjustment
+      if (month >= 3 && month <= 8) { // Spring and Summer (April-September)
+        sunriseHour = 5 + (Math.floor(day / 10) % 2); // Varies between 5 and 6
+        sunsetHour = 19 - (Math.floor(day / 15) % 2); // Varies between 18 and 19
+      } else { // Fall and Winter (October-March)
+        sunriseHour = 6 + (Math.floor(day / 10) % 2); // Varies between 6 and 7
+        sunsetHour = 16 + (Math.floor(day / 15) % 2); // Varies between 16 and 17
+      }
+      
+      const simulatedTimes = [
+        { name: 'עלות השחר (72 ד\')', time: `0${sunriseHour - 1}:${30 + (day % 20)}` },
+        { name: 'הנץ החמה', time: `0${sunriseHour}:${40 + (day % 20)}` },
+        { name: 'זמן טלית ותפילין', time: `0${sunriseHour - 1}:${50 + (day % 10)}` },
+        { name: 'סוף זמן ק"ש (מג״א)', time: `0${sunriseHour + 2}:${10 + (day % 15)}` },
+        { name: 'סוף זמן ק"ש (גר״א)', time: `0${sunriseHour + 3}:${05 + (day % 15)}` },
+        { name: 'סוף זמן תפילה (מג״א)', time: `0${sunriseHour + 3}:${40 + (day % 10)}` },
+        { name: 'סוף זמן תפילה (גר"א)', time: `0${sunriseHour + 4}:${05 + (day % 10)}` },
+        { name: 'חצות היום והלילה', time: `${11 + (day % 2)}:${45 + (day % 5)}` },
+        { name: 'זמן מנחה גדולה', time: `${12 + (day % 2)}:${15 + (day % 5)}` },
+        { name: 'פלג המנחה', time: `${sunsetHour - 2}:${30 + (day % 10)}` },
+        { name: 'שקיעה', time: `${sunsetHour}:${50 + (day % 10)}` },
+        { name: 'צאת הכוכבים', time: `${sunsetHour + 1}:${20 + (day % 5)}` }
+      ];
+      
+      setSimulatedDailyTimes(simulatedTimes);
     }
     
     // Simulate the week of the selected date for prayer times
@@ -83,8 +111,46 @@ const Simulation = () => {
     // Filter zmanim for this week
     const zmanimForWeek = zmanimDatabase.filter(item => weekDays.includes(item.date));
     
-    if (zmanimForWeek.length > 0) {
+    // If no actual zmanim data, create synthetic data for simulation
+    if (zmanimForWeek.length === 0) {
+      const syntheticZmanimForWeek = weekDays.map(date => {
+        const dateParts = date.split('-');
+        const day = parseInt(dateParts[2]);
+        const month = parseInt(dateParts[1]) - 1;
+        
+        // Simple seasonal adjustment for sunset
+        let sunsetHour = 17;
+        if (month >= 3 && month <= 8) { // Spring and Summer
+          sunsetHour = 19 - (Math.floor(day / 15) % 2);
+        } else { // Fall and Winter
+          sunsetHour = 16 + (Math.floor(day / 15) % 2);
+        }
+        
+        // Create synthetic zmanim data for this day with some variation
+        return {
+          date,
+          sunset: `${sunsetHour}:${50 + (day % 10)}`
+        };
+      });
+
       // Calculate mincha and arvit times for the simulated week
+      const simulatedMinchaTime = calculateWeeklyMinchaTime(syntheticZmanimForWeek);
+      const simulatedArvitTime = calculateWeeklyArvitTime(syntheticZmanimForWeek);
+      
+      // Simulate prayer times
+      const isSelectedDateRoshChodesh = false; // This would come from an API in a real implementation
+      const simulatedPrayers = [
+        { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
+        { name: 'שחרית ב׳', time: '07:00' },
+        { name: 'שחרית ג׳', time: '08:00' },
+        { name: 'מנחה גדולה', time: '12:30' },
+        { name: 'מנחה', time: simulatedMinchaTime },
+        { name: 'ערבית א׳', time: simulatedArvitTime },
+        { name: 'ערבית ב׳', time: '20:45' }
+      ];
+      setSimulatedDailyPrayers(simulatedPrayers);
+    } else {
+      // Calculate mincha and arvit times for the actual zmanim data
       const simulatedMinchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
       const simulatedArvitTime = calculateWeeklyArvitTime(zmanimForWeek);
       
@@ -105,11 +171,23 @@ const Simulation = () => {
     // Simulate Shabbat data if needed
     if (isShabbat) {
       // This would be more sophisticated in a production app
+      // Simple logic to adjust Shabbat times based on month for simulation
+      const month = selectedDate.getMonth();
+      let candleTime, havdalaTime;
+      
+      if (month >= 3 && month <= 8) { // Spring and Summer
+        candleTime = `19:${15 + (selectedDate.getDate() % 10)}`;
+        havdalaTime = `20:${25 + (selectedDate.getDate() % 5)}`;
+      } else { // Fall and Winter
+        candleTime = `16:${30 + (selectedDate.getDate() % 10)}`;
+        havdalaTime = `17:${40 + (selectedDate.getDate() % 5)}`;
+      }
+      
       const simulatedShabbatTimes = {
         ...shabbatData,
-        candlesPT: "17:30",
-        candlesTA: "17:45",
-        havdala: "18:30",
+        candlesPT: candleTime,
+        candlesTA: format(new Date(Date.parse(candleTime)), 'HH:mm'),
+        havdala: havdalaTime,
         prayers: shabbatData.prayers
       };
       setSimulatedShabbatData(simulatedShabbatTimes);
