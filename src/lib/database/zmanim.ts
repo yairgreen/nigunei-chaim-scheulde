@@ -24,25 +24,28 @@ let zmanimDatabase: ZmanimData[] = [];
 // Fetch zmanim data from the API
 export const fetchZmanim = async (): Promise<ZmanimData[]> => {
   try {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    
+    // First, try to fetch today's specific zmanim for validation
+    const todayResponse = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${today}`);
+    
+    if (todayResponse.ok) {
+      const todayData = await todayResponse.json();
+      if (todayData.times) {
+        const processedItem = processSingleDayZmanim(todayData, today);
+        if (processedItem) {
+          zmanimDatabase = [processedItem];
+          return zmanimDatabase;
+        }
+      }
+    }
+    
+    // If today's specific data fails, fetch the range
     const response = await fetch('https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&start=2025-03-01&end=2026-12-31');
     const data = await response.json();
     
-    if (data.items) {
-      zmanimDatabase = data.items.map((item: any) => ({
-        date: item.date,
-        alotHaShachar: formatTime(item.alotHaShachar),
-        sunrise: formatTime(item.sunrise),
-        misheyakir: formatTime(item.misheyakir),
-        sofZmanShmaMGA: formatTime(item.sofZmanShmaMGA),
-        sofZmanShma: formatTime(item.sofZmanShma),
-        sofZmanTfillaMGA: formatTime(item.sofZmanTfillaMGA),
-        sofZmanTfilla: formatTime(item.sofZmanTfilla),
-        chatzot: formatTime(item.chatzot),
-        minchaGedola: formatTime(item.minchaGedola),
-        plagHaMincha: formatTime(item.plagHaMincha),
-        sunset: formatTime(item.sunset),
-        beinHaShmashos: formatTime(item.beinHaShmashos)
-      }));
+    if (data.times) {
+      zmanimDatabase = processZmanimData(data);
     }
     
     return zmanimDatabase;
@@ -50,6 +53,67 @@ export const fetchZmanim = async (): Promise<ZmanimData[]> => {
     console.error('Error fetching zmanim data:', error);
     throw error;
   }
+};
+
+// Process zmanim data for a single day
+const processSingleDayZmanim = (data: any, date: string): ZmanimData | null => {
+  try {
+    const times = data.times;
+    if (!times) return null;
+    
+    return {
+      date,
+      alotHaShachar: formatTime(times.alotHaShachar?.[date] || ''),
+      sunrise: formatTime(times.sunrise?.[date] || ''),
+      misheyakir: formatTime(times.misheyakir?.[date] || ''),
+      sofZmanShmaMGA: formatTime(times.sofZmanShmaMGA?.[date] || ''),
+      sofZmanShma: formatTime(times.sofZmanShma?.[date] || ''),
+      sofZmanTfillaMGA: formatTime(times.sofZmanTfillaMGA?.[date] || ''),
+      sofZmanTfilla: formatTime(times.sofZmanTfilla?.[date] || ''),
+      chatzot: formatTime(times.chatzot?.[date] || ''),
+      minchaGedola: formatTime(times.minchaGedola?.[date] || ''),
+      plagHaMincha: formatTime(times.plagHaMincha?.[date] || ''),
+      sunset: formatTime(times.sunset?.[date] || ''),
+      beinHaShmashos: formatTime(times.tzeit?.[date] || times.beinHaShmashos?.[date] || '')
+    };
+  } catch (error) {
+    console.error('Error processing single day zmanim data:', error);
+    return null;
+  }
+};
+
+// Process zmanim data for a range of dates
+const processZmanimData = (data: any): ZmanimData[] => {
+  const processed: ZmanimData[] = [];
+  const times = data.times;
+  if (!times || !times.sunrise) return processed;
+  
+  // Get all the dates from the sunrise object as it should be present for all days
+  const dates = Object.keys(times.sunrise);
+  
+  for (const date of dates) {
+    try {
+      processed.push({
+        date,
+        alotHaShachar: formatTime(times.alotHaShachar?.[date] || ''),
+        sunrise: formatTime(times.sunrise?.[date] || ''),
+        misheyakir: formatTime(times.misheyakir?.[date] || ''),
+        sofZmanShmaMGA: formatTime(times.sofZmanShmaMGA?.[date] || ''),
+        sofZmanShma: formatTime(times.sofZmanShma?.[date] || ''),
+        sofZmanTfillaMGA: formatTime(times.sofZmanTfillaMGA?.[date] || ''),
+        sofZmanTfilla: formatTime(times.sofZmanTfilla?.[date] || ''),
+        chatzot: formatTime(times.chatzot?.[date] || ''),
+        minchaGedola: formatTime(times.minchaGedola?.[date] || ''),
+        plagHaMincha: formatTime(times.plagHaMincha?.[date] || ''),
+        sunset: formatTime(times.sunset?.[date] || ''),
+        beinHaShmashos: formatTime(times.tzeit?.[date] || times.beinHaShmashos?.[date] || '')
+      });
+    } catch (error) {
+      console.error(`Error processing zmanim for date ${date}:`, error);
+    }
+  }
+  
+  return processed;
 };
 
 // Get today's zmanim

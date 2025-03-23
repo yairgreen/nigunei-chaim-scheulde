@@ -53,13 +53,13 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           <h3 className="text-lg font-semibold mb-3 text-title">שיעורים</h3>
           <div className="space-y-2">
             {classes.map((item, index) => (
-              <div key={index} className="time-item">
+              <div key={index} className="flex flex-col mb-3 last:mb-0">
                 <div className="flex justify-between w-full">
                   <span className="font-medium">{item.name.split(' מפי ')[0]}</span>
                   <span className="text-title">{item.time}</span>
                 </div>
                 {item.name.includes(' מפי ') && (
-                  <span className="text-sm text-gray-600 text-right">{item.name.split(' מפי ')[1]}</span>
+                  <span className="text-sm text-gray-600 text-right mt-1">{item.name.split(' מפי ')[1]}</span>
                 )}
               </div>
             ))}
