@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Footer from './Footer';
 import { Button } from './ui/button';
 import { User, Calendar } from 'lucide-react';
 
@@ -59,8 +58,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4">
         {children}
       </main>
-      
-      <Footer />
     </div>
   );
 };
