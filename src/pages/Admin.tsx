@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUser, useAuth, SignOutButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +11,25 @@ import { useScheduleData } from '@/hooks/useScheduleData';
 const ADMIN_EMAILS = ['yair.green@gmail.com'];
 
 const Admin = () => {
-  const { user, isSignedIn, isLoaded } = useUser();
+  const [isClerkAvailable, setIsClerkAvailable] = useState<boolean | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  
+  // Using try/catch since these hooks will throw errors if Clerk is not available
+  let user, isSignedIn, isLoaded;
+  
+  try {
+    // @ts-ignore - checking if useUser is available
+    if (typeof useUser === 'function') {
+      const userHook = useUser();
+      user = userHook.user;
+      isSignedIn = userHook.isSignedIn;
+      isLoaded = userHook.isLoaded;
+    }
+  } catch (error) {
+    console.error("Error using Clerk hooks:", error);
+    isClerkAvailable = false;
+  }
+  
   const { toast } = useToast();
   const navigate = useNavigate();
   const { dailyPrayers, dailyClasses, shabbatData } = useScheduleData();
@@ -27,12 +44,33 @@ const Admin = () => {
   });
   
   useEffect(() => {
-    // Redirect non-admin users
-    if (isLoaded && (!isSignedIn || !user?.emailAddresses.some(email => 
+    // Check if Clerk is available
+    try {
+      // @ts-ignore - we're checking if Clerk exists on window
+      const hasClerk = typeof window.Clerk !== 'undefined';
+      setIsClerkAvailable(hasClerk);
+      
+      if (!hasClerk) {
+        setIsDemoMode(true);
+        toast({
+          title: "מצב דמו",
+          description: "המסך מוצג במצב דמו. שינויים לא יישמרו באופן קבוע.",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking Clerk availability:", error);
+      setIsClerkAvailable(false);
+      setIsDemoMode(true);
+    }
+  }, [toast]);
+  
+  useEffect(() => {
+    // Redirect non-admin users if authentication is available
+    if (isClerkAvailable && isLoaded && (!isSignedIn || !user?.emailAddresses.some(email => 
       ADMIN_EMAILS.includes(email.emailAddress)))) {
       navigate('/');
     }
-  }, [isLoaded, isSignedIn, user, navigate]);
+  }, [isClerkAvailable, isLoaded, isSignedIn, user, navigate]);
   
   useEffect(() => {
     if (dailyPrayers.length) {
@@ -86,9 +124,21 @@ const Admin = () => {
     });
   };
   
-  if (!isLoaded || !isSignedIn || !user?.emailAddresses.some(email => 
-    ADMIN_EMAILS.includes(email.emailAddress))) {
+  if (isClerkAvailable && !isLoaded) {
     return <div className="text-center py-12">טוען...</div>;
+  }
+  
+  if (isClerkAvailable && isLoaded && !isSignedIn && !isDemoMode) {
+    navigate('/sign-in');
+    return null;
+  }
+  
+  const isAuthorized = isDemoMode || (isClerkAvailable && user?.emailAddresses.some(email => 
+    ADMIN_EMAILS.includes(email.emailAddress)));
+    
+  if (!isAuthorized) {
+    navigate('/');
+    return null;
   }
   
   return (
@@ -97,12 +147,19 @@ const Admin = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">ניהול לוח זמנים</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm">{user.primaryEmailAddress?.emailAddress}</span>
-            <SignOutButton>
-              <Button variant="outline" size="sm">התנתק</Button>
-            </SignOutButton>
+            {isDemoMode ? (
+              <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">מצב דמו</span>
+            ) : (
+              <>
+                <span className="text-sm">{user?.primaryEmailAddress?.emailAddress}</span>
+                <SignOutButton>
+                  <Button variant="outline" size="sm">התנתק</Button>
+                </SignOutButton>
+              </>
+            )}
           </div>
         </div>
+        
         
         <Tabs defaultValue="daily" className="space-y-6">
           <TabsList className="w-full bg-white shadow">
@@ -110,6 +167,7 @@ const Admin = () => {
             <TabsTrigger value="shabbat" className="flex-1">זמני שבת</TabsTrigger>
             <TabsTrigger value="classes" className="flex-1">שיעורים</TabsTrigger>
           </TabsList>
+          
           
           <TabsContent value="daily" className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md">

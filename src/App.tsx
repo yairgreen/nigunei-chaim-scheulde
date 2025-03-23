@@ -9,16 +9,35 @@ import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
-import { ClerkLoaded } from "@clerk/clerk-react";
+import { useState, useEffect } from "react";
 
+// Create a new query client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <ClerkLoaded>
+const App = () => {
+  const [isClerkAvailable, setIsClerkAvailable] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    // Check if Clerk is available by checking if window.Clerk exists
+    const checkClerk = async () => {
+      try {
+        // @ts-ignore - we're checking if Clerk exists on window
+        const hasClerk = typeof window.Clerk !== 'undefined';
+        setIsClerkAvailable(hasClerk);
+      } catch (error) {
+        console.error("Error checking Clerk availability:", error);
+        setIsClerkAvailable(false);
+      }
+    };
+    
+    checkClerk();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -28,9 +47,9 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </ClerkLoaded>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
