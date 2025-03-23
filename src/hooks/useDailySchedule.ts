@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
-  getZmanimDatabase,
   recalculatePrayerTimes
 } from '@/lib/database/index';
 import { format } from 'date-fns';
@@ -50,12 +49,12 @@ export function useDailySchedule(): DailyScheduleData {
       
       // Tuesday class
       if (dayOfWeek === 2) { // Tuesday
-        classes.push({ name: 'שיעור חסידות', time: '21:00-22:00' });
+        classes.push({ name: 'שיעור חסידות עם הרב אשר דייטש', time: '21:00-22:00' });
       }
       
       // Friday class
       if (dayOfWeek === 5) { // Friday
-        classes.push({ name: 'מדרשישי', time: '09:00-10:00' });
+        classes.push({ name: 'מדרשישי עם הרב עמיהוד סלומון', time: '09:00-10:00' });
       }
       
       setDailyClasses(classes);
@@ -71,7 +70,7 @@ export function useDailySchedule(): DailyScheduleData {
         { name: 'ערבית א׳', time: '18:15' },
         { name: 'ערבית ב׳', time: '20:45' }
       ]);
-      setDailyClasses([{ name: 'שיעור הדף היומי', time: '20:00-20:45' }]);
+      setDailyClasses([{ name: 'שיעור הדף היומי מפי הרב דוד קלופפר', time: '20:00-20:45' }]);
     }
   };
 

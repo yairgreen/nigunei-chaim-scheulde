@@ -21,15 +21,20 @@ export function useScheduleData(): ScheduleData {
     // Initialize app and load data
     const loadData = async () => {
       try {
+        console.log('Loading initial data...');
         await initDatabase();
-        // Add a small delay to ensure any async operations complete
+        
+        // Add a delay to ensure all hooks have their data
         setTimeout(() => {
+          console.log('Data loaded successfully');
           setDataLoaded(true);
-        }, 500);
+        }, 1000);
       } catch (error) {
         console.error('Failed to load initial data:', error);
         // Still set dataLoaded to true so we can show default data
-        setDataLoaded(true);
+        setTimeout(() => {
+          setDataLoaded(true);
+        }, 1000);
       }
     };
 

@@ -1,7 +1,7 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
 import { fetchZmanim, getTodayZmanim, getZmanimDatabase } from './zmanim';
-import { fetchHolidays, getTodayHoliday, isRoshChodeshToday } from './holidays';
+import { fetchHolidays, getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
 import { 
   fetchShabbat, 
   getThisWeekShabbat, 
@@ -15,7 +15,7 @@ export { formatTime } from './core';
 export type { ZmanimData } from './zmanim';
 export { getTodayZmanim, getZmanimDatabase } from './zmanim';
 export type { HolidayData } from './holidays';
-export { getTodayHoliday, isRoshChodeshToday } from './holidays';
+export { getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
 export type { ShabbatData } from './shabbat';
 export { 
   getThisWeekShabbat, 
@@ -24,39 +24,7 @@ export {
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 
-// Initialize the database
-export const initDatabase = async () => {
-  try {
-    // Initialize with default data first to prevent rendering empty components
-    setDefaultData();
-    
-    const zmanimPromise = fetchZmanim();
-    const holidaysPromise = fetchHolidays();
-    const shabbatPromise = fetchShabbat();
-    
-    // Wait for all data to be fetched
-    await Promise.all([zmanimPromise, holidaysPromise, shabbatPromise]);
-    
-    console.log('Database initialized');
-    setLastUpdated(new Date());
-    
-    return {
-      zmanim: getZmanimDatabase(),
-      holidays: getTodayHoliday(),
-      shabbat: getThisWeekShabbat()
-    };
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    // Even if there's an error, continue with default data
-    return {
-      zmanim: getZmanimDatabase(),
-      holidays: getTodayHoliday(),
-      shabbat: getThisWeekShabbat()
-    };
-  }
-};
-
-// Set default data to ensure components don't render empty
+// Initialize the database with default values first
 const setDefaultData = () => {
   // Set default zmanim data if empty
   if (getZmanimDatabase().length === 0) {
@@ -80,18 +48,68 @@ const setDefaultData = () => {
   }
 };
 
+// Initialize the database
+export const initDatabase = async () => {
+  try {
+    // Initialize with default data first to prevent rendering empty components
+    setDefaultData();
+    
+    const zmanimPromise = fetchZmanim().catch(err => {
+      console.error('Failed to fetch zmanim:', err);
+      return [];
+    });
+    
+    const holidaysPromise = fetchHolidays().catch(err => {
+      console.error('Failed to fetch holidays:', err);
+      return [];
+    });
+    
+    const shabbatPromise = fetchShabbat().catch(err => {
+      console.error('Failed to fetch shabbat data:', err);
+      return [];
+    });
+    
+    // Wait for all data to be fetched, but don't fail if one fails
+    await Promise.allSettled([zmanimPromise, holidaysPromise, shabbatPromise]);
+    
+    console.log('Database initialized');
+    setLastUpdated(new Date());
+    
+    return {
+      zmanim: getZmanimDatabase(),
+      holidays: getTodayHoliday(),
+      shabbat: getThisWeekShabbat()
+    };
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    return {
+      zmanim: getZmanimDatabase(),
+      holidays: getTodayHoliday(),
+      shabbat: getThisWeekShabbat()
+    };
+  }
+};
+
 // Update database - to be called by a cron job or scheduled task
 export const updateDatabase = async () => {
-  await fetchZmanim();
-  await fetchHolidays();
-  setLastUpdated(new Date());
-  console.log('Daily update completed at', getLastUpdated());
+  try {
+    await fetchZmanim();
+    await fetchHolidays();
+    setLastUpdated(new Date());
+    console.log('Daily update completed at', getLastUpdated());
+  } catch (error) {
+    console.error('Error updating database:', error);
+  }
 };
 
 // Update Shabbat info - to be called weekly
 export const updateShabbatInfo = async () => {
-  await fetchShabbat();
-  console.log('Weekly Shabbat update completed at', new Date());
+  try {
+    await fetchShabbat();
+    console.log('Weekly Shabbat update completed at', new Date());
+  } catch (error) {
+    console.error('Error updating Shabbat info:', error);
+  }
 };
 
 // Recalculate prayer times based on current zmanim

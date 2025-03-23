@@ -20,23 +20,22 @@ export function useDateInfo(): DateInfo {
       // Get today's date
       const now = new Date();
       
-      // Format the dates
+      // Format the Gregorian date
       setGregorianDate(format(now, 'dd MMMM yyyy', { locale: he }));
       
-      // In a real app, you would get the Hebrew date from the API
-      // For now, we'll use the holiday data if available
+      // Get the Hebrew date from the holiday data if available
       const todayHoliday = getTodayHoliday();
       if (todayHoliday && todayHoliday.hebrew) {
         setHebrewDate(todayHoliday.hebrew);
       } else {
-        // Fallback Hebrew date - hardcoded for display purposes
-        setHebrewDate('כ״ט אדר ב׳ תשפ״ד');
+        // Use a more current fallback Hebrew date
+        setHebrewDate('ד׳ סיון תשפ״ד');
       }
     } catch (error) {
       console.error('Error refreshing date info:', error);
       // Fallback to hardcoded values
       setGregorianDate(format(new Date(), "d MMMM yyyy", { locale: he }));
-      setHebrewDate('כ״ט אדר ב׳ תשפ״ד');
+      setHebrewDate('ד׳ סיון תשפ״ד');
     }
   };
 

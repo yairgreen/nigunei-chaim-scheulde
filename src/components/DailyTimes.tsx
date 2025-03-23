@@ -39,7 +39,8 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
   
   return (
     <div className={cn('schedule-card bg-times animate-fade-in-up delay-200', className)}>
-      <h2 className="text-2xl font-bold mb-4 text-title border-b pb-2 border-accent1/20">זמני היום</h2>
+      <h2 className="text-2xl font-bold mb-2 text-title border-b pb-2 border-accent1/20">זמני היום</h2>
+      <p className="text-lg font-medium mb-4">זמני הלכה</p>
       
       <div className="flex justify-between items-center mb-6 bg-white/50 p-4 rounded-lg">
         <div>
