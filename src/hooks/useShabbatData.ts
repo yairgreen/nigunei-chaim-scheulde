@@ -64,7 +64,8 @@ export function useShabbatData(): ShabbatData {
         return;
       }
       
-      // Calculate Kabalat Shabbat time: 11-15 minutes before sunset, rounded to nearest 5 minutes (up)
+      // Calculate Kabalat Shabbat time: Always use the sunset value for calculation
+      // to ensure consistent results
       const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
@@ -77,7 +78,7 @@ export function useShabbatData(): ShabbatData {
         subtitle += ` | ${shabbat.holidayHebrew}`;
       }
       
-      // Set Shabbat prayers
+      // Set Shabbat prayers with fixed kabalat time
       const shabbatPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
         { name: 'מנחה וקבלת שבת', time: kabalatTime },

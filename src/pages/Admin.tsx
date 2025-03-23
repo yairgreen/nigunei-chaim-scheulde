@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useAuth, SignOutButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -8,30 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useScheduleData } from '@/hooks/useScheduleData';
 
-const ADMIN_EMAILS = ['yair.green@gmail.com'];
-
 const Admin = () => {
-  const [isClerkAvailable, setIsClerkAvailable] = useState<boolean | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  
-  // Using try/catch since these hooks will throw errors if Clerk is not available
-  let user, isSignedIn, isLoaded;
-  
-  try {
-    // @ts-ignore - checking if useUser is available
-    if (typeof useUser === 'function') {
-      const userHook = useUser();
-      user = userHook.user;
-      isSignedIn = userHook.isSignedIn;
-      isLoaded = userHook.isLoaded;
-    }
-  } catch (error) {
-    console.error("Error using Clerk hooks:", error);
-    // Instead of direct assignment, use the state setter
-    if (isClerkAvailable !== false) {
-      setIsClerkAvailable(false);
-    }
-  }
+  const [isDemoMode, setIsDemoMode] = useState(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -47,33 +24,14 @@ const Admin = () => {
   });
   
   useEffect(() => {
-    // Check if Clerk is available
-    try {
-      // @ts-ignore - we're checking if Clerk exists on window
-      const hasClerk = typeof window.Clerk !== 'undefined';
-      setIsClerkAvailable(hasClerk);
-      
-      if (!hasClerk) {
-        setIsDemoMode(true);
-        toast({
-          title: "מצב דמו",
-          description: "המסך מוצג במצב דמו. שינויים לא יישמרו באופן קבוע.",
-        });
-      }
-    } catch (error) {
-      console.error("Error checking Clerk availability:", error);
-      setIsClerkAvailable(false);
-      setIsDemoMode(true);
-    }
+    // Always use demo mode now that we removed Clerk
+    setIsDemoMode(true);
+    
+    toast({
+      title: "מצב דמו",
+      description: "המסך מוצג במצב דמו. שינויים לא יישמרו באופן קבוע.",
+    });
   }, [toast]);
-  
-  useEffect(() => {
-    // Redirect non-admin users if authentication is available
-    if (isClerkAvailable && isLoaded && (!isSignedIn || !user?.emailAddresses.some(email => 
-      ADMIN_EMAILS.includes(email.emailAddress)))) {
-      navigate('/');
-    }
-  }, [isClerkAvailable, isLoaded, isSignedIn, user, navigate]);
   
   useEffect(() => {
     if (dailyPrayers.length) {
@@ -127,47 +85,13 @@ const Admin = () => {
     });
   };
   
-  // Fix conditional navigation to use useEffect
-  useEffect(() => {
-    if (isClerkAvailable === true && isLoaded === true && !isSignedIn && !isDemoMode) {
-      navigate('/sign-in');
-    }
-    
-    if (isClerkAvailable === true && isLoaded === true && !isDemoMode && !user?.emailAddresses.some(email => 
-      ADMIN_EMAILS.includes(email.emailAddress))) {
-      navigate('/');
-    }
-  }, [isClerkAvailable, isLoaded, isSignedIn, isDemoMode, user, navigate]);
-  
-  if (isClerkAvailable && !isLoaded) {
-    return <div className="text-center py-12">טוען...</div>;
-  }
-  
-  // Remove direct navigation calls that were causing infinite renders
-  const isAuthorized = isDemoMode || (isClerkAvailable && user?.emailAddresses.some(email => 
-    ADMIN_EMAILS.includes(email.emailAddress)));
-    
-  if (!isAuthorized) {
-    // Instead of directly calling navigate here, we handle this in useEffect above
-    return null;
-  }
-  
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">ניהול לוח זמנים</h1>
           <div className="flex items-center gap-4">
-            {isDemoMode ? (
-              <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">מצב דמו</span>
-            ) : (
-              <>
-                <span className="text-sm">{user?.primaryEmailAddress?.emailAddress}</span>
-                <SignOutButton>
-                  <Button variant="outline" size="sm">התנתק</Button>
-                </SignOutButton>
-              </>
-            )}
+            <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">מצב דמו</span>
           </div>
         </div>
         
