@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
       <header className={cn('text-center py-8 animate-fade-in-up', className)}>
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 animate-fade-in" style={{ color: '#604A7B' }}>
-            לוח זמנים - בית כנסת "ניגוני חיים"
+            {shabbatName}
           </h1>
           <div className="space-y-1">
             <p className="text-xl text-subtitle font-medium">{hebrewDate}</p>

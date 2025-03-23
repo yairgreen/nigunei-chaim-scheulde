@@ -27,6 +27,9 @@ export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 // Initialize the database
 export const initDatabase = async () => {
   try {
+    // Initialize with default data first to prevent rendering empty components
+    setDefaultData();
+    
     const zmanimPromise = fetchZmanim();
     const holidaysPromise = fetchHolidays();
     const shabbatPromise = fetchShabbat();
@@ -44,7 +47,36 @@ export const initDatabase = async () => {
     };
   } catch (error) {
     console.error('Error initializing database:', error);
-    throw error;
+    // Even if there's an error, continue with default data
+    return {
+      zmanim: getZmanimDatabase(),
+      holidays: getTodayHoliday(),
+      shabbat: getThisWeekShabbat()
+    };
+  }
+};
+
+// Set default data to ensure components don't render empty
+const setDefaultData = () => {
+  // Set default zmanim data if empty
+  if (getZmanimDatabase().length === 0) {
+    const defaultZmanim = {
+      date: format(new Date(), 'yyyy-MM-dd'),
+      alotHaShachar: '05:20',
+      sunrise: '06:07',
+      misheyakir: '05:40',
+      sofZmanShmaMGA: '08:44',
+      sofZmanShma: '09:20',
+      sofZmanTfillaMGA: '09:48',
+      sofZmanTfilla: '10:26',
+      chatzot: '11:53',
+      minchaGedola: '12:25',
+      plagHaMincha: '17:22',
+      sunset: '17:39',
+      beinHaShmashos: '18:05'
+    };
+    
+    (getZmanimDatabase() as any).push(defaultZmanim);
   }
 };
 
@@ -64,27 +96,37 @@ export const updateShabbatInfo = async () => {
 
 // Recalculate prayer times based on current zmanim
 export const recalculatePrayerTimes = () => {
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  const dayOfWeek = today.getDay(); // 0 is Sunday
-  
-  // Set to start of current week (Sunday)
-  startOfWeek.setDate(today.getDate() - dayOfWeek);
-  
-  // Get this week's days (Sun-Thu)
-  const weekDays = [];
-  for (let i = 0; i < 5; i++) {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + i);
-    weekDays.push(format(date, 'yyyy-MM-dd'));
+  try {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    const dayOfWeek = today.getDay(); // 0 is Sunday
+    
+    // Set to start of current week (Sunday)
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+    
+    // Get this week's days (Sun-Thu)
+    const weekDays = [];
+    for (let i = 0; i < 5; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      weekDays.push(format(date, 'yyyy-MM-dd'));
+    }
+    
+    // Get zmanim for these days
+    const zmanimForWeek = getZmanimDatabase()
+      .filter(item => weekDays.some(day => item.date.startsWith(day)));
+    
+    // If no data available, use default values
+    if (zmanimForWeek.length === 0) {
+      return { minchaTime: '17:15', arvitTime: '18:15' };
+    }
+    
+    const minchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
+    const arvitTime = calculateWeeklyArvitTime(zmanimForWeek);
+    
+    return { minchaTime, arvitTime };
+  } catch (error) {
+    console.error('Error calculating prayer times:', error);
+    return { minchaTime: '17:15', arvitTime: '18:15' };
   }
-  
-  // Get zmanim for these days
-  const zmanimForWeek = getZmanimDatabase()
-    .filter(item => weekDays.some(day => item.date.startsWith(day)));
-  
-  const minchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
-  const arvitTime = calculateWeeklyArvitTime(zmanimForWeek);
-  
-  return { minchaTime, arvitTime };
 };

@@ -61,6 +61,17 @@ export function useDailySchedule(): DailyScheduleData {
       setDailyClasses(classes);
     } catch (error) {
       console.error('Error refreshing daily schedule:', error);
+      // Set default values in case of error
+      setDailyPrayers([
+        { name: 'שחרית א׳', time: '06:15' },
+        { name: 'שחרית ב׳', time: '07:00' },
+        { name: 'שחרית ג׳', time: '08:00' },
+        { name: 'מנחה גדולה', time: '12:30' },
+        { name: 'מנחה', time: '17:15' },
+        { name: 'ערבית א׳', time: '18:15' },
+        { name: 'ערבית ב׳', time: '20:45' }
+      ]);
+      setDailyClasses([{ name: 'שיעור הדף היומי', time: '20:00-20:45' }]);
     }
   };
 

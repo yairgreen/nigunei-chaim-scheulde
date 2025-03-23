@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { initDatabase } from '@/lib/database';
+import { initDatabase } from '@/lib/database/index';
 import { useDailyTimes, DailyTimesData } from './useDailyTimes';
 import { useShabbatData, ShabbatData } from './useShabbatData';
 import { useDailySchedule, DailyScheduleData } from './useDailySchedule';
@@ -22,9 +22,14 @@ export function useScheduleData(): ScheduleData {
     const loadData = async () => {
       try {
         await initDatabase();
-        setDataLoaded(true);
+        // Add a small delay to ensure any async operations complete
+        setTimeout(() => {
+          setDataLoaded(true);
+        }, 500);
       } catch (error) {
         console.error('Failed to load initial data:', error);
+        // Still set dataLoaded to true so we can show default data
+        setDataLoaded(true);
       }
     };
 
