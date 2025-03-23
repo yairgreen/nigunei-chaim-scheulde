@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
@@ -243,7 +242,7 @@ const Simulation = () => {
             >
               {isLoading ? (
                 <>
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner />
                   <span className="mr-2">טוען...</span>
                 </>
               ) : (
@@ -255,7 +254,7 @@ const Simulation = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
-            <LoadingSpinner size="lg" />
+            <LoadingSpinner />
           </div>
         ) : (
           <>

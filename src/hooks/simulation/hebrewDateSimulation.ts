@@ -84,7 +84,7 @@ export const simulateHebrewDate = (selectedDate: Date): string => {
     hebrewMonthIndex = (month + 3) % 12;
   }
   
-  const hebrewMonth = hebrewMonths[hebrewMonthIndex];
+  let hebrewMonth = hebrewMonths[hebrewMonthIndex];
   
   // Adjust Hebrew day based on selected date for better simulation
   // For March 2025, the offset is approximately +13 days
