@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import Header from '@/components/Header';
 import TimeSelector from '@/components/simulation/TimeSelector';
-import { useSimulationData } from '@/hooks/useSimulationData';
+import { useSimulationData } from '@/hooks/simulation';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { Button } from '@/components/ui/button';
 
