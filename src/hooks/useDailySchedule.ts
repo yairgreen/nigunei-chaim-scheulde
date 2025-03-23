@@ -2,9 +2,12 @@
 import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
+  getZmanimDatabase,
   calculateWeeklyMinchaTime,
-  calculateWeeklyArvitTime
+  calculateWeeklyArvitTime,
+  recalculatePrayerTimes
 } from '@/lib/database';
+import { format } from 'date-fns';
 
 export interface DailyScheduleData {
   dailyPrayers: { name: string; time: string }[];
@@ -23,9 +26,8 @@ export function useDailySchedule(): DailyScheduleData {
       const roshChodesh = isRoshChodeshToday();
       setIsRoshChodesh(roshChodesh);
       
-      // Calculate prayer times
-      const minchaTime = calculateWeeklyMinchaTime();
-      const arvitTime = calculateWeeklyArvitTime();
+      // Get prayer times from the updated calculation function
+      const { minchaTime, arvitTime } = recalculatePrayerTimes();
       
       // Set daily prayers
       const prayers = [
