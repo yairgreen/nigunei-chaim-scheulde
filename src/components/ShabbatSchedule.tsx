@@ -8,7 +8,10 @@ interface TimeItem {
 }
 
 interface ShabbatScheduleProps {
-  candles: string;
+  title: string;
+  subtitle?: string;
+  candlesPT: string;
+  candlesTA: string;
   havdala: string;
   prayers: TimeItem[];
   classes: TimeItem[];
@@ -16,7 +19,10 @@ interface ShabbatScheduleProps {
 }
 
 const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
-  candles,
+  title,
+  subtitle,
+  candlesPT,
+  candlesTA,
   havdala,
   prayers,
   classes,
@@ -24,12 +30,22 @@ const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
 }) => {
   return (
     <div className={cn('schedule-card bg-shabbat animate-fade-in-up', className)}>
-      <h2 className="text-2xl font-bold mb-4 text-title border-b pb-2 border-accent2/20">לוח זמני שבת</h2>
+      <h2 className="text-2xl font-bold mb-2 text-title border-b pb-2 border-accent2/20">זמני שבת</h2>
+      {subtitle && <p className="text-lg font-medium mb-4">{subtitle}</p>}
       
       <div className="flex justify-between items-center mb-6 bg-white/50 p-4 rounded-lg">
         <div>
           <h3 className="font-medium">הדלקת נרות</h3>
-          <p className="text-xl font-bold">{candles}</p>
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">פ"ת</span>
+              <span className="text-base font-bold mr-2">{candlesPT}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">ת"א</span>
+              <span className="text-base font-bold mr-2">{candlesTA}</span>
+            </div>
+          </div>
         </div>
         <div className="h-10 w-px bg-gray-300"></div>
         <div>
@@ -50,17 +66,19 @@ const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
         </div>
       </div>
       
-      <div>
-        <h3 className="text-lg font-semibold mb-3 text-title">שיעורים</h3>
-        <div className="space-y-2">
-          {classes.map((item, index) => (
-            <div key={index} className="time-item">
-              <span className="font-medium">{item.name}</span>
-              <span className="text-title">{item.time}</span>
-            </div>
-          ))}
+      {classes.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3 text-title">שיעורים</h3>
+          <div className="space-y-2">
+            {classes.map((item, index) => (
+              <div key={index} className="time-item">
+                <span className="font-medium">{item.name}</span>
+                <span className="text-title">{item.time}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

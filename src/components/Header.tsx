@@ -16,18 +16,25 @@ const Header: React.FC<HeaderProps> = ({
   className
 }) => {
   return (
-    <header className={cn('text-center py-10 animate-fade-in-up', className)}>
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-title mb-2 animate-fade-in">
-          {shabbatName}
-        </h1>
-        <div className="space-y-1">
-          <p className="text-xl text-subtitle font-medium">{hebrewDate}</p>
-          <p className="text-sm text-subtitle/80">{gregorianDate}</p>
-        </div>
+    <div className="mb-8">
+      <div className="flex justify-between items-start mb-6">
+        <div className="text-sm font-serif">בס״ד</div>
+        <img src="/logo.png" alt="ניגוני חיים" className="h-12" />
       </div>
-      <div className="w-20 h-1 bg-accent1 mx-auto mt-6 rounded-full animate-fade-in"></div>
-    </header>
+      
+      <header className={cn('text-center py-8 animate-fade-in-up', className)}>
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 animate-fade-in" style={{ color: '#604A7B' }}>
+            לוח זמנים - בית כנסת "ניגוני חיים"
+          </h1>
+          <div className="space-y-1">
+            <p className="text-xl text-subtitle font-medium">{hebrewDate}</p>
+            <p className="text-sm text-subtitle/80">{gregorianDate}</p>
+          </div>
+        </div>
+        <div className="w-20 h-1 bg-accent1 mx-auto mt-6 rounded-full animate-fade-in"></div>
+      </header>
+    </div>
   );
 };
 

@@ -75,7 +75,7 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
       </div>
       
       <div className="mt-4 text-xs text-gray-500 text-center bg-white/50 p-2 rounded">
-        הזמנים מתעדכנים אוטומטית לפי מיקום הקהילה
+        הזמנים מתעדכנים אוטומטית לפי אופק פתח תקוה
       </div>
     </div>
   );
