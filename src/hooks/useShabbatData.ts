@@ -64,18 +64,12 @@ export function useShabbatData(): ShabbatData {
         return;
       }
       
-      // Calculate Shabbat times
+      // Calculate Kabalat Shabbat time: 11-15 minutes before sunset, rounded to nearest 5 minutes (up)
       const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
       const havdalahTime = shabbat.havdalah || '19:35';
-      const [havdalahHours, havdalahMinutes] = havdalahTime.split(':').map(Number);
-      const havdalahTotalMinutes = havdalahHours * 60 + havdalahMinutes;
-      const minchaTotalMinutes = havdalahTotalMinutes - 60; // One hour before havdalah
-      const roundedMinchaMinutes = Math.floor(minchaTotalMinutes / 5) * 5; // Round down to nearest 5 minutes
-      const minchaHours = Math.floor(roundedMinchaMinutes / 60);
-      const minchaMinutes = roundedMinchaMinutes % 60;
-      const shabbatMinchaTime = `${String(minchaHours).padStart(2, '0')}:${String(minchaMinutes).padStart(2, '0')}`;
+      const minchaTime = calculateShabbatMinchaTime(havdalahTime);
       
       // Set Shabbat subtitle
       let subtitle = shabbat.parashatHebrew || 'פרשת השבוע';
@@ -90,8 +84,8 @@ export function useShabbatData(): ShabbatData {
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
-        { name: 'מנחה', time: shabbatMinchaTime },
-        { name: 'ערבית מוצ״ש', time: shabbat.havdalah } // Arvit at Havdalah time
+        { name: 'מנחה', time: minchaTime },
+        { name: 'ערבית מוצ״ש', time: havdalahTime } // Arvit at Havdalah time
       ];
       
       // Set Shabbat classes (empty for now)
@@ -109,7 +103,7 @@ export function useShabbatData(): ShabbatData {
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
       
-      // Set default values in case of error - use actual values from API response
+      // Set default values in case of error
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
         { name: 'מנחה וקבלת שבת', time: '19:00' },

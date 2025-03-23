@@ -42,10 +42,9 @@ export const fetchShabbat = async (): Promise<ShabbatData[]> => {
             acc.parashatHebrew = item.hebrew;
             
             // Check if this Shabbat has a holiday
-            const holiday = holidaysDb.find(h => 
-              h.date.split('T')[0] === item.date.split('T')[0] && 
-              h.category === 'holiday' && 
-              h.subcat === 'shabbat'
+            const holiday = holidaysDb.find((h: any) => 
+              h.subcat === 'shabbat' && 
+              h.category === 'holiday'
             );
             
             if (holiday) {

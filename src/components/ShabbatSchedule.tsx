@@ -72,8 +72,13 @@ const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
           <div className="space-y-2">
             {classes.map((item, index) => (
               <div key={index} className="time-item">
-                <span className="font-medium">{item.name}</span>
-                <span className="text-title">{item.time}</span>
+                <div className="flex justify-between w-full">
+                  <span className="font-medium">{item.name.split(' מפי ')[0]}</span>
+                  <span className="text-title">{item.time}</span>
+                </div>
+                {item.name.includes(' מפי ') && (
+                  <span className="text-sm text-gray-600 text-right">{item.name.split(' מפי ')[1]}</span>
+                )}
               </div>
             ))}
           </div>
