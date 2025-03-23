@@ -188,7 +188,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <Header 
-          shabbatName="לוח זמנים - בית כנסת \"ניגוני חיים\""
+          shabbatName='לוח זמנים - בית כנסת "ניגוני חיים"'
           hebrewDate={hebrewDate}
           gregorianDate={gregorianDate}
         />
@@ -226,7 +226,7 @@ const Index = () => {
         
         <Footer 
           greeting="שבת שלום ומבורך"
-          contactInfo="לשאלות וברורים: 054-1234567 | קהילת בית הכנסת \"ניגוני חיים\""
+          contactInfo='לשאלות וברורים: 054-1234567 | קהילת בית הכנסת "ניגוני חיים"'
         />
       </div>
     </div>
