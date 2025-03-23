@@ -51,12 +51,12 @@ export function useDailySchedule(): DailyScheduleData {
       
       // Tuesday class
       if (dayOfWeek === 2) { // Tuesday
-        classes.push({ name: 'שיעור חסידות עם הרב אשר דייטש', time: '21:00-22:00' });
+        classes.push({ name: 'שיעור חסידות מפי הרב אשר דייטש', time: '21:00-22:00' });
       }
       
       // Friday class
       if (dayOfWeek === 5) { // Friday
-        classes.push({ name: 'מדרשישי עם הרב עמיהוד סלומון', time: '09:00-10:00' });
+        classes.push({ name: 'מדרשישי מפי הרב עמיהוד סלומון', time: '09:00-10:00' });
       }
       
       setDailyClasses(classes);

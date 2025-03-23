@@ -22,13 +22,13 @@ const Header: React.FC<HeaderProps> = ({
         <img 
           src="/lovable-uploads/6276adff-5e29-461c-b4e3-b7c42147ebc6.png" 
           alt="ניגוני חיים" 
-          className="h-12" 
+          className="h-24" // Increased size from h-12 to h-24 (2x)
         />
       </div>
       
       <header className={cn('text-center py-8 animate-fade-in-up', className)}>
         <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 animate-fade-in" style={{ color: '#604A7B' }}>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 animate-fade-in" style={{ color: '#604A7B' }}>
             {shabbatName}
           </h1>
           <div className="space-y-1">

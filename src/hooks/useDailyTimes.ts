@@ -67,12 +67,12 @@ export function useDailyTimes(): DailyTimesData {
           foundNext = true;
           return { ...zman, isNext: true };
         }
-        return zman;
+        return { ...zman, isNext: false }; // Explicitly set isNext to false
       });
       
-      // If no "next" time was found (all times passed), don't highlight any
-      if (!foundNext) {
-        zmanim_with_next[0].isNext = true; // Default to first time for tomorrow
+      // If no "next" time was found (all times passed), highlight the first one for tomorrow
+      if (!foundNext && zmanim_with_next.length > 0) {
+        zmanim_with_next[0].isNext = true;
       }
       
       setDailyTimes(zmanim_with_next);

@@ -48,8 +48,8 @@ export function useShabbatData(): ShabbatData {
           { name: 'שחרית א׳', time: '06:45' },
           { name: 'שחרית ב׳', time: '08:30' },
           { name: 'מנחה גדולה', time: '12:30' },
-          { name: 'מנחה', time: '19:15' },
-          { name: 'ערבית מוצ״ש', time: '20:15' }
+          { name: 'מנחה', time: '18:35' }, // One hour before havdalah, rounded down to nearest 5 minutes
+          { name: 'ערבית מוצ״ש', time: '19:35' } // Same as havdalah time
         ];
         
         setShabbatData({
@@ -66,7 +66,16 @@ export function useShabbatData(): ShabbatData {
       
       // Calculate Shabbat times
       const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
-      const shabbatMinchaTime = calculateShabbatMinchaTime(shabbat.havdalah);
+      
+      // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
+      const havdalahTime = shabbat.havdalah || '19:35';
+      const [havdalahHours, havdalahMinutes] = havdalahTime.split(':').map(Number);
+      const havdalahTotalMinutes = havdalahHours * 60 + havdalahMinutes;
+      const minchaTotalMinutes = havdalahTotalMinutes - 60; // One hour before havdalah
+      const roundedMinchaMinutes = Math.floor(minchaTotalMinutes / 5) * 5; // Round down to nearest 5 minutes
+      const minchaHours = Math.floor(roundedMinchaMinutes / 60);
+      const minchaMinutes = roundedMinchaMinutes % 60;
+      const shabbatMinchaTime = `${String(minchaHours).padStart(2, '0')}:${String(minchaMinutes).padStart(2, '0')}`;
       
       // Set Shabbat subtitle
       let subtitle = shabbat.parashatHebrew || 'פרשת השבוע';
@@ -82,7 +91,7 @@ export function useShabbatData(): ShabbatData {
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
         { name: 'מנחה', time: shabbatMinchaTime },
-        { name: 'ערבית מוצ״ש', time: shabbat.havdalah }
+        { name: 'ערבית מוצ״ש', time: shabbat.havdalah } // Arvit at Havdalah time
       ];
       
       // Set Shabbat classes (empty for now)
@@ -107,7 +116,7 @@ export function useShabbatData(): ShabbatData {
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
-        { name: 'מנחה', time: '19:15' },
+        { name: 'מנחה', time: '18:35' },
         { name: 'ערבית מוצ״ש', time: '19:35' }
       ];
       
