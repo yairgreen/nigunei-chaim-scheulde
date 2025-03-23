@@ -24,7 +24,7 @@ export function useScheduleData(): ScheduleData {
         console.log('Loading initial data...');
         await initDatabase();
         
-        // Add a delay to ensure all hooks have their data
+        // Set dataLoaded to true to display the UI
         setTimeout(() => {
           console.log('Data loaded successfully');
           setDataLoaded(true);
