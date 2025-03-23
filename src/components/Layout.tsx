@@ -4,14 +4,28 @@ import { Link } from 'react-router-dom';
 import Footer from './Footer';
 import { Button } from './ui/button';
 import { User, Calendar } from 'lucide-react';
-import { useUser } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isSignedIn } = useUser();
+  // Safely check if Clerk is available
+  let isSignedIn = false;
+  
+  try {
+    // Only try to use Clerk if it's available in the window object
+    // @ts-ignore - we're checking if Clerk exists on window
+    if (typeof window.Clerk !== 'undefined') {
+      // Only import useUser if Clerk is available
+      const { useUser } = require('@clerk/clerk-react');
+      const userHook = useUser();
+      isSignedIn = userHook.isSignedIn;
+    }
+  } catch (error) {
+    console.error("Error using Clerk hooks in Layout:", error);
+    isSignedIn = false;
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50" dir="rtl">
