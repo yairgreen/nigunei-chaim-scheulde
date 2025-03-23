@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ClerkProvider } from "@clerk/clerk-react";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
@@ -16,37 +17,51 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [isClerkAvailable, setIsClerkAvailable] = useState<boolean | null>(null);
+  const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
   
   useEffect(() => {
-    // Check if Clerk is available by checking if window.Clerk exists
-    const checkClerk = async () => {
-      try {
-        // @ts-ignore - we're checking if Clerk exists on window
-        const hasClerk = typeof window.Clerk !== 'undefined';
-        setIsClerkAvailable(hasClerk);
-      } catch (error) {
-        console.error("Error checking Clerk availability:", error);
-        setIsClerkAvailable(false);
-      }
-    };
-    
-    checkClerk();
-  }, []);
+    // Check if Clerk publishable key is available
+    setIsClerkAvailable(!!publishableKey);
+  }, [publishableKey]);
+
+  const renderWithClerk = () => (
+    <ClerkProvider 
+      publishableKey={publishableKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-in"
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
+    >
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/simulation" element={<Simulation />} />
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ClerkProvider>
+  );
+
+  const renderWithoutClerk = () => (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/simulation" element={<Simulation />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/simulation" element={<Simulation />} />
-            <Route path="/sign-in" element={<SignIn />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        {isClerkAvailable ? renderWithClerk() : renderWithoutClerk()}
       </TooltipProvider>
     </QueryClientProvider>
   );

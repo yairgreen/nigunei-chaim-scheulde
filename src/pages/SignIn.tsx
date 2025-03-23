@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { AlertCircle } from 'lucide-react';
 
 const SignIn = () => {
   const [isClerkAvailable, setIsClerkAvailable] = useState<boolean | null>(null);
@@ -14,14 +15,13 @@ const SignIn = () => {
   useEffect(() => {
     // Check if Clerk is available
     try {
-      // @ts-ignore - we're checking if Clerk exists on window
-      const hasClerk = typeof window.Clerk !== 'undefined';
-      setIsClerkAvailable(hasClerk);
+      const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+      setIsClerkAvailable(!!publishableKey);
       
-      if (!hasClerk) {
+      if (!publishableKey) {
         toast({
           title: "התראת התחברות",
-          description: "מערכת ההתחברות אינה זמינה כרגע. יש להגדיר מפתח Clerk תקין.",
+          description: "מערכת ההתחברות אינה זמינה כרגע. נדרש מפתח Clerk תקין.",
           variant: "destructive",
         });
       }
@@ -36,7 +36,7 @@ const SignIn = () => {
       title: "כניסה במצב דמו",
       description: "נכנסת במצב דמו. חלק מהתכונות לא יהיו זמינות.",
     });
-    navigate('/admin');
+    navigate('/');
   };
 
   return (
@@ -46,8 +46,7 @@ const SignIn = () => {
         
         {isClerkAvailable ? (
           <ClerkSignIn 
-            signUpUrl="/"
-            redirectUrl="/admin"
+            redirectUrl="/"
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
@@ -60,9 +59,19 @@ const SignIn = () => {
           />
         ) : (
           <div className="bg-white shadow-md p-6 rounded-xl text-center">
-            <p className="mb-4 text-red-600">מערכת ההתחברות אינה זמינה כרגע</p>
-            <p className="mb-6 text-gray-600">יש להגדיר את המשתנה הסביבתי VITE_CLERK_PUBLISHABLE_KEY עם מפתח תקין מ-Clerk</p>
-            <Button onClick={handleDemoLogin}>כניסה במצב דמו</Button>
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="text-red-500 h-12 w-12" />
+            </div>
+            <p className="mb-4 text-red-600 font-medium">מערכת ההתחברות אינה זמינה כרגע</p>
+            <p className="mb-6 text-gray-600">
+              יש להגדיר את המשתנה הסביבתי VITE_CLERK_PUBLISHABLE_KEY עם מפתח תקין מ-Clerk
+            </p>
+            <div className="flex flex-col gap-4">
+              <Button onClick={handleDemoLogin}>כניסה במצב דמו</Button>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                חזרה לדף הראשי
+              </Button>
+            </div>
           </div>
         )}
       </div>
