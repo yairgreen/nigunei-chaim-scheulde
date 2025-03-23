@@ -1,83 +1,28 @@
 
 import { useState, useEffect } from 'react';
-import { useScheduleData } from '@/hooks/useScheduleData';
+import { usePrayersState, PrayerItem } from './usePrayersState';
+import { useClassesState, ClassItem } from './useClassesState';
+import { useShabbatState, ShabbatTimes } from './useShabbatState';
 
-export interface PrayerItem {
-  name: string;
-  time: string;
-}
-
-export interface ClassItem {
-  name: string;
-  time: string;
-}
-
-export interface ShabbatTimes {
-  candlesPT: string;
-  candlesTA: string;
-  havdala: string;
-}
+export { PrayerItem, ClassItem, ShabbatTimes };
 
 export function useAdminState() {
   const [isDemoMode, setIsDemoMode] = useState(true);
-  const { dailyPrayers, dailyClasses, shabbatData } = useScheduleData();
   
-  const [prayers, setPrayers] = useState<PrayerItem[]>([]);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [shabbatPrayers, setShabbatPrayers] = useState<PrayerItem[]>([]);
-  const [shabbatTimes, setShabbatTimes] = useState<ShabbatTimes>({
-    candlesPT: '',
-    candlesTA: '',
-    havdala: ''
-  });
+  // Use our specialized hooks
+  const { prayers, handleUpdatePrayerTime } = usePrayersState();
+  const { classes, handleUpdateClassName, handleUpdateClassTime } = useClassesState();
+  const { 
+    shabbatPrayers, 
+    shabbatTimes, 
+    setShabbatTimes, 
+    handleUpdateShabbatPrayerTime 
+  } = useShabbatState();
   
   useEffect(() => {
-    // Always use demo mode now that we removed Clerk
+    // Always use demo mode
     setIsDemoMode(true);
   }, []);
-  
-  useEffect(() => {
-    if (dailyPrayers.length) {
-      setPrayers([...dailyPrayers]);
-    }
-    
-    if (dailyClasses.length) {
-      setClasses([...dailyClasses]);
-    }
-    
-    if (shabbatData.prayers.length) {
-      setShabbatPrayers([...shabbatData.prayers]);
-      setShabbatTimes({
-        candlesPT: shabbatData.candlesPT,
-        candlesTA: shabbatData.candlesTA,
-        havdala: shabbatData.havdala
-      });
-    }
-  }, [dailyPrayers, dailyClasses, shabbatData]);
-  
-  const handleUpdatePrayerTime = (index: number, time: string) => {
-    const newPrayers = [...prayers];
-    newPrayers[index].time = time;
-    setPrayers(newPrayers);
-  };
-  
-  const handleUpdateClassName = (index: number, name: string) => {
-    const newClasses = [...classes];
-    newClasses[index].name = name;
-    setClasses(newClasses);
-  };
-  
-  const handleUpdateClassTime = (index: number, time: string) => {
-    const newClasses = [...classes];
-    newClasses[index].time = time;
-    setClasses(newClasses);
-  };
-  
-  const handleUpdateShabbatPrayerTime = (index: number, time: string) => {
-    const newPrayers = [...shabbatPrayers];
-    newPrayers[index].time = time;
-    setShabbatPrayers(newPrayers);
-  };
   
   return {
     isDemoMode,
