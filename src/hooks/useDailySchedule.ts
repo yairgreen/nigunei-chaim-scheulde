@@ -3,10 +3,8 @@ import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
   getZmanimDatabase,
-  calculateWeeklyMinchaTime,
-  calculateWeeklyArvitTime,
   recalculatePrayerTimes
-} from '@/lib/database';
+} from '@/lib/database/index';
 import { format } from 'date-fns';
 
 export interface DailyScheduleData {
