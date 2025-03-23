@@ -11,7 +11,7 @@ const Index = () => {
   const { dataLoaded, hebrewDate, gregorianDate } = scheduleData;
 
   return (
-    <Layout>
+    <Layout hideLogin={true}>
       <Header 
         shabbatName='לוח זמנים - בית כנסת "ניגוני חיים"'
         hebrewDate={hebrewDate}

@@ -21,7 +21,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ date, setDate }) => {
   };
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+    <>
       <h2 className="text-xl font-medium mb-4">בחר תאריך לסימולציה</h2>
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
         <Popover>
@@ -69,7 +69,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({ date, setDate }) => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

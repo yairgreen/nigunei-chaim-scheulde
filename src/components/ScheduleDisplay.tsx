@@ -14,7 +14,8 @@ const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({
   dailyClasses,
   shabbatData,
   isRoshChodesh,
-  hebrewDate
+  hebrewDate,
+  currentDate
 }) => {
   const isMobile = useIsMobile();
   
