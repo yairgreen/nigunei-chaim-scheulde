@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUser, useAuth, SignOutButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +28,9 @@ const Admin = () => {
   } catch (error) {
     console.error("Error using Clerk hooks:", error);
     // Instead of direct assignment, use the state setter
-    setIsClerkAvailable(false);
+    if (isClerkAvailable !== false) {
+      setIsClerkAvailable(false);
+    }
   }
   
   const { toast } = useToast();
@@ -126,20 +127,28 @@ const Admin = () => {
     });
   };
   
+  // Fix conditional navigation to use useEffect
+  useEffect(() => {
+    if (isClerkAvailable === true && isLoaded === true && !isSignedIn && !isDemoMode) {
+      navigate('/sign-in');
+    }
+    
+    if (isClerkAvailable === true && isLoaded === true && !isDemoMode && !user?.emailAddresses.some(email => 
+      ADMIN_EMAILS.includes(email.emailAddress))) {
+      navigate('/');
+    }
+  }, [isClerkAvailable, isLoaded, isSignedIn, isDemoMode, user, navigate]);
+  
   if (isClerkAvailable && !isLoaded) {
     return <div className="text-center py-12">טוען...</div>;
   }
   
-  if (isClerkAvailable && isLoaded && !isSignedIn && !isDemoMode) {
-    navigate('/sign-in');
-    return null;
-  }
-  
+  // Remove direct navigation calls that were causing infinite renders
   const isAuthorized = isDemoMode || (isClerkAvailable && user?.emailAddresses.some(email => 
     ADMIN_EMAILS.includes(email.emailAddress)));
     
   if (!isAuthorized) {
-    navigate('/');
+    // Instead of directly calling navigate here, we handle this in useEffect above
     return null;
   }
   
@@ -274,8 +283,22 @@ const Admin = () => {
         <div className="mt-12 border-t pt-8">
           <h2 className="text-xl font-medium mb-4">קישורים מהירים</h2>
           <div className="flex flex-wrap gap-4">
-            <Button variant="outline" onClick={() => navigate('/')}>לדף הראשי</Button>
-            <Button variant="outline" onClick={() => navigate('/simulation')}>לדף סימולציה</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                navigate('/');
+              }}
+            >
+              לדף הראשי
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                navigate('/simulation');
+              }}
+            >
+              לדף סימולציה
+            </Button>
           </div>
         </div>
       </div>
