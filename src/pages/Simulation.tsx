@@ -3,6 +3,7 @@ import Layout from '@/components/Layout';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import Header from '@/components/Header';
 import TimeSelector from '@/components/simulation/TimeSelector';
+import DatabaseViewer from '@/components/simulation/DatabaseViewer';
 import { useSimulationData, runSimulationTests, getDatabaseContent } from '@/hooks/simulation';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ const Simulation = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [appliedDate, setAppliedDate] = useState<Date>(new Date());
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [showDatabase, setShowDatabase] = useState(false);
   const [testResults, setTestResults] = useState<string | null>(null);
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   
@@ -157,11 +159,19 @@ const Simulation = () => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
+              onClick={() => setShowDatabase(!showDatabase)}
               className="text-sm flex items-center gap-2"
             >
               <Database className="h-4 w-4" />
-              {showDebugInfo ? 'הסתר מידע' : 'הצג מידע מה-database'}
+              {showDatabase ? 'הסתר database' : 'הצג מסד נתונים מלא'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDebugInfo(!showDebugInfo)}
+              className="text-sm flex items-center gap-2"
+            >
+              <AlertCircle className="h-4 w-4" />
+              {showDebugInfo ? 'הסתר מידע דיבאג' : 'הצג מידע דיבאג'}
             </Button>
           </div>
         </div>
@@ -179,6 +189,9 @@ const Simulation = () => {
             </AlertDescription>
           </Alert>
         )}
+        
+        {/* Database Viewer Component */}
+        {showDatabase && <DatabaseViewer />}
         
         {showDebugInfo && (
           <div className="bg-gray-50 p-4 rounded-lg mb-8 border border-gray-200 overflow-auto max-h-96 text-right">
