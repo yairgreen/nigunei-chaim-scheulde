@@ -61,6 +61,9 @@ const processSingleDayZmanim = (data: any, date: string): ZmanimData | null => {
     const times = data.times;
     if (!times) return null;
     
+    // Use tzeit7083deg for tzet if available, otherwise use beinHaShmashos
+    const tzeitTime = times.tzeit7083deg?.[date] || times.beinHaShmashos?.[date] || '';
+    
     return {
       date,
       alotHaShachar: formatTime(times.alotHaShachar?.[date] || ''),
@@ -74,7 +77,7 @@ const processSingleDayZmanim = (data: any, date: string): ZmanimData | null => {
       minchaGedola: formatTime(times.minchaGedola?.[date] || ''),
       plagHaMincha: formatTime(times.plagHaMincha?.[date] || ''),
       sunset: formatTime(times.sunset?.[date] || ''),
-      beinHaShmashos: formatTime(times.tzeit?.[date] || times.beinHaShmashos?.[date] || '')
+      beinHaShmashos: formatTime(tzeitTime)
     };
   } catch (error) {
     console.error('Error processing single day zmanim data:', error);
@@ -93,6 +96,9 @@ const processZmanimData = (data: any): ZmanimData[] => {
   
   for (const date of dates) {
     try {
+      // Use tzeit7083deg for tzet if available, otherwise use beinHaShmashos
+      const tzeitTime = times.tzeit7083deg?.[date] || times.beinHaShmashos?.[date] || '';
+      
       processed.push({
         date,
         alotHaShachar: formatTime(times.alotHaShachar?.[date] || ''),
@@ -106,7 +112,7 @@ const processZmanimData = (data: any): ZmanimData[] => {
         minchaGedola: formatTime(times.minchaGedola?.[date] || ''),
         plagHaMincha: formatTime(times.plagHaMincha?.[date] || ''),
         sunset: formatTime(times.sunset?.[date] || ''),
-        beinHaShmashos: formatTime(times.tzeit?.[date] || times.beinHaShmashos?.[date] || '')
+        beinHaShmashos: formatTime(tzeitTime)
       });
     } catch (error) {
       console.error(`Error processing zmanim for date ${date}:`, error);

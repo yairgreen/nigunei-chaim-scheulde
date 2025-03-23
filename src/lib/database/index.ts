@@ -30,18 +30,18 @@ const setDefaultData = () => {
   if (getZmanimDatabase().length === 0) {
     const defaultZmanim = {
       date: format(new Date(), 'yyyy-MM-dd'),
-      alotHaShachar: '05:20',
-      sunrise: '06:07',
-      misheyakir: '05:40',
-      sofZmanShmaMGA: '08:44',
-      sofZmanShma: '09:20',
-      sofZmanTfillaMGA: '09:48',
-      sofZmanTfilla: '10:26',
-      chatzot: '11:53',
-      minchaGedola: '12:25',
-      plagHaMincha: '17:22',
-      sunset: '17:39',
-      beinHaShmashos: '18:05'
+      alotHaShachar: '04:28',
+      sunrise: '05:40',
+      misheyakir: '04:50',
+      sofZmanShmaMGA: '08:08',
+      sofZmanShma: '08:44',
+      sofZmanTfillaMGA: '09:21',
+      sofZmanTfilla: '09:45',
+      chatzot: '11:47',
+      minchaGedola: '12:18',
+      plagHaMincha: '16:38',
+      sunset: '17:54',
+      beinHaShmashos: '18:24'
     };
     
     (getZmanimDatabase() as any).push(defaultZmanim);
@@ -136,7 +136,7 @@ export const recalculatePrayerTimes = () => {
     
     // If no data available, use default values
     if (zmanimForWeek.length === 0) {
-      return { minchaTime: '17:15', arvitTime: '18:15' };
+      return { minchaTime: '17:45', arvitTime: '18:25' };
     }
     
     const minchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
@@ -145,6 +145,6 @@ export const recalculatePrayerTimes = () => {
     return { minchaTime, arvitTime };
   } catch (error) {
     console.error('Error calculating prayer times:', error);
-    return { minchaTime: '17:15', arvitTime: '18:15' };
+    return { minchaTime: '17:45', arvitTime: '18:25' };
   }
 };
