@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useUser, useAuth, SignOutButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,8 @@ const Admin = () => {
     }
   } catch (error) {
     console.error("Error using Clerk hooks:", error);
-    isClerkAvailable = false;
+    // Instead of direct assignment, use the state setter
+    setIsClerkAvailable(false);
   }
   
   const { toast } = useToast();
