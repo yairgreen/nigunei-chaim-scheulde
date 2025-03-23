@@ -4,7 +4,8 @@ import { usePrayersState, PrayerItem } from './usePrayersState';
 import { useClassesState, ClassItem } from './useClassesState';
 import { useShabbatState, ShabbatTimes } from './useShabbatState';
 
-export { PrayerItem, ClassItem, ShabbatTimes };
+// Use 'export type' for type-only exports
+export type { PrayerItem, ClassItem, ShabbatTimes };
 
 export function useAdminState() {
   const [isDemoMode, setIsDemoMode] = useState(true);
