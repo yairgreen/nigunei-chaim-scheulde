@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { simulateHebrewDate } from './hebrewDateSimulation';
+import { simulateHebrewDate, fetchRealHebrewDate } from './hebrewDateSimulation';
 import { simulateZmanimData } from './zmanimSimulation';
 import { simulatePrayerTimes } from './prayerSimulation';
 import { simulateShabbatData } from './shabbatSimulation';
@@ -24,6 +24,12 @@ export interface SimulationData {
   simulatedGregorianDate: string;
 }
 
+/**
+ * Hook to simulate schedule data for a given date
+ * 
+ * @param date - The date to simulate data for
+ * @returns Simulated data for the selected date
+ */
 export function useSimulationData(date: Date): SimulationData {
   const { dailyTimes, dailyPrayers, dailyClasses, shabbatData } = useScheduleData();
   const [simulatedDailyTimes, setSimulatedDailyTimes] = useState(dailyTimes);
@@ -38,15 +44,22 @@ export function useSimulationData(date: Date): SimulationData {
       console.log("Simulating data for date:", date);
       simulateDataForDate(date);
     }
-  }, [date]); // Only react to changes in date, not shabbatData
+  }, [date, shabbatData]); // Also react to changes in shabbatData
 
-  const simulateDataForDate = (selectedDate: Date) => {
+  const simulateDataForDate = async (selectedDate: Date) => {
     if (!selectedDate) return;
     
-    // Update Hebrew date based on selected date
-    const hebrewDate = simulateHebrewDate(selectedDate);
-    setSimulatedHebrewDate(hebrewDate);
-    console.log("Simulated Hebrew date:", hebrewDate);
+    try {
+      // First, try to get the real Hebrew date from the API
+      const hebrewDate = await fetchRealHebrewDate(selectedDate);
+      setSimulatedHebrewDate(hebrewDate);
+      console.log("Real Hebrew date from API:", hebrewDate);
+    } catch (error) {
+      // If API call fails, fall back to simulated date
+      const fallbackHebrewDate = simulateHebrewDate(selectedDate);
+      setSimulatedHebrewDate(fallbackHebrewDate);
+      console.log("Fallback Hebrew date (simulated):", fallbackHebrewDate);
+    }
     
     // Format Gregorian date properly in dd/mm/yyyy format
     const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -80,3 +93,24 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedGregorianDate
   };
 }
+
+// Helper function to run tests for the simulation
+export const runSimulationTests = () => {
+  console.log("Running simulation tests...");
+  
+  // Test simulation for different days of the week
+  const testDates = [
+    new Date(2025, 2, 23), // Sunday
+    new Date(2025, 2, 25), // Tuesday
+    new Date(2025, 2, 28), // Friday
+    new Date(2025, 2, 29), // Saturday
+  ];
+  
+  testDates.forEach(date => {
+    console.log(`Testing simulation for ${date.toDateString()}`);
+    console.log(`Day of week: ${date.getDay()}`);
+    console.log(`Expected Hebrew date: ${simulateHebrewDate(date)}`);
+    // Additional test logic can be added here
+  });
+};
+

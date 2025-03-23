@@ -1,9 +1,57 @@
 
 /**
- * Functions for simulating Hebrew date data
+ * Functions for simulating and validating Hebrew date data
  */
 
-// Generate a Hebrew date based on the selected date
+// API function to fetch the real Hebrew date for a given Gregorian date
+export const fetchRealHebrewDate = async (gregorianDate: Date): Promise<string> => {
+  try {
+    // Format the date as YYYY-MM-DD for API
+    const year = gregorianDate.getFullYear();
+    const month = String(gregorianDate.getMonth() + 1).padStart(2, '0');
+    const day = String(gregorianDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    // Build the URL for the Hebcal API
+    const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&start=${formattedDate}&end=${formattedDate}&c=on&ss=on&mf=on&c=on&b=40&d=on&geo=geoname&geonameid=293918&M=on&s=on`;
+    
+    console.log(`Fetching Hebrew date from: ${url}`);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Hebrew date: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("Received Hebrew date data:", data);
+    
+    // Extract the Hebrew date from the response
+    if (data.items && data.items.length > 0) {
+      // Find the Hebrew date item
+      const hebrewDateItem = data.items.find((item: any) => item.category === 'hebdate');
+      
+      if (hebrewDateItem && hebrewDateItem.hebrew) {
+        return hebrewDateItem.hebrew;
+      }
+    }
+    
+    // If extraction fails, fall back to the simulated date
+    throw new Error("Could not extract Hebrew date from API response");
+  } catch (error) {
+    console.error("Error fetching real Hebrew date:", error);
+    // Fall back to simulated date
+    return simulateHebrewDate(gregorianDate);
+  }
+};
+
+/**
+ * Generates a simulated Hebrew date based on the selected Gregorian date
+ * This is a fallback when the API request fails
+ * 
+ * @param selectedDate - The Gregorian date for which to simulate a Hebrew date
+ * @returns A formatted Hebrew date string
+ */
 export const simulateHebrewDate = (selectedDate: Date): string => {
   // This is a simplified algorithm - in a real app, this would use a proper Hebrew calendar library
   const day = selectedDate.getDate();
@@ -70,3 +118,28 @@ const getHebrewYearLastLetter = (year: number): string => {
   const hebrewLastDigits = ['ה', 'ו', 'ז', 'ח', 'ט'];
   return hebrewLastDigits[lastDigit - 5] || 'ה';
 };
+
+/**
+ * Unit tests for Hebrew date simulation
+ * These are simple validation tests that can be run in the console
+ */
+export const runHebrewDateTests = () => {
+  const testCases = [
+    { date: new Date(2025, 2, 23), expected: "כ״ג אדר תשפ״ה" }, // March 23, 2025
+    { date: new Date(2025, 2, 25), expected: "כ״ה אדר תשפ״ה" }, // March 25, 2025
+    { date: new Date(2025, 8, 25), expected: "כ״ה אלול תשפ״ה" }, // September 25, 2025
+    { date: new Date(2025, 9, 5), expected: "ה תשרי תשפ״ו" },   // October 5, 2025 - New Hebrew year
+  ];
+  
+  console.log("Running Hebrew date simulation tests:");
+  testCases.forEach((test, index) => {
+    const result = simulateHebrewDate(test.date);
+    const passed = result === test.expected;
+    console.log(`Test ${index + 1}: ${passed ? 'PASSED' : 'FAILED'} - Date: ${test.date.toLocaleDateString()}`);
+    console.log(`  Expected: ${test.expected}`);
+    console.log(`  Actual: ${result}`);
+  });
+  
+  console.log("Note: These are simplified tests. For accurate Hebrew dates, the API should be used.");
+};
+
