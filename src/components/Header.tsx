@@ -19,7 +19,11 @@ const Header: React.FC<HeaderProps> = ({
     <div className="mb-8">
       <div className="flex justify-between items-start mb-6">
         <div className="text-sm font-serif">בס״ד</div>
-        <img src="/logo.png" alt="ניגוני חיים" className="h-12" />
+        <img 
+          src="/lovable-uploads/6276adff-5e29-461c-b4e3-b7c42147ebc6.png" 
+          alt="ניגוני חיים" 
+          className="h-12" 
+        />
       </div>
       
       <header className={cn('text-center py-8 animate-fade-in-up', className)}>
