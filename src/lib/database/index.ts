@@ -23,7 +23,6 @@ export {
   calculateShabbatKabalatTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
-export { recalculatePrayerTimes } from './index';
 
 // Initialize the database
 export const initDatabase = async () => {
