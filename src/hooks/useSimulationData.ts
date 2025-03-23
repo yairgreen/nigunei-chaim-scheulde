@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
 import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from '@/lib/database/prayers';
 import { useScheduleData } from '@/hooks/useScheduleData';
@@ -23,21 +22,73 @@ interface SimulationData {
 }
 
 export function useSimulationData(date: Date): SimulationData {
-  const { dailyTimes, dailyPrayers, dailyClasses, shabbatData, isRoshChodesh } = useScheduleData();
+  const { dailyTimes, dailyPrayers, dailyClasses, shabbatData } = useScheduleData();
   const [simulatedDailyTimes, setSimulatedDailyTimes] = useState(dailyTimes);
   const [simulatedDailyPrayers, setSimulatedDailyPrayers] = useState(dailyPrayers);
   const [simulatedShabbatData, setSimulatedShabbatData] = useState(shabbatData);
-
-  // Simulated Hebrew date - this would come from an API in a real implementation
-  const simulatedHebrewDate = "כ״ג אדר תשפ״ה";
-  const simulatedGregorianDate = format(date, 'dd/MM/yyyy');
+  const [simulatedHebrewDate, setSimulatedHebrewDate] = useState<string>("");
+  const [simulatedGregorianDate, setSimulatedGregorianDate] = useState<string>("");
 
   useEffect(() => {
     // Update the simulated data when the date changes
     simulateDataForDate(date);
-  }, [date]);
+  }, [date]); // Important: react to changes in date
 
   const simulateDataForDate = (selectedDate: Date) => {
+    // Update Hebrew date based on selected date
+    setSimulatedHebrewDate(generateHebrewDate(selectedDate));
+    setSimulatedGregorianDate(format(selectedDate, 'dd/MM/yyyy'));
+    
+    simulateZmanimData(selectedDate);
+    simulatePrayerTimes(selectedDate);
+    simulateShabbatData(selectedDate);
+  };
+  
+  // Generate a Hebrew date based on the selected date (simplified simulation)
+  const generateHebrewDate = (selectedDate: Date): string => {
+    // This is a simplified algorithm - in a real app, this would use a proper Hebrew calendar library
+    const day = selectedDate.getDate();
+    const month = selectedDate.getMonth();
+    const year = selectedDate.getFullYear();
+    
+    // Hebrew month names (simplified)
+    const hebrewMonths = [
+      'ניסן', 'אייר', 'סיון', 'תמוז', 'אב', 'אלול',
+      'תשרי', 'חשון', 'כסלו', 'טבת', 'שבט', 'אדר'
+    ];
+    
+    // Determine Hebrew month based on Gregorian date (very simplified)
+    // In reality, this requires complex calculations with the Hebrew calendar
+    let hebrewMonth = (month + 1) % 12; // Shift by 1 for simplified Hebrew months
+    let hebrewDay = ((day + 10) % 29) + 1; // Simplified simulation
+    let hebrewYear = year + 3761; // Simplified Hebrew year
+    
+    // Format the Hebrew date (this is a very simplified representation)
+    // Hebrew dates use different formats for different day numbers
+    let hebrewDayStr;
+    if (hebrewDay === 15 || hebrewDay === 16) {
+      hebrewDayStr = 'ט״ו';
+    } else if (hebrewDay > 10 && hebrewDay < 20) {
+      hebrewDayStr = 'י״' + getHebrewDayChar(hebrewDay - 10);
+    } else if (hebrewDay === 20) {
+      hebrewDayStr = 'כ׳';
+    } else if (hebrewDay > 20) {
+      hebrewDayStr = 'כ״' + getHebrewDayChar(hebrewDay - 20);
+    } else {
+      hebrewDayStr = getHebrewDayChar(hebrewDay);
+    }
+    
+    return `${hebrewDayStr} ${hebrewMonths[hebrewMonth]} תשפ״ה`;
+  };
+  
+  // Helper to convert digit to Hebrew character
+  const getHebrewDayChar = (digit: number): string => {
+    const hebrewChars = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+    return hebrewChars[digit - 1] || '';
+  };
+  
+  // Simulate zmanim data based on the selected date
+  const simulateZmanimData = (selectedDate: Date) => {
     const zmanimDatabase = getZmanimDatabase();
     const formattedDate = format(selectedDate, 'yyyy-MM-dd');
     
@@ -46,6 +97,7 @@ export function useSimulationData(date: Date): SimulationData {
     
     // Simulate daily times
     if (selectedDateZmanim) {
+      // Use actual data from the database if available
       const simulatedTimes = [
         { name: 'עלות השחר (72 ד\')', time: selectedDateZmanim.alotHaShachar },
         { name: 'הנץ החמה', time: selectedDateZmanim.sunrise },
@@ -62,8 +114,7 @@ export function useSimulationData(date: Date): SimulationData {
       ];
       setSimulatedDailyTimes(simulatedTimes);
     } else {
-      // If no zmanim data is found for this date, use default values with adjustments
-      // These values are just for simulation purposes
+      // Generate simulated times if no zmanim data is found
       const day = selectedDate.getDate();
       const month = selectedDate.getMonth();
       
@@ -80,27 +131,29 @@ export function useSimulationData(date: Date): SimulationData {
         sunsetHour = 16 + (Math.floor(day / 15) % 2); // Varies between 16 and 17
       }
       
-      // Fix: Use string formatting for single digit minutes to avoid octal interpretation
+      // Format times with leading zeros
+      const formatTimeWithLeadingZeros = (hour: number, minute: number): string => {
+        return `${hour < 10 ? '0' + hour : hour}:${minute < 10 ? '0' + minute : minute}`;
+      };
+      
+      // Create simulated times with proper formatting
       const simulatedTimes = [
-        { name: 'עלות השחר (72 ד\')', time: `0${sunriseHour - 1}:${30 + (day % 20)}` },
-        { name: 'הנץ החמה', time: `0${sunriseHour}:${40 + (day % 20)}` },
-        { name: 'זמן טלית ותפילין', time: `0${sunriseHour - 1}:${50 + (day % 10)}` },
-        { name: 'סוף זמן ק"ש (מג״א)', time: `0${sunriseHour + 2}:${10 + (day % 15)}` },
-        { name: 'סוף זמן ק"ש (גר״א)', time: `0${sunriseHour + 3}:${5 + (day % 15)}` }, 
-        { name: 'סוף זמן תפילה (מג״א)', time: `0${sunriseHour + 3}:${40 + (day % 10)}` },
-        { name: 'סוף זמן תפילה (גר"א)', time: `0${sunriseHour + 4}:${5 + (day % 10)}` },
-        { name: 'חצות היום והלילה', time: `${11 + (day % 2)}:${45 + (day % 5)}` },
-        { name: 'זמן מנחה גדולה', time: `${12 + (day % 2)}:${15 + (day % 5)}` },
-        { name: 'פלג המנחה', time: `${sunsetHour - 2}:${30 + (day % 10)}` },
-        { name: 'שקיעה', time: `${sunsetHour}:${50 + (day % 10)}` },
-        { name: 'צאת הכוכבים', time: `${sunsetHour + 1}:${20 + (day % 5)}` }
+        { name: 'עלות השחר (72 ד\')', time: formatTimeWithLeadingZeros(sunriseHour - 1, 30 + (day % 20)) },
+        { name: 'הנץ החמה', time: formatTimeWithLeadingZeros(sunriseHour, 40 + (day % 20)) },
+        { name: 'זמן טלית ותפילין', time: formatTimeWithLeadingZeros(sunriseHour - 1, 50 + (day % 10)) },
+        { name: 'סוף זמן ק"ש (מג״א)', time: formatTimeWithLeadingZeros(sunriseHour + 2, 10 + (day % 15)) },
+        { name: 'סוף זמן ק"ש (גר״א)', time: formatTimeWithLeadingZeros(sunriseHour + 3, 5 + (day % 15)) }, 
+        { name: 'סוף זמן תפילה (מג״א)', time: formatTimeWithLeadingZeros(sunriseHour + 3, 40 + (day % 10)) },
+        { name: 'סוף זמן תפילה (גר"א)', time: formatTimeWithLeadingZeros(sunriseHour + 4, 5 + (day % 10)) },
+        { name: 'חצות היום והלילה', time: formatTimeWithLeadingZeros(11 + (day % 2), 45 + (day % 5)) },
+        { name: 'זמן מנחה גדולה', time: formatTimeWithLeadingZeros(12 + (day % 2), 15 + (day % 5)) },
+        { name: 'פלג המנחה', time: formatTimeWithLeadingZeros(sunsetHour - 2, 30 + (day % 10)) },
+        { name: 'שקיעה', time: formatTimeWithLeadingZeros(sunsetHour, 50 + (day % 10)) },
+        { name: 'צאת הכוכבים', time: formatTimeWithLeadingZeros(sunsetHour + 1, 20 + (day % 5)) }
       ];
       
       setSimulatedDailyTimes(simulatedTimes);
     }
-    
-    simulatePrayerTimes(selectedDate);
-    simulateShabbatData(selectedDate);
   };
   
   const simulatePrayerTimes = (selectedDate: Date) => {

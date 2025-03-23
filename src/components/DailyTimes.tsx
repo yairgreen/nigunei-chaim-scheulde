@@ -37,6 +37,29 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
     hour12: false
   });
   
+  // Find the next time item
+  useEffect(() => {
+    const updateNextTime = () => {
+      // Reset all isNext flags
+      times.forEach(item => {
+        if ('isNext' in item) {
+          delete item.isNext;
+        }
+      });
+      
+      // Current time in HH:MM format
+      const now = formattedTime;
+      
+      // Find the next time that hasn't passed yet
+      const nextTimeIndex = times.findIndex(item => item.time > now);
+      if (nextTimeIndex !== -1) {
+        times[nextTimeIndex].isNext = true;
+      }
+    };
+    
+    updateNextTime();
+  }, [times, formattedTime]);
+  
   return (
     <div className={cn('schedule-card bg-times animate-fade-in-up delay-200', className)}>
       <h2 className="text-2xl font-bold mb-2 text-title border-b pb-2 border-accent1/20">זמני היום</h2>
