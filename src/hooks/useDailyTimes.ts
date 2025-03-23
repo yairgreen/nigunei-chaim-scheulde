@@ -13,6 +13,7 @@ export function useDailyTimes(): DailyTimesData {
     try {
       // Get today's zmanim
       const todayZmanim = getTodayZmanim();
+      console.log('Today\'s zmanim:', todayZmanim);
       
       // If no zmanim data is available, create default data
       if (!todayZmanim) {
@@ -34,13 +35,19 @@ export function useDailyTimes(): DailyTimesData {
         return;
       }
       
-      // Format the zmanim for display
+      // Find which time is next
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      
+      // Format the zmanim for display and mark the next time
       const zmanim = [
         { name: 'עלות השחר (72 ד\')', time: todayZmanim.alotHaShachar },
         { name: 'הנץ החמה', time: todayZmanim.sunrise },
         { name: 'זמן טלית ותפילין', time: todayZmanim.misheyakir },
         { name: 'סוף זמן ק"ש (מג״א)', time: todayZmanim.sofZmanShmaMGA },
-        { name: 'סוף זמן ק"ש (גר״א)', time: todayZmanim.sofZmanShma, isNext: true },
+        { name: 'סוף זמן ק"ש (גר״א)', time: todayZmanim.sofZmanShma },
         { name: 'סוף זמן תפילה (מג״א)', time: todayZmanim.sofZmanTfillaMGA },
         { name: 'סוף זמן תפילה (גר"א)', time: todayZmanim.sofZmanTfilla },
         { name: 'חצות היום והלילה', time: todayZmanim.chatzot },
@@ -50,7 +57,25 @@ export function useDailyTimes(): DailyTimesData {
         { name: 'צאת הכוכבים', time: todayZmanim.beinHaShmashos }
       ];
       
-      setDailyTimes(zmanim);
+      // Mark which time is next
+      let foundNext = false;
+      const zmanim_with_next = zmanim.map(zman => {
+        const [hours, minutes] = zman.time.split(':').map(Number);
+        const zmanTimeInMinutes = hours * 60 + minutes;
+        
+        if (!foundNext && zmanTimeInMinutes > currentTimeInMinutes) {
+          foundNext = true;
+          return { ...zman, isNext: true };
+        }
+        return zman;
+      });
+      
+      // If no "next" time was found (all times passed), don't highlight any
+      if (!foundNext) {
+        zmanim_with_next[0].isNext = true; // Default to first time for tomorrow
+      }
+      
+      setDailyTimes(zmanim_with_next);
     } catch (error) {
       console.error('Error refreshing daily times:', error);
       
@@ -75,6 +100,13 @@ export function useDailyTimes(): DailyTimesData {
 
   useEffect(() => {
     refreshDailyTimes();
+    
+    // Refresh times every minute to update "next" time indicator
+    const refreshInterval = setInterval(() => {
+      refreshDailyTimes();
+    }, 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   return { dailyTimes };

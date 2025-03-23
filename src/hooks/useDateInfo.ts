@@ -26,20 +26,18 @@ export function useDateInfo(): DateInfo {
       
       const data = await response.json();
       
-      // Find today's date from API response
-      const todayItem = data.items?.find((item: any) => 
-        item.date.startsWith(formattedDate) && 
-        (item.category === 'parashat' || item.category === 'holiday' || item.category === 'mevarchim')
-      );
-      
-      if (todayItem && todayItem.hdate) {
-        // Extract just the date part from "DD Month YYYY" format
-        const hdateParts = todayItem.hdate.split(' ');
-        if (hdateParts.length >= 2) {
-          setHebrewDate(`${hdateParts[0]} ${hdateParts[1]} ${hdateParts[2]}`);
+      if (data.items && data.items.length > 0) {
+        // Find the Hebrew date from the items array
+        const hebrewDateItem = data.items.find((item: any) => item.category === 'hebdate');
+        
+        if (hebrewDateItem && hebrewDateItem.hebrew) {
+          setHebrewDate(hebrewDateItem.hebrew);
+        } else {
+          // Use the correct fixed date if API doesn't return the expected format
+          setHebrewDate('כ״ג אדר תשפ״ה');
         }
       } else {
-        // Use the correct fixed date if API doesn't return useful info
+        // Use the correct fixed date if API returns empty items
         setHebrewDate('כ״ג אדר תשפ״ה');
       }
       

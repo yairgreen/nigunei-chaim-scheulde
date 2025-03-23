@@ -37,8 +37,10 @@ export function useShabbatData(): ShabbatData {
       
       // Get Shabbat data
       const shabbat = getThisWeekShabbat();
+      console.log('Shabbat data:', shabbat);
       
       if (!shabbat || !todayZmanim) {
+        console.log('No Shabbat or zmanim data available, using default values');
         // Set default Shabbat data if no data is available
         const defaultPrayers = [
           { name: 'קבלת שבת מוקדמת', time: '17:30' },
@@ -52,10 +54,10 @@ export function useShabbatData(): ShabbatData {
         
         setShabbatData({
           title: 'שבת',
-          subtitle: 'שלח לך',
-          candlesPT: '19:15',
-          candlesTA: '19:10',
-          havdala: '20:15',
+          subtitle: 'פרשת פקודי | שבת החודש',
+          candlesPT: '18:17',
+          candlesTA: '18:39',
+          havdala: '19:35',
           prayers: defaultPrayers,
           classes: []
         });
@@ -89,16 +91,16 @@ export function useShabbatData(): ShabbatData {
       setShabbatData({
         title: 'שבת',
         subtitle: subtitle,
-        candlesPT: shabbat.candlesPT || '19:15',
-        candlesTA: shabbat.candlesTA || '19:10',
-        havdala: shabbat.havdalah || '20:15',
+        candlesPT: shabbat.candlesPT || '18:17',
+        candlesTA: shabbat.candlesTA || '18:39',
+        havdala: shabbat.havdalah || '19:35',
         prayers: shabbatPrayers,
         classes: shabbatClasses
       });
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
       
-      // Set default values in case of error
+      // Set default values in case of error - use actual values from API response
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
         { name: 'מנחה וקבלת שבת', time: '19:00' },
@@ -106,15 +108,15 @@ export function useShabbatData(): ShabbatData {
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
         { name: 'מנחה', time: '19:15' },
-        { name: 'ערבית מוצ״ש', time: '20:15' }
+        { name: 'ערבית מוצ״ש', time: '19:35' }
       ];
       
       setShabbatData({
         title: 'שבת',
-        subtitle: 'שלח לך',
-        candlesPT: '19:15',
-        candlesTA: '19:10',
-        havdala: '20:15',
+        subtitle: 'פרשת פקודי | שבת החודש',
+        candlesPT: '18:17',
+        candlesTA: '18:39',
+        havdala: '19:35',
         prayers: defaultPrayers,
         classes: []
       });
@@ -123,6 +125,13 @@ export function useShabbatData(): ShabbatData {
 
   useEffect(() => {
     refreshShabbatData();
+    
+    // Refresh data every hour
+    const refreshInterval = setInterval(() => {
+      refreshShabbatData();
+    }, 60 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   return { shabbatData };

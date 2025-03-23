@@ -21,10 +21,12 @@ export function useDailySchedule(): DailyScheduleData {
     try {
       // Check if today is Rosh Chodesh
       const roshChodesh = isRoshChodeshToday();
+      console.log('Is Rosh Chodesh:', roshChodesh);
       setIsRoshChodesh(roshChodesh);
       
       // Get prayer times from the updated calculation function
       const { minchaTime, arvitTime } = recalculatePrayerTimes();
+      console.log('Calculated prayer times - Mincha:', minchaTime, 'Arvit:', arvitTime);
       
       // Set daily prayers
       const prayers = [
@@ -45,7 +47,7 @@ export function useDailySchedule(): DailyScheduleData {
       const classes = [];
       
       // Daily class
-      classes.push({ name: 'שיעור הדף היומי', time: '20:00-20:45' });
+      classes.push({ name: 'שיעור הדף היומי מפי הרב דוד קלופפר', time: '20:00-20:45' });
       
       // Tuesday class
       if (dayOfWeek === 2) { // Tuesday
@@ -76,6 +78,13 @@ export function useDailySchedule(): DailyScheduleData {
 
   useEffect(() => {
     refreshDailySchedule();
+    
+    // Set up daily refresh
+    const refreshInterval = setInterval(() => {
+      refreshDailySchedule();
+    }, 60 * 60 * 1000); // Refresh every hour
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   return { dailyPrayers, dailyClasses, isRoshChodesh };

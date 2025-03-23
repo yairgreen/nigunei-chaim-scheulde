@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
             {shabbatName}
           </h1>
           <div className="space-y-1">
-            <p className="text-xl text-subtitle font-medium">{hebrewDate || 'כ״ג אדר תשפ״ה'}</p>
+            <p className="text-xl text-subtitle font-medium">{hebrewDate}</p>
             <p className="text-sm text-subtitle/80">{gregorianDate}</p>
           </div>
         </div>
