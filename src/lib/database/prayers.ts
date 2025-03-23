@@ -29,34 +29,28 @@ export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: 
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
-// Calculate arvit time based on beinHaShmashos (tzet hakochavim) times
-export const calculateWeeklyArvitTime = (zmanimForWeek: {date: string, beinHaShmashos: string}[]): string => {
+// Calculate arvit time based on sunset times (sunset + 18 minutes)
+export const calculateWeeklyArvitTime = (zmanimForWeek: {date: string, sunset: string}[]): string => {
   if (zmanimForWeek.length === 0) return "18:45"; // Fallback
   
-  // Get tzet times for each day
-  const tzetTimes = zmanimForWeek.map(item => {
-    if (!item.beinHaShmashos) return -Infinity; // Skip days without tzet data
-    const [hours, minutes] = item.beinHaShmashos.split(':').map(Number);
+  // Get sunset times for each day
+  const sunsetTimes = zmanimForWeek.map(item => {
+    if (!item.sunset) return -Infinity; // Skip days without sunset data
+    const [hours, minutes] = item.sunset.split(':').map(Number);
     return hours * 60 + minutes; // Convert to minutes
   });
   
-  // Find latest tzet
-  const latestTzetMinutes = Math.max(...tzetTimes);
+  // Find latest sunset
+  const latestSunsetMinutes = Math.max(...sunsetTimes);
   
-  // If no valid tzet times were found, return default
-  if (latestTzetMinutes === -Infinity) return "18:45";
+  // If no valid sunset times were found, return default
+  if (latestSunsetMinutes === -Infinity) return "18:45";
   
-  // Round to nearest 5 minutes according to specified rules
-  const remainder = latestTzetMinutes % 5;
-  let roundedMinutes;
+  // Add 18 minutes to represent tzet (star appearance) time
+  const arvitMinutes = latestSunsetMinutes + 18;
   
-  if (remainder <= 2) {
-    // Round down if remainder is 0, 1, or 2 minutes
-    roundedMinutes = latestTzetMinutes - remainder;
-  } else {
-    // Round up if remainder is 3 or 4 minutes
-    roundedMinutes = latestTzetMinutes + (5 - remainder);
-  }
+  // Round up to the nearest 5 minutes
+  const roundedMinutes = Math.ceil(arvitMinutes / 5) * 5;
   
   // Convert back to HH:MM format
   const hours = Math.floor(roundedMinutes / 60);
