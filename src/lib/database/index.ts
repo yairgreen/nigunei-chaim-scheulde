@@ -12,15 +12,18 @@ import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 import { format } from 'date-fns';
 
 export { formatTime } from './core';
-export { ZmanimData, getTodayZmanim } from './zmanim';
-export { HolidayData, getTodayHoliday, isRoshChodeshToday } from './holidays';
+export type { ZmanimData } from './zmanim';
+export { getTodayZmanim, getZmanimDatabase } from './zmanim';
+export type { HolidayData } from './holidays';
+export { getTodayHoliday, isRoshChodeshToday } from './holidays';
+export type { ShabbatData } from './shabbat';
 export { 
-  ShabbatData, 
   getThisWeekShabbat, 
   calculateShabbatMinchaTime, 
   calculateShabbatKabalatTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
+export { recalculatePrayerTimes } from './index';
 
 // Initialize the database
 export const initDatabase = async () => {
