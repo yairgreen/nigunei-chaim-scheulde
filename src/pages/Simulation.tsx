@@ -8,6 +8,7 @@ import { useSimulationData } from '@/hooks/simulation';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const Simulation = () => {
   // Keep track of both selected date and applied date
@@ -37,6 +38,24 @@ const Simulation = () => {
     setAppliedDate(new Date(selectedDate));
   }, []);
   
+  // Get the Hebrew display day of week
+  const getHebrewDayOfWeek = (date: Date) => {
+    const daysInHebrew = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
+    return daysInHebrew[date.getDay()];
+  };
+  
+  // Get the title for the header based on day of week
+  const getHeaderTitle = () => {
+    const dayOfWeek = appliedDate.getDay();
+    if (dayOfWeek === 6) {
+      // If it's Shabbat, use the Shabbat title
+      return simulatedShabbatData.title;
+    } else {
+      // For weekdays, show the day of week
+      return getHebrewDayOfWeek(appliedDate);
+    }
+  };
+
   return (
     <Layout hideLogin={true}>
       <div className="py-6 px-4">
@@ -54,7 +73,7 @@ const Simulation = () => {
         </div>
         
         <Header 
-          shabbatName={simulatedShabbatData.title}
+          shabbatName={getHeaderTitle()}
           hebrewDate={simulatedHebrewDate}
           gregorianDate={simulatedGregorianDate}
         />

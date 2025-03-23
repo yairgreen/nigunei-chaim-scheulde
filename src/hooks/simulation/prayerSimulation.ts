@@ -21,6 +21,18 @@ export const simulatePrayerTimes = (selectedDate: Date): Array<{ name: string; t
     return [];
   }
   
+  // Check if it's Friday (dayOfWeek === 5)
+  if (dayOfWeek === 5) {
+    // Special case for Friday (no afternoon/evening prayers)
+    return [
+      { name: 'שחרית א׳', time: '06:15' },
+      { name: 'שחרית ב׳', time: '07:00' },
+      { name: 'שחרית ג׳', time: '08:00' },
+      { name: 'מנחה גדולה', time: '12:30' },
+      { name: 'מנחה ערב שבת', time: '13:30' }
+    ];
+  }
+  
   // Get this week's days (Sun-Thu)
   const weekDays = [];
   for (let i = 0; i < 5; i++) {
@@ -67,10 +79,10 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
   const simulatedArvitTime = calculateWeeklyArvitTime(syntheticZmanimForWeek);
   
   // Check if selected date is Rosh Chodesh (simplified for simulation)
-  const isSelectedDateRoshChodesh = selectedDate.getDate() === 1;
+  const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
   
-  // Simulate prayer times
-  return [
+  // Main daily classes for weekdays - ensure they appear in the simulation
+  const mainClasses = [
     { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
     { name: 'שחרית ב׳', time: '07:00' },
     { name: 'שחרית ג׳', time: '08:00' },
@@ -79,6 +91,8 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
     { name: 'ערבית א׳', time: simulatedArvitTime },
     { name: 'ערבית ב׳', time: '20:45' }
   ];
+  
+  return mainClasses;
 };
 
 // Generate prayer times from real zmanim data
@@ -88,7 +102,7 @@ const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[])
   const simulatedArvitTime = calculateWeeklyArvitTime(zmanimForWeek);
   
   // Check if selected date is Rosh Chodesh (simplified for simulation)
-  const isSelectedDateRoshChodesh = selectedDate.getDate() === 1;
+  const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
   
   // Friday has different times
   if (selectedDate.getDay() === 5) { // Friday

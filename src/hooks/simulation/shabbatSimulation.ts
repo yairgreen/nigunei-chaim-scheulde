@@ -42,7 +42,7 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     const candleHour = sunsetHour;
     const candleMinute = Math.max(0, sunsetMinute - 20);
     candleLightingPT = `${String(candleHour).padStart(2, '0')}:${String(candleMinute).padStart(2, '0')}`;
-    candleLightingTA = `${String(candleHour).padStart(2, '0')}:${String(candleMinute - 2).padStart(2, '0')}`;
+    candleLightingTA = `${String(candleHour).padStart(2, '0')}:${String(Math.max(0, candleMinute - 2)).padStart(2, '0')}`;
     
     // Havdalah is typically 42 minutes after sunset (3 medium stars)
     const havdalaHour = sunsetHour + (sunsetMinute + 42 >= 60 ? 1 : 0);
@@ -54,15 +54,15 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     
     if (month >= 3 && month <= 8) { // Spring and Summer
       candleLightingPT = `19:${15 + (shabbatDate.getDate() % 10)}`;
+      candleLightingTA = `19:${13 + (shabbatDate.getDate() % 10)}`;
       havdalaTime = `20:${25 + (shabbatDate.getDate() % 5)}`;
       sunsetTime = `19:${45 + (shabbatDate.getDate() % 10)}`;
     } else { // Fall and Winter
       candleLightingPT = `16:${30 + (shabbatDate.getDate() % 10)}`;
+      candleLightingTA = `16:${28 + (shabbatDate.getDate() % 10)}`;
       havdalaTime = `17:${40 + (shabbatDate.getDate() % 5)}`;
       sunsetTime = `17:${10 + (shabbatDate.getDate() % 10)}`;
     }
-    
-    candleLightingTA = format(new Date(`2025-01-01T${candleLightingPT}`), 'HH:mm');
   }
   
   // Calculate prayer times based on simulated sunset and havdalah
@@ -80,7 +80,7 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     { name: 'ערבית מוצ״ש', time: havdalaTime }
   ];
   
-  // No Shabbat classes as requested
+  // No Shabbat classes
   const shabbatClasses = [];
   
   // Check if the Shabbat has a special name (מברכין, החודש, etc)

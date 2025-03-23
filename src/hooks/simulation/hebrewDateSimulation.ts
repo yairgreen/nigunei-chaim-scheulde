@@ -43,14 +43,13 @@ export const simulateHebrewDate = (selectedDate: Date): string => {
   
   // Hebrew year changes around Rosh Hashanah (Sep-Oct)
   // Determine which Hebrew year to use based on current month
-  const currentYear = new Date().getFullYear();
   const hebrewYearOffset = 5785 - 2025; // Difference between Hebrew 5785 and Gregorian 2025
   
   // Determine Hebrew year based on month
   // After September (month 8), we're in the next Hebrew year
   const hebrewYear = (month >= 8) ? 
-    currentYear + hebrewYearOffset + 1 : 
-    currentYear + hebrewYearOffset;
+    year + hebrewYearOffset + 1 : 
+    year + hebrewYearOffset;
   
   // Format Hebrew year (only show the last two digits with geresh)
   const hebrewYearStr = 'תשפ״' + getHebrewYearLastLetter(hebrewYear);
