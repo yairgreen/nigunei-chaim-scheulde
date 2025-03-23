@@ -77,14 +77,15 @@ const Simulation = () => {
         sunsetHour = 16 + (Math.floor(day / 15) % 2); // Varies between 16 and 17
       }
       
+      // Fix: Use string formatting for single digit minutes to avoid octal interpretation
       const simulatedTimes = [
         { name: 'עלות השחר (72 ד\')', time: `0${sunriseHour - 1}:${30 + (day % 20)}` },
         { name: 'הנץ החמה', time: `0${sunriseHour}:${40 + (day % 20)}` },
         { name: 'זמן טלית ותפילין', time: `0${sunriseHour - 1}:${50 + (day % 10)}` },
         { name: 'סוף זמן ק"ש (מג״א)', time: `0${sunriseHour + 2}:${10 + (day % 15)}` },
-        { name: 'סוף זמן ק"ש (גר״א)', time: `0${sunriseHour + 3}:${05 + (day % 15)}` },
+        { name: 'סוף זמן ק"ש (גר״א)', time: `0${sunriseHour + 3}:${5 + (day % 15)}` }, // Fixed: Changed 05 to 5
         { name: 'סוף זמן תפילה (מג״א)', time: `0${sunriseHour + 3}:${40 + (day % 10)}` },
-        { name: 'סוף זמן תפילה (גר"א)', time: `0${sunriseHour + 4}:${05 + (day % 10)}` },
+        { name: 'סוף זמן תפילה (גר"א)', time: `0${sunriseHour + 4}:${5 + (day % 10)}` }, // Fixed: Changed 05 to 5
         { name: 'חצות היום והלילה', time: `${11 + (day % 2)}:${45 + (day % 5)}` },
         { name: 'זמן מנחה גדולה', time: `${12 + (day % 2)}:${15 + (day % 5)}` },
         { name: 'פלג המנחה', time: `${sunsetHour - 2}:${30 + (day % 10)}` },
@@ -186,7 +187,7 @@ const Simulation = () => {
       const simulatedShabbatTimes = {
         ...shabbatData,
         candlesPT: candleTime,
-        candlesTA: format(new Date(Date.parse(candleTime)), 'HH:mm'),
+        candlesTA: format(new Date(Date.parse(`2025-01-01T${candleTime}`)), 'HH:mm'),
         havdala: havdalaTime,
         prayers: shabbatData.prayers
       };
