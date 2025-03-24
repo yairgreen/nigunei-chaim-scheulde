@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getThisWeekShabbat,
@@ -40,10 +41,15 @@ export function useShabbatData(): ShabbatData {
       
       if (!shabbat || !todayZmanim) {
         console.log('No Shabbat or zmanim data available, using default values');
+        
+        // Default sunset time for calculation
+        const defaultSunset = "17:54"; // Fallback sunset time
+        const defaultKabalatTime = calculateShabbatKabalatTime(defaultSunset);
+        
         // Set default Shabbat data if no data is available
         const defaultPrayers = [
           { name: 'קבלת שבת מוקדמת', time: '17:30' },
-          { name: 'מנחה וקבלת שבת', time: '17:38' },  // 16 minutes before sunset (17:54)
+          { name: 'מנחה וקבלת שבת', time: defaultKabalatTime },  // Dynamic calculation
           { name: 'שחרית א׳', time: '06:45' },
           { name: 'שחרית ב׳', time: '08:30' },
           { name: 'מנחה גדולה', time: '12:30' },
@@ -65,6 +71,7 @@ export function useShabbatData(): ShabbatData {
       
       // Calculate Kabalat Shabbat time: 16 minutes before sunset
       const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
+      console.log('Calculated Kabalat time:', kabalatTime, 'using sunset:', todayZmanim.sunset);
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
       const havdalahTime = shabbat.havdalah || '19:35';
@@ -76,7 +83,7 @@ export function useShabbatData(): ShabbatData {
         subtitle += ` | ${shabbat.holidayHebrew}`;
       }
       
-      // Set Shabbat prayers with fixed kabalat time
+      // Set Shabbat prayers with dynamic kabalat time
       const shabbatPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
         { name: 'מנחה וקבלת שבת', time: kabalatTime },
@@ -103,9 +110,13 @@ export function useShabbatData(): ShabbatData {
       console.error('Error refreshing Shabbat data:', error);
       
       // Set default values in case of error
+      // Default sunset time for calculation
+      const defaultSunset = "17:54"; // Fallback sunset time
+      const defaultKabalatTime = calculateShabbatKabalatTime(defaultSunset);
+      
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
-        { name: 'מנחה וקבלת שבת', time: '17:38' },  // 16 minutes before sunset (17:54)
+        { name: 'מנחה וקבלת שבת', time: defaultKabalatTime },  // Dynamic calculation
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },

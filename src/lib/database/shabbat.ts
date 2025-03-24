@@ -106,7 +106,7 @@ export const calculateShabbatMinchaTime = (havdalah: string): string => {
 
 // Calculate Shabbat kabalat time
 export const calculateShabbatKabalatTime = (sunset: string): string => {
-  if (!sunset) return "18:45"; // Fallback
+  if (!sunset) return "18:45"; // Fallback default to 18:45
   
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
