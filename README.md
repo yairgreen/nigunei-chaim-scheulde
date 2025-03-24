@@ -1,69 +1,93 @@
-# Welcome to your Lovable project
 
-## Project info
+# בית כנסת ניגוני חיים - Synagogue Schedule Application
 
-**URL**: https://lovable.dev/projects/0bf66f79-c3fa-4696-b6f6-3efd4506eef4
+![Logo](./public/lovable-uploads/26e23c71-0047-488c-9c4e-a3d0cf2ac0e6.png)
 
-## How can I edit this code?
+## Overview
 
-There are several ways of editing your application.
+This web application displays the schedule and prayer times for "Nigunei Chaim" synagogue. The application provides real-time information about daily prayer times, Shabbat schedules, and upcoming religious classes and events.
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0bf66f79-c3fa-4696-b6f6-3efd4506eef4) and start prompting.
+- **Live Prayer Times**: Displays the daily Zmanim (Jewish prayer times) with current time highlighted
+- **Daily Prayer Schedule**: Shows the schedule for daily prayers (Shacharit, Mincha, Arvit)
+- **Shabbat Schedule**: Displays candle lighting times, Havdalah time, and Shabbat prayer schedule
+- **Weekly Classes**: Lists Torah classes and learning sessions throughout the week
+- **Hebrew Date**: Shows the current Hebrew date alongside the Gregorian date
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-Changes made via Lovable will be committed automatically to this repo.
+## Technical Details
 
-**Use your preferred IDE**
+The application is built using:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- React with TypeScript for the frontend
+- Vite as the build tool
+- Tailwind CSS for styling
+- Shadcn UI component library
+- Date manipulation with date-fns
+- Real-time data fetching from Hebrew calendar APIs (hebcal.com)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## API Integration
 
-Follow these steps:
+The application integrates with the following external APIs:
+
+- **Hebcal API**: For Hebrew dates, Zmanim, holidays, and Shabbat times
+  - Zmanim API: `https://www.hebcal.com/zmanim`
+  - Hebrew Calendar API: `https://www.hebcal.com/hebcal`
+  - Shabbat Times API: `https://www.hebcal.com/shabbat`
+
+## Data Architecture
+
+The application uses a simple in-memory data structure with the following modules:
+
+- **Zmanim Database**: Handles sunrise, sunset, and other halachic time calculations
+- **Holidays Database**: Manages Jewish holidays and special days
+- **Shabbat Database**: Handles Shabbat-specific times and information
+- **Prayer Times Calculator**: Calculates prayer times based on halachic rules
+
+## Prayer Time Calculations
+
+The application implements several halachic time calculations:
+
+- **Shabbat Mincha Time**: One hour before Havdalah, rounded down to nearest 5 minutes
+- **Shabbat Kabalat Time**: Between 11-16 minutes before sunset, rounded to nearest 5 minutes
+- **Weekly Mincha Time**: Based on earliest sunset of the week with buffer
+- **Weekly Arvit Time**: Based on latest sunset of the week plus 18 minutes
+
+## Project Structure
+
+```
+src/
+├── components/       # UI components
+├── hooks/            # React hooks for data management
+├── lib/              # Core logic and utility functions
+│   └── database/     # Data management modules
+└── pages/            # Application pages
+```
+
+## Development
+
+To work on this project locally, follow these steps:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Clone the repository
+git clone <repository-url>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd <project-directory>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The application can be deployed using the built-in deployment feature via the Lovable platform. You can also deploy to any static hosting service like Netlify, Vercel, or GitHub Pages.
 
-**Use GitHub Codespaces**
+## Credits
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0bf66f79-c3fa-4696-b6f6-3efd4506eef4) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- Developed for Nigunei Chaim Synagogue
+- Calendar and Zmanim data provided by [Hebcal](https://www.hebcal.com/)
