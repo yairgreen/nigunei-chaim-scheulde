@@ -21,7 +21,7 @@ const scheduleUpdates = () => {
   // Schedule daily update at 00:01
   scheduleDailyUpdate();
   
-  // Schedule weekly Shabbat update (Sundays at 04:00)
+  // Schedule weekly Shabbat update (Sundays at 05:00)
   scheduleWeeklyUpdate();
 };
 
@@ -59,21 +59,21 @@ const scheduleDailyUpdate = () => {
   }, msUntilUpdate);
 };
 
-// Schedule weekly Shabbat update (Sundays at 04:00)
+// Schedule weekly Shabbat update (Sundays at 05:00)
 const scheduleWeeklyUpdate = () => {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 is Sunday
   
   // Calculate days until next Sunday
   const daysUntilSunday = dayOfWeek === 0 ? 
-    (now.getHours() >= 4 ? 7 : 0) : // If it's already Sunday after 4am, schedule for next Sunday
+    (now.getHours() >= 5 ? 7 : 0) : // If it's already Sunday after 5am, schedule for next Sunday
     7 - dayOfWeek; // Days until next Sunday
   
   const nextUpdate = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate() + daysUntilSunday,
-    4, // 04:00 hours
+    5, // 05:00 hours (changed from 04:00)
     0, // 00 minutes
     0
   );

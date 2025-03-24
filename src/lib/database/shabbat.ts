@@ -112,9 +112,22 @@ export const calculateShabbatKabalatTime = (sunset: string): string => {
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
   
-  // 11-15 minutes before sunset, rounded to nearest 5 minutes (up)
-  const kabalatMinutes = totalMinutes - 15;
-  const roundedMinutes = Math.ceil(kabalatMinutes / 5) * 5;
+  // Between 11-16 minutes before sunset, rounded to nearest 5 minutes
+  // Calculate a dynamic window between 11-16 minutes before sunset
+  const minBuffer = 11;
+  const maxBuffer = 16;
+  
+  // Use date to vary the buffer between min and max values
+  const date = new Date();
+  const day = date.getDate();
+  
+  // Dynamic buffer between 11-16 minutes based on day of month
+  const dynamicBuffer = minBuffer + (day % (maxBuffer - minBuffer + 1));
+  
+  const kabalatMinutes = totalMinutes - dynamicBuffer;
+  
+  // Round to nearest 5 minutes
+  const roundedMinutes = Math.round(kabalatMinutes / 5) * 5;
   
   // Convert back to HH:MM format
   const kabalatHours = Math.floor(roundedMinutes / 60);
