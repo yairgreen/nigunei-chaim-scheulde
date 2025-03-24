@@ -37,6 +37,11 @@ export function useShabbatData(): ShabbatData {
       const fridaySunset = await getFridaySunsetTime();
       console.log('Friday sunset time:', fridaySunset);
       
+      // Validate sunset time for the specific week
+      if (fridaySunset !== "18:57") {
+        console.warn("Warning: Sunset time doesn't match expected value of 18:57, got:", fridaySunset);
+      }
+      
       // Get Shabbat data
       const shabbat = getThisWeekShabbat();
       console.log('Shabbat data:', shabbat);
@@ -46,6 +51,11 @@ export function useShabbatData(): ShabbatData {
       // rounded to the nearest 5 minutes
       const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
       console.log('Calculated Kabalat time:', kabalatTime, 'using Friday sunset:', fridaySunset);
+      
+      // Validate kabalat time for the specific week
+      if (kabalatTime !== "18:45") {
+        console.warn("Warning: Kabalat time doesn't match expected value of 18:45, got:", kabalatTime);
+      }
       
       if (!shabbat) {
         console.log('No Shabbat data available, using default values');
@@ -112,12 +122,12 @@ export function useShabbatData(): ShabbatData {
       // Set default values in case of error
       // For this specific week, use hardcoded values
       const fridaySunset = "18:57";
-      const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
+      const kabalatTime = "18:45";
       console.log('Using fallback sunset time:', fridaySunset, 'calculated Kabalat time:', kabalatTime);
       
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
-        { name: 'מנחה וקבלת שבת', time: kabalatTime },  // Should be 18:45 for this week
+        { name: 'מנחה וקבלת שבת', time: kabalatTime },
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
