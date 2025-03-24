@@ -106,29 +106,37 @@ export const calculateShabbatMinchaTime = (havdalah: string): string => {
 };
 
 // Calculate Shabbat kabalat time
-// New implementation: Between 11-16 minutes before sunset, rounded to 5 minutes
+// Calculate between 11-16 minutes before sunset, rounded to nearest 5 minutes
 export const calculateShabbatKabalatTime = (sunset: string): string => {
-  if (!sunset) return "18:45"; // Fallback default to 18:45
+  if (!sunset) return "18:45"; // Fallback default
   
+  // Parse sunset time
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
   
-  // Use between 11-16 minutes before sunset as requested
-  const minBuffer = 11; // Minimum minutes before sunset
+  // Use 16 minutes before sunset for the initial calculation
   const maxBuffer = 16; // Maximum minutes before sunset
+  const minBuffer = 11; // Minimum minutes before sunset
   
-  // Apply buffer to sunset time
+  // Apply maximum buffer to sunset time (16 minutes before)
   const kabalatMinutes = totalMinutes - maxBuffer;
   
   // Round to nearest 5 minutes
   const roundedMinutes = Math.round(kabalatMinutes / 5) * 5;
   
   // Ensure we're at least minBuffer minutes before sunset
-  const finalMinutes = Math.min(totalMinutes - minBuffer, roundedMinutes);
+  // but not more than maxBuffer minutes before sunset
+  const finalMinutes = Math.max(totalMinutes - maxBuffer, Math.min(totalMinutes - minBuffer, roundedMinutes));
   
   // Convert back to HH:MM format
   const kabalatHours = Math.floor(finalMinutes / 60);
   const kabalatMinutesPart = finalMinutes % 60;
+  
+  console.log(`Calculated Kabalat time from sunset ${sunset}:`, 
+    `Initial minutes: ${kabalatMinutes}`, 
+    `Rounded: ${roundedMinutes}`, 
+    `Final: ${finalMinutes}`,
+    `Result: ${String(kabalatHours).padStart(2, '0')}:${String(kabalatMinutesPart).padStart(2, '0')}`);
   
   return `${String(kabalatHours).padStart(2, '0')}:${String(kabalatMinutesPart).padStart(2, '0')}`;
 };
@@ -157,10 +165,11 @@ export const getFridaySunsetTime = async (): Promise<string> => {
       return sunsetTime;
     }
     
-    console.log(`No sunset data found for ${formattedDate}, using default`);
-    return "18:57"; // Fallback for this week
+    console.log(`No sunset data found for ${formattedDate}, using hardcoded fallback value`);
+    return "18:57"; // Hardcoded fallback for this week
   } catch (error) {
     console.error('Error fetching Friday sunset time:', error);
-    return "18:57"; // Fallback for this week
+    return "18:57"; // Hardcoded fallback for this week
   }
 };
+
