@@ -22,17 +22,27 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
   // Get the parasha name based on the Shabbat date
   const parashatName = getParashaForDate(shabbatDate);
   
-  // Get zmanim data for this date to have accurate sunset time
+  // Get Friday date (for sunset calculation)
+  const fridayDate = new Date(shabbatDate);
+  fridayDate.setDate(shabbatDate.getDate() - 1);
+  
+  // Format for API lookup
+  const fridayFormatted = format(fridayDate, 'yyyy-MM-dd');
+  
+  // Get zmanim data for Friday to have accurate sunset time
   const zmanimDatabase = getZmanimDatabase();
+  const fridayZmanim = zmanimDatabase.find(z => z.date === fridayFormatted);
+  
+  // Get zmanim data for Shabbat for havdalah time
   const formattedDate = format(shabbatDate, 'yyyy-MM-dd');
   const shabbatZmanim = zmanimDatabase.find(z => z.date === formattedDate);
   
   // Use sunset from zmanim if available, otherwise use simulation
   let sunsetTime, havdalaTime, candleLightingPT, candleLightingTA;
   
-  if (shabbatZmanim && shabbatZmanim.sunset) {
-    // Use actual sunset from database
-    sunsetTime = shabbatZmanim.sunset;
+  if (fridayZmanim && fridayZmanim.sunset) {
+    // Use actual sunset from database for Friday
+    sunsetTime = fridayZmanim.sunset;
     
     // Generate simulated times based on sunset
     const sunsetHour = parseInt(sunsetTime.split(':')[0]);
@@ -43,11 +53,6 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     const candleMinute = Math.max(0, sunsetMinute - 20);
     candleLightingPT = `${String(candleHour).padStart(2, '0')}:${String(candleMinute).padStart(2, '0')}`;
     candleLightingTA = `${String(candleHour).padStart(2, '0')}:${String(Math.max(0, candleMinute - 2)).padStart(2, '0')}`;
-    
-    // Havdalah is typically 42 minutes after sunset (3 medium stars)
-    const havdalaHour = sunsetHour + (sunsetMinute + 42 >= 60 ? 1 : 0);
-    const havdalaMinute = (sunsetMinute + 42) % 60;
-    havdalaTime = `${String(havdalaHour).padStart(2, '0')}:${String(havdalaMinute).padStart(2, '0')}`;
   } else {
     // Fallback to seasonal simulation if no database data
     const month = shabbatDate.getMonth();
@@ -55,14 +60,27 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     if (month >= 3 && month <= 8) { // Spring and Summer
       candleLightingPT = `19:${15 + (shabbatDate.getDate() % 10)}`;
       candleLightingTA = `19:${13 + (shabbatDate.getDate() % 10)}`;
-      havdalaTime = `20:${25 + (shabbatDate.getDate() % 5)}`;
-      sunsetTime = `19:${45 + (shabbatDate.getDate() % 10)}`;
+      sunsetTime = `19:${35 + (shabbatDate.getDate() % 10)}`;
     } else { // Fall and Winter
       candleLightingPT = `16:${30 + (shabbatDate.getDate() % 10)}`;
       candleLightingTA = `16:${28 + (shabbatDate.getDate() % 10)}`;
-      havdalaTime = `17:${40 + (shabbatDate.getDate() % 5)}`;
-      sunsetTime = `17:${10 + (shabbatDate.getDate() % 10)}`;
+      sunsetTime = `16:${50 + (shabbatDate.getDate() % 10)}`;
     }
+  }
+  
+  // Use Shabbat zmanim for beinHaShmashos (for havdalah) if available
+  if (shabbatZmanim && shabbatZmanim.beinHaShmashos) {
+    havdalaTime = shabbatZmanim.beinHaShmashos;
+  } else {
+    // If no Shabbat zmanim, calculate approximately 42 minutes after sunset
+    const [hours, minutes] = sunsetTime.split(':').map(Number);
+    const sunsetTotalMinutes = hours * 60 + minutes;
+    const havdalaTotalMinutes = sunsetTotalMinutes + 42;  // Typical time for 3 stars
+    
+    const havdalaHours = Math.floor(havdalaTotalMinutes / 60);
+    const havdalaMinutes = havdalaTotalMinutes % 60;
+    
+    havdalaTime = `${String(havdalaHours).padStart(2, '0')}:${String(havdalaMinutes).padStart(2, '0')}`;
   }
   
   // Calculate prayer times based on simulated sunset and havdalah

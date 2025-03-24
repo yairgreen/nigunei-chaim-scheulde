@@ -107,23 +107,23 @@ export const calculateShabbatMinchaTime = (havdalah: string): string => {
 
 // Calculate Shabbat kabalat time
 export const calculateShabbatKabalatTime = (sunset: string): string => {
-  if (!sunset) return "18:00"; // Fallback
+  if (!sunset) return "18:45"; // Fallback
   
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
   
-  // Between 11-16 minutes before sunset, rounded to nearest 5 minutes
-  // Calculate a dynamic window between 11-16 minutes before sunset
-  const minBuffer = 11;
-  const maxBuffer = 16;
+  // Between 11-16 minutes before sunset
+  const minBuffer = 11; // Minimum 11 minutes before sunset
+  const maxBuffer = 16; // Maximum 16 minutes before sunset
   
   // Use date to vary the buffer between min and max values
   const date = new Date();
   const day = date.getDate();
   
-  // Dynamic buffer between 11-16 minutes based on day of month
+  // Calculate dynamic buffer based on the day
   const dynamicBuffer = minBuffer + (day % (maxBuffer - minBuffer + 1));
   
+  // Apply buffer to sunset time
   const kabalatMinutes = totalMinutes - dynamicBuffer;
   
   // Round to nearest 5 minutes

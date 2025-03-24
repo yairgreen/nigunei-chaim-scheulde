@@ -61,8 +61,8 @@ const processSingleDayZmanim = (data: any, date: string): ZmanimData | null => {
     const times = data.times;
     if (!times) return null;
     
-    // Use tzeit7083deg for tzet if available, otherwise use beinHaShmashos
-    const tzeitTime = times.tzeit7083deg || times.beinHaShmashos || '';
+    // Use beinHaShmashos for tzet
+    const tzeitTime = times.beinHaShmashos || '';
     
     return {
       date,
@@ -96,8 +96,8 @@ const processZmanimData = (data: any): ZmanimData[] => {
   
   for (const date of dates) {
     try {
-      // Use tzeit7083deg for tzet if available, otherwise use beinHaShmashos
-      const tzeitTime = times.tzeit7083deg?.[date] || times.beinHaShmashos?.[date] || '';
+      // Use beinHaShmashos for tzet
+      const tzeitTime = times.beinHaShmashos?.[date] || '';
       
       processed.push({
         date,
@@ -141,8 +141,8 @@ export const getTodayZmanim = (): ZmanimData | null => {
       chatzot: '11:47',
       minchaGedola: '12:18',
       plagHaMincha: '16:38',
-      sunset: '17:54',
-      beinHaShmashos: '18:24'
+      sunset: '17:55',
+      beinHaShmashos: '18:11'  // Updated to use the accurate beinHaShmashos for today
     };
   }
   
