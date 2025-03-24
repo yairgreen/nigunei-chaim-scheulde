@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getThisWeekShabbat,
@@ -44,7 +43,7 @@ export function useShabbatData(): ShabbatData {
         // Set default Shabbat data if no data is available
         const defaultPrayers = [
           { name: 'קבלת שבת מוקדמת', time: '17:30' },
-          { name: 'מנחה וקבלת שבת', time: '19:00' },
+          { name: 'מנחה וקבלת שבת', time: '17:38' },  // 16 minutes before sunset (17:54)
           { name: 'שחרית א׳', time: '06:45' },
           { name: 'שחרית ב׳', time: '08:30' },
           { name: 'מנחה גדולה', time: '12:30' },
@@ -64,8 +63,7 @@ export function useShabbatData(): ShabbatData {
         return;
       }
       
-      // Calculate Kabalat Shabbat time: Always use the sunset value for calculation
-      // to ensure consistent results
+      // Calculate Kabalat Shabbat time: 16 minutes before sunset
       const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
@@ -107,7 +105,7 @@ export function useShabbatData(): ShabbatData {
       // Set default values in case of error
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
-        { name: 'מנחה וקבלת שבת', time: '19:00' },
+        { name: 'מנחה וקבלת שבת', time: '17:38' },  // 16 minutes before sunset (17:54)
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },

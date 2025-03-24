@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getTodayZmanim } from '@/lib/database/index';
 
@@ -96,7 +95,7 @@ export function useDailyTimes(): DailyTimesData {
         { name: 'זמן מנחה גדולה', time: '12:18' },
         { name: 'פלג המנחה', time: '16:38' },
         { name: 'שקיעה', time: '17:54' },
-        { name: 'צאת הכוכבים', time: '18:24' }
+        { name: 'צאת הכוכבים', time: '18:11' }
       ];
       setDailyTimes(defaultTimes);
     }
