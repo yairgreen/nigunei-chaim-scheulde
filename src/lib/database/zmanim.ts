@@ -136,7 +136,7 @@ export const getTodayZmanim = (): ZmanimData | null => {
       minchaGedola: '12:18',
       plagHaMincha: '16:38',
       sunset: '17:54',
-      beinHaShmashos: '18:11'  // Updated to use the accurate beinHaShmashos
+      beinHaShmashos: '18:11'  // Correct value for beinHaShmashos
     };
   }
   

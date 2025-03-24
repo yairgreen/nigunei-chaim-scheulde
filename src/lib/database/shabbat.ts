@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { formatTime } from './core';
 import { getHolidaysDatabase } from './holidays';
@@ -112,12 +111,8 @@ export const calculateShabbatKabalatTime = (sunset: string): string => {
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
   
-  // Between 11-16 minutes before sunset
-  const minBuffer = 11; // Minimum 11 minutes before sunset
-  const maxBuffer = 16; // Maximum 16 minutes before sunset
-  
-  // Calculate dynamic buffer between min and max
-  const buffer = maxBuffer; // Always use the max buffer (16 minutes)
+  // Always use 16 minutes before sunset as requested
+  const buffer = 16; // Use exactly 16 minutes before sunset
   
   // Apply buffer to sunset time
   const kabalatMinutes = totalMinutes - buffer;

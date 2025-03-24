@@ -72,7 +72,7 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
   if (shabbatZmanim && shabbatZmanim.beinHaShmashos) {
     havdalaTime = shabbatZmanim.beinHaShmashos;
   } else {
-    // If no Shabbat zmanim, calculate approximately 42 minutes after sunset
+    // If no Shabbat zmanim, calculate havdala time (using fixed 42 minutes)
     const [hours, minutes] = sunsetTime.split(':').map(Number);
     const sunsetTotalMinutes = hours * 60 + minutes;
     const havdalaTotalMinutes = sunsetTotalMinutes + 42;  // Typical time for 3 stars
