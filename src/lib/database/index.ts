@@ -1,3 +1,4 @@
+
 import { getLastUpdated, setLastUpdated } from './core';
 import { fetchZmanim, getTodayZmanim, getZmanimDatabase } from './zmanim';
 import { fetchHolidays, getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
@@ -5,7 +6,8 @@ import {
   fetchShabbat, 
   getThisWeekShabbat, 
   calculateShabbatMinchaTime, 
-  calculateShabbatKabalatTime 
+  calculateShabbatKabalatTime,
+  getFridaySunsetTime 
 } from './shabbat';
 import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 import { format } from 'date-fns';
@@ -19,7 +21,8 @@ export type { ShabbatData } from './shabbat';
 export { 
   getThisWeekShabbat, 
   calculateShabbatMinchaTime, 
-  calculateShabbatKabalatTime 
+  calculateShabbatKabalatTime,
+  getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 
