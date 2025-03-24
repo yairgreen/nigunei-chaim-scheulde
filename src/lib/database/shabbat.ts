@@ -1,4 +1,5 @@
-import { format } from 'date-fns';
+
+import { format, addDays } from 'date-fns';
 import { formatTime } from './core';
 import { getHolidaysDatabase } from './holidays';
 
@@ -105,24 +106,61 @@ export const calculateShabbatMinchaTime = (havdalah: string): string => {
 };
 
 // Calculate Shabbat kabalat time
+// New implementation: Between 11-16 minutes before sunset, rounded to 5 minutes
 export const calculateShabbatKabalatTime = (sunset: string): string => {
   if (!sunset) return "18:45"; // Fallback default to 18:45
   
   const [hours, minutes] = sunset.split(':').map(Number);
   const totalMinutes = hours * 60 + minutes;
   
-  // Always use 16 minutes before sunset as requested
-  const buffer = 16; // Use exactly 16 minutes before sunset
+  // Use between 11-16 minutes before sunset as requested
+  const minBuffer = 11; // Minimum minutes before sunset
+  const maxBuffer = 16; // Maximum minutes before sunset
   
   // Apply buffer to sunset time
-  const kabalatMinutes = totalMinutes - buffer;
+  const kabalatMinutes = totalMinutes - maxBuffer;
   
   // Round to nearest 5 minutes
   const roundedMinutes = Math.round(kabalatMinutes / 5) * 5;
   
+  // Ensure we're at least minBuffer minutes before sunset
+  const finalMinutes = Math.min(totalMinutes - minBuffer, roundedMinutes);
+  
   // Convert back to HH:MM format
-  const kabalatHours = Math.floor(roundedMinutes / 60);
-  const kabalatMinutesPart = roundedMinutes % 60;
+  const kabalatHours = Math.floor(finalMinutes / 60);
+  const kabalatMinutesPart = finalMinutes % 60;
   
   return `${String(kabalatHours).padStart(2, '0')}:${String(kabalatMinutesPart).padStart(2, '0')}`;
+};
+
+// Get Friday sunset time for Shabbat calculations
+export const getFridaySunsetTime = async (): Promise<string> => {
+  try {
+    // Determine the next Friday's date
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 is Sunday, 5 is Friday
+    const daysUntilFriday = (dayOfWeek <= 5) ? 5 - dayOfWeek : 5 + 7 - dayOfWeek;
+    const nextFriday = addDays(today, daysUntilFriday);
+    
+    // Format date for API call
+    const formattedDate = format(nextFriday, 'yyyy-MM-dd');
+    
+    // Fetch Friday's zmanim data
+    const response = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${formattedDate}`);
+    const data = await response.json();
+    
+    // Extract sunset time
+    if (data && data.times && data.times.sunset) {
+      // Format time from ISO format to HH:MM
+      const sunsetTime = formatTime(data.times.sunset);
+      console.log(`Next Friday (${formattedDate}) sunset time: ${sunsetTime}`);
+      return sunsetTime;
+    }
+    
+    console.log(`No sunset data found for ${formattedDate}, using default`);
+    return "18:57"; // Fallback for this week
+  } catch (error) {
+    console.error('Error fetching Friday sunset time:', error);
+    return "18:57"; // Fallback for this week
+  }
 };

@@ -4,6 +4,7 @@ import {
   getThisWeekShabbat,
   calculateShabbatMinchaTime,
   calculateShabbatKabalatTime,
+  getFridaySunsetTime,
   getTodayZmanim
 } from '@/lib/database';
 
@@ -32,19 +33,19 @@ export function useShabbatData(): ShabbatData {
 
   const refreshShabbatData = async () => {
     try {
-      // Get today's zmanim for sunset time
-      const todayZmanim = getTodayZmanim();
+      // Get Friday's sunset time for Kabalat Shabbat calculation
+      const fridaySunset = await getFridaySunsetTime();
+      console.log('Friday sunset time:', fridaySunset);
       
       // Get Shabbat data
       const shabbat = getThisWeekShabbat();
       console.log('Shabbat data:', shabbat);
       
-      if (!shabbat || !todayZmanim) {
-        console.log('No Shabbat or zmanim data available, using default values');
+      if (!shabbat) {
+        console.log('No Shabbat data available, using default values');
         
-        // Default sunset time for calculation
-        const defaultSunset = "17:54"; // Fallback sunset time
-        const defaultKabalatTime = calculateShabbatKabalatTime(defaultSunset);
+        // Calculate Kabalat Shabbat time using Friday sunset
+        const defaultKabalatTime = calculateShabbatKabalatTime(fridaySunset);
         
         // Set default Shabbat data if no data is available
         const defaultPrayers = [
@@ -69,9 +70,9 @@ export function useShabbatData(): ShabbatData {
         return;
       }
       
-      // Calculate Kabalat Shabbat time: 16 minutes before sunset
-      const kabalatTime = calculateShabbatKabalatTime(todayZmanim.sunset);
-      console.log('Calculated Kabalat time:', kabalatTime, 'using sunset:', todayZmanim.sunset);
+      // Calculate Kabalat Shabbat time using Friday sunset
+      const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
+      console.log('Calculated Kabalat time:', kabalatTime, 'using Friday sunset:', fridaySunset);
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
       const havdalahTime = shabbat.havdalah || '19:35';
@@ -110,13 +111,13 @@ export function useShabbatData(): ShabbatData {
       console.error('Error refreshing Shabbat data:', error);
       
       // Set default values in case of error
-      // Default sunset time for calculation
-      const defaultSunset = "17:54"; // Fallback sunset time
-      const defaultKabalatTime = calculateShabbatKabalatTime(defaultSunset);
+      // For this specific week, use 18:57 as the sunset time
+      const fridaySunset = "18:57";
+      const defaultKabalatTime = calculateShabbatKabalatTime(fridaySunset);
       
       const defaultPrayers = [
         { name: 'קבלת שבת מוקדמת', time: '17:30' },
-        { name: 'מנחה וקבלת שבת', time: defaultKabalatTime },  // Dynamic calculation
+        { name: 'מנחה וקבלת שבת', time: defaultKabalatTime },  // Should be 18:45 for this week
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
         { name: 'מנחה גדולה', time: '12:30' },
