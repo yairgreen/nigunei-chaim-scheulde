@@ -116,15 +116,11 @@ export const calculateShabbatKabalatTime = (sunset: string): string => {
   const minBuffer = 11; // Minimum 11 minutes before sunset
   const maxBuffer = 16; // Maximum 16 minutes before sunset
   
-  // Use date to vary the buffer between min and max values
-  const date = new Date();
-  const day = date.getDate();
-  
-  // Calculate dynamic buffer based on the day
-  const dynamicBuffer = minBuffer + (day % (maxBuffer - minBuffer + 1));
+  // Calculate dynamic buffer between min and max
+  const buffer = maxBuffer; // Always use the max buffer (16 minutes)
   
   // Apply buffer to sunset time
-  const kabalatMinutes = totalMinutes - dynamicBuffer;
+  const kabalatMinutes = totalMinutes - buffer;
   
   // Round to nearest 5 minutes
   const roundedMinutes = Math.round(kabalatMinutes / 5) * 5;

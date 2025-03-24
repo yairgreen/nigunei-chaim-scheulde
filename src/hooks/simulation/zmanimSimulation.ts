@@ -55,6 +55,9 @@ const generateSimulatedTimes = (selectedDate: Date): Array<{ name: string; time:
     sunsetHour = 16 + (Math.floor(day / 15) % 2); // Varies between 16 and 17
   }
   
+  // Calculate tzet time (beinHaShmashos) - typically 18-42 minutes after sunset
+  const tzet = getSunsetWithMinutesAdded(sunsetHour, 50 + (day % 10), 18);
+  
   // Create simulated times with proper formatting
   return [
     { name: 'עלות השחר (72 ד\')', time: formatTimeWithLeadingZeros(sunriseHour - 1, 30 + (day % 20)) },
@@ -68,11 +71,19 @@ const generateSimulatedTimes = (selectedDate: Date): Array<{ name: string; time:
     { name: 'זמן מנחה גדולה', time: formatTimeWithLeadingZeros(12 + (day % 2), 15 + (day % 5)) },
     { name: 'פלג המנחה', time: formatTimeWithLeadingZeros(sunsetHour - 2, 30 + (day % 10)) },
     { name: 'שקיעה', time: formatTimeWithLeadingZeros(sunsetHour, 50 + (day % 10)) },
-    { name: 'צאת הכוכבים', time: formatTimeWithLeadingZeros(sunsetHour + 1, 20 + (day % 5)) }
+    { name: 'צאת הכוכבים', time: tzet }
   ];
 };
 
 // Format times with leading zeros
 const formatTimeWithLeadingZeros = (hour: number, minute: number): string => {
   return `${hour < 10 ? '0' + hour : hour}:${minute < 10 ? '0' + minute : minute}`;
+};
+
+// Calculate time with minutes added, handling hour overflow
+const getSunsetWithMinutesAdded = (hour: number, minute: number, minutesToAdd: number): string => {
+  let totalMinutes = hour * 60 + minute + minutesToAdd;
+  const newHour = Math.floor(totalMinutes / 60);
+  const newMinute = totalMinutes % 60;
+  return formatTimeWithLeadingZeros(newHour, newMinute);
 };
