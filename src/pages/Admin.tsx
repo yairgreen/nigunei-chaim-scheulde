@@ -10,6 +10,7 @@ import ShabbatTab from '@/components/admin/ShabbatTab';
 import ClassesTab from '@/components/admin/ClassesTab';
 import QuickLinks from '@/components/admin/QuickLinks';
 import AdminHeader from '@/components/admin/AdminHeader';
+import ReloadData from '@/components/admin/ReloadData';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -52,6 +53,7 @@ const Admin = () => {
             <TabsTrigger value="daily" className="flex-1">זמנים יומיים</TabsTrigger>
             <TabsTrigger value="shabbat" className="flex-1">זמני שבת</TabsTrigger>
             <TabsTrigger value="classes" className="flex-1">שיעורים</TabsTrigger>
+            <TabsTrigger value="reload" className="flex-1">עדכון נתונים</TabsTrigger>
           </TabsList>
           
           <TabsContent value="daily" className="space-y-6">
@@ -76,6 +78,10 @@ const Admin = () => {
               handleUpdateClassName={handleUpdateClassName}
               handleUpdateClassTime={handleUpdateClassTime}
             />
+          </TabsContent>
+          
+          <TabsContent value="reload" className="space-y-6">
+            <ReloadData />
           </TabsContent>
         </Tabs>
         

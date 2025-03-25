@@ -13,6 +13,7 @@ import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 import { format } from 'date-fns';
 
 export { formatTime } from './core';
+export { getLastUpdated } from './core';
 export type { ZmanimData } from './zmanim';
 export { getTodayZmanim, getZmanimDatabase } from './zmanim';
 export type { HolidayData } from './holidays';
