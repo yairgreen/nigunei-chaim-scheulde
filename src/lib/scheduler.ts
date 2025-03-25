@@ -18,10 +18,10 @@ export const initializeApp = async () => {
 
 // Schedule automatic updates
 const scheduleUpdates = () => {
-  // Schedule daily update at 00:01
+  // Schedule daily update for Zmanim and Hebrew Date at 00:00
   scheduleDailyUpdate();
   
-  // Schedule weekly Shabbat update (Sundays at 05:00)
+  // Schedule weekly Shabbat update (Sundays at 04:00)
   scheduleWeeklyUpdate();
 };
 
@@ -33,7 +33,7 @@ const scheduleDailyUpdate = () => {
     now.getMonth(),
     now.getDate() + 1, // Tomorrow
     0, // 00:00 hours
-    1, // 01 minutes
+    0, // 00 minutes
     0
   );
   
@@ -59,21 +59,21 @@ const scheduleDailyUpdate = () => {
   }, msUntilUpdate);
 };
 
-// Schedule weekly Shabbat update (Sundays at 05:00)
+// Schedule weekly Shabbat update (Sundays at 04:00)
 const scheduleWeeklyUpdate = () => {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 is Sunday
   
   // Calculate days until next Sunday
   const daysUntilSunday = dayOfWeek === 0 ? 
-    (now.getHours() >= 5 ? 7 : 0) : // If it's already Sunday after 5am, schedule for next Sunday
+    (now.getHours() >= 4 ? 7 : 0) : // If it's already Sunday after 4am, schedule for next Sunday
     7 - dayOfWeek; // Days until next Sunday
   
   const nextUpdate = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate() + daysUntilSunday,
-    5, // 05:00 hours (changed from 04:00)
+    4, // 04:00 hours
     0, // 00 minutes
     0
   );
@@ -103,8 +103,19 @@ const scheduleWeeklyUpdate = () => {
 // For testing purposes - force an immediate update
 export const forceUpdate = async () => {
   try {
+    console.log("Starting force update process...");
+    
+    // Update Zmanim data
+    console.log("Fetching Zmanim data from API...");
     await updateDatabase();
+    console.log("Zmanim data update completed");
+    
+    // Update Shabbat information
+    console.log("Fetching Shabbat data from API...");
     await updateShabbatInfo();
+    console.log("Shabbat data update completed");
+    
+    console.log("Force update completed successfully");
     return true;
   } catch (error) {
     console.error('Forced update failed:', error);

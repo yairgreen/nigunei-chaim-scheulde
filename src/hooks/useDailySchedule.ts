@@ -7,14 +7,14 @@ import {
 import { format } from 'date-fns';
 
 export interface DailyScheduleData {
-  dailyPrayers: { name: string; time: string }[];
-  dailyClasses: { name: string; time: string }[];
+  dailyPrayers: { name: string; time: string; isNext?: boolean }[];
+  dailyClasses: { name: string; time: string; isNext?: boolean }[];
   isRoshChodesh: boolean;
 }
 
 export function useDailySchedule(): DailyScheduleData {
-  const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string }[]>([]);
-  const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string }[]>([]);
+  const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
+  const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
   const [isRoshChodesh, setIsRoshChodesh] = useState(false);
 
   const refreshDailySchedule = async () => {
@@ -39,8 +39,6 @@ export function useDailySchedule(): DailyScheduleData {
         { name: 'ערבית ב׳', time: '20:45' }
       ];
       
-      setDailyPrayers(prayers);
-      
       // Set daily classes based on the day of the week
       const now = new Date();
       const dayOfWeek = now.getDay(); // 0 is Sunday
@@ -61,7 +59,60 @@ export function useDailySchedule(): DailyScheduleData {
         classes.push({ name: 'מדרשישי מפי הרב עמיהוד סלומון', time: '09:00-10:00' });
       }
       
-      setDailyClasses(classes);
+      // Find which prayer is next
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      
+      // Mark which prayer is next
+      let foundNextPrayer = false;
+      const prayers_with_next = prayers.map(prayer => {
+        if (!prayer.time) {
+          return { ...prayer, isNext: false };
+        }
+        
+        // Extract start time for prayer
+        const [hours, minutes] = prayer.time.split(':').map(Number);
+        const prayerTimeInMinutes = hours * 60 + minutes;
+        
+        if (!foundNextPrayer && prayerTimeInMinutes > currentTimeInMinutes) {
+          foundNextPrayer = true;
+          return { ...prayer, isNext: true };
+        }
+        return { ...prayer, isNext: false };
+      });
+      
+      // If no "next" prayer was found (all times passed), highlight the first one for tomorrow
+      if (!foundNextPrayer && prayers_with_next.length > 0) {
+        prayers_with_next[0].isNext = true;
+      }
+      
+      // Find which class is next
+      let foundNextClass = false;
+      const classes_with_next = classes.map(cls => {
+        if (!cls.time) {
+          return { ...cls, isNext: false };
+        }
+        
+        // Extract start time for class (handles ranges like "20:00-20:45")
+        const startTime = cls.time.split('-')[0];
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const classTimeInMinutes = hours * 60 + minutes;
+        
+        if (!foundNextClass && classTimeInMinutes > currentTimeInMinutes) {
+          foundNextClass = true;
+          return { ...cls, isNext: true };
+        }
+        return { ...cls, isNext: false };
+      });
+      
+      // If no "next" class was found (all times passed), highlight the first one for tomorrow
+      if (!foundNextClass && classes_with_next.length > 0) {
+        classes_with_next[0].isNext = true;
+      }
+      
+      setDailyPrayers(prayers_with_next);
+      setDailyClasses(classes_with_next);
     } catch (error) {
       console.error('Error refreshing daily schedule:', error);
       // Set default values in case of error
@@ -81,10 +132,10 @@ export function useDailySchedule(): DailyScheduleData {
   useEffect(() => {
     refreshDailySchedule();
     
-    // Set up daily refresh
+    // Set up minute-by-minute refresh for "next" highlighting
     const refreshInterval = setInterval(() => {
       refreshDailySchedule();
-    }, 60 * 60 * 1000); // Refresh every hour
+    }, 60 * 1000); // Refresh every minute
     
     return () => clearInterval(refreshInterval);
   }, []);

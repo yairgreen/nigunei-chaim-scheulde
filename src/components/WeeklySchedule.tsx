@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 interface TimeItem {
   name: string;
   time: string;
+  isNext?: boolean;
 }
 
 interface DailyScheduleProps {
@@ -40,9 +41,9 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
         <h3 className="text-lg font-semibold mb-3 text-title">תפילות</h3>
         <div className="space-y-2">
           {prayers.map((prayer, index) => (
-            <div key={index} className="time-item">
-              <span className="font-medium">{prayer.name}</span>
-              <span className="text-title">{prayer.time}</span>
+            <div key={index} className={`time-item ${prayer.isNext ? 'bg-blue-50 border-r-4 border-blue-500 pr-2' : ''}`}>
+              <span className={`font-medium ${prayer.isNext ? 'text-blue-700' : ''}`}>{prayer.name}</span>
+              <span className={`${prayer.isNext ? 'text-blue-700 font-bold' : 'text-title'}`}>{prayer.time}</span>
             </div>
           ))}
         </div>
@@ -53,10 +54,10 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
           <h3 className="text-lg font-semibold mb-3 text-title">שיעורים</h3>
           <div className="space-y-2">
             {classes.map((item, index) => (
-              <div key={index} className="flex flex-col mb-3 last:mb-0">
+              <div key={index} className={`flex flex-col mb-3 last:mb-0 ${item.isNext ? 'bg-blue-50 border-r-4 border-blue-500 pr-2' : ''}`}>
                 <div className="flex justify-between w-full">
-                  <span className="font-medium">{item.name.split(' מפי ')[0]}</span>
-                  <span className="text-title">{item.time}</span>
+                  <span className={`font-medium ${item.isNext ? 'text-blue-700' : ''}`}>{item.name.split(' מפי ')[0]}</span>
+                  <span className={`${item.isNext ? 'text-blue-700 font-bold' : 'text-title'}`}>{item.time}</span>
                 </div>
                 {item.name.includes(' מפי ') && (
                   <span className="text-sm text-gray-600 text-right mt-1">{item.name.split(' מפי ')[1]}</span>
