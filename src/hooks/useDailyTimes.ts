@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getTodayZmanim } from '@/lib/database/index';
 

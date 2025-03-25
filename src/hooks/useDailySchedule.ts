@@ -7,13 +7,13 @@ import {
 import { format } from 'date-fns';
 
 export interface DailyScheduleData {
-  dailyPrayers: { name: string; time: string; isNext?: boolean }[];
+  dailyPrayers: { name: string; time: string }[];
   dailyClasses: { name: string; time: string }[];
   isRoshChodesh: boolean;
 }
 
 export function useDailySchedule(): DailyScheduleData {
-  const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
+  const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string }[]>([]);
   const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string }[]>([]);
   const [isRoshChodesh, setIsRoshChodesh] = useState(false);
 
@@ -39,43 +39,10 @@ export function useDailySchedule(): DailyScheduleData {
         { name: 'ערבית ב׳', time: '20:45' }
       ];
       
-      // Find which prayer is next
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const currentTimeInMinutes = currentHour * 60 + currentMinute;
-      
-      // Mark which prayer is next
-      let foundNext = false;
-      const prayers_with_next = prayers.map(prayer => {
-        if (!prayer.time) {
-          return { ...prayer, time: '--:--', isNext: false };
-        }
-        
-        // Handle time ranges (for classes)
-        let prayerTime = prayer.time;
-        if (prayerTime.includes('-')) {
-          prayerTime = prayerTime.split('-')[0];
-        }
-        
-        const [hours, minutes] = prayerTime.split(':').map(Number);
-        const prayerTimeInMinutes = hours * 60 + minutes;
-        
-        if (!foundNext && prayerTimeInMinutes > currentTimeInMinutes) {
-          foundNext = true;
-          return { ...prayer, isNext: true };
-        }
-        return { ...prayer, isNext: false };
-      });
-      
-      // If no "next" prayer was found (all times passed), highlight the first one for tomorrow
-      if (!foundNext && prayers_with_next.length > 0) {
-        prayers_with_next[0].isNext = true;
-      }
-      
-      setDailyPrayers(prayers_with_next);
+      setDailyPrayers(prayers);
       
       // Set daily classes based on the day of the week
+      const now = new Date();
       const dayOfWeek = now.getDay(); // 0 is Sunday
       const classes = [];
       
@@ -114,10 +81,10 @@ export function useDailySchedule(): DailyScheduleData {
   useEffect(() => {
     refreshDailySchedule();
     
-    // Set up minute refresh for next prayer indicator
+    // Set up daily refresh
     const refreshInterval = setInterval(() => {
       refreshDailySchedule();
-    }, 60 * 1000); // Refresh every minute
+    }, 60 * 60 * 1000); // Refresh every hour
     
     return () => clearInterval(refreshInterval);
   }, []);
