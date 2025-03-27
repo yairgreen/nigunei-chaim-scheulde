@@ -24,7 +24,7 @@ export function useDailySchedule(selectedDate?: Date): DailyScheduleData {
       const date = selectedDate || new Date();
       
       // Check if selected date is Rosh Chodesh
-      const roshChodesh = isRoshChodeshToday(date);
+      const roshChodesh = isRoshChodeshToday();
       console.log('Is Rosh Chodesh:', roshChodesh);
       setIsRoshChodesh(roshChodesh);
       
@@ -33,8 +33,8 @@ export function useDailySchedule(selectedDate?: Date): DailyScheduleData {
       
       // Fetch zmanim data for the week
       const startOfWeek = new Date(date);
-      const dayOfWeek = date.getDay(); // 0 is Sunday
-      startOfWeek.setDate(date.getDate() - dayOfWeek); // Go back to Sunday
+      const currentDayOfWeek = date.getDay(); // 0 is Sunday
+      startOfWeek.setDate(date.getDate() - currentDayOfWeek); // Go back to Sunday
       
       // Get zmanim for each day of the week (Sun-Thu)
       const weekDays = [];
@@ -98,21 +98,21 @@ export function useDailySchedule(selectedDate?: Date): DailyScheduleData {
       setDailyPrayers(prayers);
       
       // Set daily classes based on the day of the week
-      const dayOfWeek = date.getDay(); // 0 is Sunday
+      const classDayOfWeek = date.getDay(); // 0 is Sunday
       const classes = [];
       
       // Daily class (Sunday-Thursday)
-      if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+      if (classDayOfWeek >= 0 && classDayOfWeek <= 4) {
         classes.push({ name: 'שיעור הדף היומי מפי הרב דוד קלופפר', time: '20:00-20:45' });
       }
       
       // Tuesday class
-      if (dayOfWeek === 2) { // Tuesday
+      if (classDayOfWeek === 2) { // Tuesday
         classes.push({ name: 'שיעור חסידות מפי הרב אשר דייטש', time: '21:00-22:00' });
       }
       
       // Friday class
-      if (dayOfWeek === 5) { // Friday
+      if (classDayOfWeek === 5) { // Friday
         classes.push({ name: 'מדרשישי מפי הרב עמיהוד סלומון', time: '09:00-10:00' });
       }
       
