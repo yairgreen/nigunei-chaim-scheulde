@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TimeItem {
   name: string;
   time: string;
+  isNext?: boolean;
 }
 
 interface DailyScheduleProps {
@@ -22,12 +23,55 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
   isRoshChodesh,
   className
 }) => {
+  const [localPrayers, setLocalPrayers] = useState<TimeItem[]>(prayers);
+  
   // Get current day of week in Hebrew
   const getDayOfWeekInHebrew = () => {
     const daysInHebrew = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
     const dayIndex = new Date().getDay(); // 0 is Sunday
     return daysInHebrew[dayIndex];
   };
+  
+  // Update next prayer indicator
+  const updateNextPrayer = () => {
+    // Make a copy of prayers to work with
+    const updatedPrayers = [...prayers];
+    
+    // Reset all isNext flags
+    updatedPrayers.forEach(prayer => {
+      if ('isNext' in prayer) {
+        delete prayer.isNext;
+      }
+    });
+    
+    // Current time in HH:MM format
+    const now = new Date();
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    // Find the next prayer that hasn't passed yet
+    // If time contains a range (like "20:00-20:45"), use the start time
+    const nextPrayerIndex = updatedPrayers.findIndex(prayer => {
+      const prayerTimeStart = prayer.time.split('-')[0];
+      return prayerTimeStart > currentTimeStr;
+    });
+    
+    if (nextPrayerIndex !== -1) {
+      updatedPrayers[nextPrayerIndex].isNext = true;
+    }
+    
+    setLocalPrayers(updatedPrayers);
+  };
+  
+  // Update next prayer indicator every minute
+  useEffect(() => {
+    updateNextPrayer();
+    
+    const interval = setInterval(() => {
+      updateNextPrayer();
+    }, 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [prayers]);
 
   return (
     <div className={cn('schedule-card bg-weekly animate-fade-in-up delay-100', className)}>
@@ -39,10 +83,22 @@ const DailySchedule: React.FC<DailyScheduleProps> = ({
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3 text-title">תפילות</h3>
         <div className="space-y-2">
-          {prayers.map((prayer, index) => (
-            <div key={index} className="time-item">
+          {localPrayers.map((prayer, index) => (
+            <div 
+              key={index} 
+              className={cn(
+                "time-item",
+                prayer.isNext && "bg-accent1/10 rounded-lg px-2 -mx-2 border-accent1/20"
+              )}
+            >
               <span className="font-medium">{prayer.name}</span>
-              <span className="text-title">{prayer.time}</span>
+              <span className={cn(
+                "text-title",
+                prayer.isNext && "font-bold text-accent1"
+              )}>
+                {prayer.time}
+                {prayer.isNext && <span className="text-xs mr-2 py-1 px-2 bg-accent1/20 rounded-full">הבא</span>}
+              </span>
             </div>
           ))}
         </div>

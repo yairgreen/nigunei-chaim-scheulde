@@ -5,7 +5,7 @@ import {
   calculateShabbatMinchaTime,
   calculateShabbatKabalatTime,
   getFridaySunsetTime,
-  getTodayZmanim
+  fetchShabbat
 } from '@/lib/database';
 
 export interface ShabbatData {
@@ -20,7 +20,7 @@ export interface ShabbatData {
   };
 }
 
-export function useShabbatData(): ShabbatData {
+export function useShabbatData(selectedDate?: Date): ShabbatData {
   const [shabbatData, setShabbatData] = useState({
     title: 'שבת',
     subtitle: '',
@@ -37,28 +37,29 @@ export function useShabbatData(): ShabbatData {
       const fridaySunset = await getFridaySunsetTime();
       console.log('Friday sunset time:', fridaySunset);
       
-      // Validate sunset time for the specific week
-      if (fridaySunset !== "18:57") {
-        console.warn("Warning: Sunset time doesn't match expected value of 18:57, got:", fridaySunset);
+      // If we're in simulation mode and have a selected date, we should
+      // fetch Shabbat data for that week
+      if (selectedDate) {
+        // This will be implemented in the simulation components
+        // For now, we'll just use the current Shabbat data
       }
       
-      // Get Shabbat data
-      const shabbat = getThisWeekShabbat();
+      // Get Shabbat data or fetch it if not available
+      let shabbat = getThisWeekShabbat();
+      if (!shabbat) {
+        console.log('No Shabbat data found, fetching from API');
+        await fetchShabbat();
+        shabbat = getThisWeekShabbat();
+      }
+      
       console.log('Shabbat data:', shabbat);
       
       // Calculate Kabalat Shabbat time using Friday sunset
-      // This should be between 11-16 minutes before sunset,
-      // rounded to the nearest 5 minutes
       const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
       console.log('Calculated Kabalat time:', kabalatTime, 'using Friday sunset:', fridaySunset);
       
-      // Validate kabalat time for the specific week
-      if (kabalatTime !== "18:45") {
-        console.warn("Warning: Kabalat time doesn't match expected value of 18:45, got:", kabalatTime);
-      }
-      
       if (!shabbat) {
-        console.log('No Shabbat data available, using default values');
+        console.log('No Shabbat data available after fetch, using default values');
         
         // Set default Shabbat data if no data is available
         const defaultPrayers = [
@@ -120,7 +121,6 @@ export function useShabbatData(): ShabbatData {
       console.error('Error refreshing Shabbat data:', error);
       
       // Set default values in case of error
-      // For this specific week, use hardcoded values
       const fridaySunset = "18:57";
       const kabalatTime = "18:45";
       console.log('Using fallback sunset time:', fridaySunset, 'calculated Kabalat time:', kabalatTime);
@@ -150,13 +150,32 @@ export function useShabbatData(): ShabbatData {
   useEffect(() => {
     refreshShabbatData();
     
-    // Refresh data every hour
-    const refreshInterval = setInterval(() => {
-      refreshShabbatData();
-    }, 60 * 60 * 1000);
+    // Weekly refresh on Sundays at 04:00
+    const scheduleWeeklyRefresh = () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 is Sunday
+      const daysUntilSunday = dayOfWeek === 0 ? 
+        (now.getHours() >= 4 ? 7 : 0) : // If it's already Sunday after 4am, schedule for next Sunday
+        7 - dayOfWeek; // Days until next Sunday
+      
+      const nextSunday = new Date(now);
+      nextSunday.setDate(now.getDate() + daysUntilSunday);
+      nextSunday.setHours(4, 0, 0, 0); // 4am
+      
+      const msUntilRefresh = nextSunday.getTime() - now.getTime();
+      
+      setTimeout(() => {
+        console.log('Performing scheduled weekly Shabbat data refresh');
+        refreshShabbatData();
+        scheduleWeeklyRefresh(); // Schedule next refresh
+      }, msUntilRefresh);
+    };
     
-    return () => clearInterval(refreshInterval);
-  }, []);
+    // Initial scheduling
+    scheduleWeeklyRefresh();
+    
+    return () => {};
+  }, [selectedDate]);
 
   return { shabbatData };
 }

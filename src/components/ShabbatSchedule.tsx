@@ -50,7 +50,7 @@ const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
         <div className="h-10 w-px bg-gray-300"></div>
         <div>
           <h3 className="font-medium">צאת השבת</h3>
-          <p className="text-xl font-bold">{havdala}</p>
+          <p className="text-base font-bold">{havdala}</p>
         </div>
       </div>
       
