@@ -1,6 +1,6 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
-import { fetchZmanim, getTodayZmanim, getZmanimDatabase, fetchDailyZmanim, getZmanimForDate } from './zmanim';
+import { fetchZmanim, getTodayZmanim, getZmanimDatabase } from './zmanim';
 import { fetchHolidays, getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
 import { 
   fetchShabbat, 
@@ -14,25 +14,15 @@ import { format } from 'date-fns';
 
 export { formatTime } from './core';
 export type { ZmanimData } from './zmanim';
-export { 
-  getTodayZmanim, 
-  getZmanimDatabase,
-  fetchDailyZmanim,
-  getZmanimForDate
-} from './zmanim';
+export { getTodayZmanim, getZmanimDatabase } from './zmanim';
 export type { HolidayData } from './holidays';
-export { 
-  getTodayHoliday, 
-  isRoshChodeshToday, 
-  getHolidaysDatabase
-} from './holidays';
+export { getTodayHoliday, isRoshChodeshToday, getHolidaysDatabase } from './holidays';
 export type { ShabbatData } from './shabbat';
 export { 
   getThisWeekShabbat, 
   calculateShabbatMinchaTime, 
   calculateShabbatKabalatTime,
-  getFridaySunsetTime,
-  fetchShabbat
+  getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 
@@ -53,7 +43,7 @@ const setDefaultData = () => {
       minchaGedola: '12:18',
       plagHaMincha: '16:38',
       sunset: '17:54',
-      beinHaShmashos: '18:11'
+      beinHaShmashos: '18:24'
     };
     
     (getZmanimDatabase() as any).push(defaultZmanim);
@@ -66,27 +56,23 @@ export const initDatabase = async () => {
     // Initialize with default data first to prevent rendering empty components
     setDefaultData();
     
-    // Get today's date
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const zmanimPromise = fetchZmanim().catch(err => {
+      console.error('Failed to fetch zmanim:', err);
+      return [];
+    });
     
-    // Fetch today's zmanim data
-    const todayZmanim = await fetchDailyZmanim(today);
-    console.log("Today's zmanim:", todayZmanim);
-    
-    // Fetch holidays
     const holidaysPromise = fetchHolidays().catch(err => {
       console.error('Failed to fetch holidays:', err);
       return [];
     });
     
-    // Fetch Shabbat data
     const shabbatPromise = fetchShabbat().catch(err => {
       console.error('Failed to fetch shabbat data:', err);
       return [];
     });
     
-    // Wait for holiday and Shabbat data
-    await Promise.allSettled([holidaysPromise, shabbatPromise]);
+    // Wait for all data to be fetched, but don't fail if one fails
+    await Promise.allSettled([zmanimPromise, holidaysPromise, shabbatPromise]);
     
     console.log('Database initialized');
     setLastUpdated(new Date());
@@ -109,15 +95,8 @@ export const initDatabase = async () => {
 // Update database - to be called by a cron job or scheduled task
 export const updateDatabase = async () => {
   try {
-    // Get today's date
-    const today = format(new Date(), 'yyyy-MM-dd');
-    
-    // Fetch today's zmanim data
-    await fetchDailyZmanim(today);
-    
-    // Fetch holidays data
+    await fetchZmanim();
     await fetchHolidays();
-    
     setLastUpdated(new Date());
     console.log('Daily update completed at', getLastUpdated());
   } catch (error) {
@@ -169,23 +148,16 @@ export const recalculatePrayerTimes = () => {
       return { minchaTime: '17:45', arvitTime: '18:25' };
     }
     
-    // Convert to the format needed by prayer time calculations
-    const sunsetData = zmanimForWeek.map(item => ({
-      date: item.date,
-      sunset: item.sunset,
-      beinHaShmashos: item.beinHaShmashos
-    }));
-    
     // Calculate times based on the week's data
-    const minchaTime = calculateWeeklyMinchaTime(sunsetData);
-    const arvitTime = calculateWeeklyArvitTime(sunsetData);
+    const minchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
+    const arvitTime = calculateWeeklyArvitTime(zmanimForWeek);
     
     console.log('Calculated mincha time:', minchaTime);
     console.log('Calculated arvit time:', arvitTime);
     
     return { minchaTime, arvitTime };
   } catch (error) {
-    console.error('Error recalculating prayer times:', error);
+    console.error('Error calculating prayer times:', error);
     return { minchaTime: '17:45', arvitTime: '18:25' };
   }
 };

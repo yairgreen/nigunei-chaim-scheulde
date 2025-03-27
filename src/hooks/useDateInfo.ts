@@ -7,7 +7,6 @@ export interface DateInfo {
   currentDate: Date;
   hebrewDate: string;
   gregorianDate: string;
-  getHebrewDate: (date: Date) => Promise<string>;
 }
 
 export function useDateInfo(): DateInfo {
@@ -53,36 +52,6 @@ export function useDateInfo(): DateInfo {
     }
   };
 
-  // Add the getHebrewDate function that was missing
-  const getHebrewDate = async (date: Date): Promise<string> => {
-    try {
-      const formattedDate = format(date, 'yyyy-MM-dd');
-      const response = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&start=${formattedDate}&end=${formattedDate}&c=on&ss=on&mf=on&c=on&b=40&d=on&geo=geoname&geonameid=293918&M=on&s=on`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch Hebrew date');
-      }
-      
-      const data = await response.json();
-      
-      if (data.items && data.items.length > 0) {
-        // Find the Hebrew date from the items array
-        const hebrewDateItem = data.items.find((item: any) => item.category === 'hebdate');
-        
-        if (hebrewDateItem && hebrewDateItem.hebrew) {
-          return hebrewDateItem.hebrew;
-        }
-      }
-      
-      // Fallback to a default format if the API doesn't return the expected data
-      return 'כ״ג אדר תשפ״ה';
-      
-    } catch (error) {
-      console.error('Error fetching Hebrew date:', error);
-      return 'כ״ג אדר תשפ״ה';
-    }
-  };
-
   useEffect(() => {
     fetchHebrewDate();
     
@@ -95,5 +64,5 @@ export function useDateInfo(): DateInfo {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  return { currentDate, hebrewDate, gregorianDate, getHebrewDate };
+  return { currentDate, hebrewDate, gregorianDate };
 }

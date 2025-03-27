@@ -20,86 +20,57 @@ let shabbatDatabase: ShabbatData[] = [];
 // Fetch Shabbat data from the API
 export const fetchShabbat = async (): Promise<ShabbatData[]> => {
   try {
-    console.log('Fetching Shabbat data...');
-    
     // Fetch Petach Tikva Shabbat times
     const responsePT = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=293918&b=40&M=on');
-    if (!responsePT.ok) {
-      throw new Error(`PT API error: ${responsePT.status} ${responsePT.statusText}`);
-    }
-    
     const dataPT = await responsePT.json();
-    console.log('Petach Tikva Shabbat data:', dataPT);
     
     // Fetch Tel Aviv Shabbat times
     const responseTA = await fetch('https://www.hebcal.com/shabbat?cfg=json&geonameid=293397&b=18&M=on');
-    if (!responseTA.ok) {
-      throw new Error(`TA API error: ${responseTA.status} ${responseTA.statusText}`);
-    }
-    
     const dataTA = await responseTA.json();
-    console.log('Tel Aviv Shabbat data:', dataTA);
     
     if (dataPT.items && dataTA.items) {
       // Process Shabbat data
       const holidaysDb = getHolidaysDatabase();
       
-      // Extract relevant items
-      const parashatItems = dataPT.items.filter((item: any) => item.category === 'parashat');
-      const candlesPTItems = dataPT.items.filter((item: any) => item.category === 'candles');
-      const havdalahItems = dataPT.items.filter((item: any) => item.category === 'havdalah');
-      const candlesTAItems = dataTA.items.filter((item: any) => item.category === 'candles');
-      const holidayItems = dataPT.items.filter((item: any) => 
-        item.category === 'holiday' && item.subcat === 'shabbat');
-      
-      console.log('Found parashat items:', parashatItems.length);
-      console.log('Found candles PT items:', candlesPTItems.length);
-      console.log('Found havdalah items:', havdalahItems.length);
-      console.log('Found candles TA items:', candlesTAItems.length);
-      console.log('Found holiday items:', holidayItems.length);
-      
-      if (parashatItems.length > 0) {
-        const parashat = parashatItems[0];
-        const holiday = holidayItems.length > 0 ? holidayItems[0] : null;
-        const candlesPT = candlesPTItems.length > 0 ? formatTime(candlesPTItems[0].date) : "18:00";
-        const havdalah = havdalahItems.length > 0 ? formatTime(havdalahItems[0].date) : "19:00";
-        
-        // Find matching Tel Aviv candle lighting
-        let candlesTA = "18:00";
-        if (candlesPTItems.length > 0 && candlesTAItems.length > 0) {
-          const ptDate = format(new Date(candlesPTItems[0].date), 'yyyy-MM-dd');
-          const matchingTAItem = candlesTAItems.find((item: any) => 
-            format(new Date(item.date), 'yyyy-MM-dd') === ptDate
-          );
-          
-          if (matchingTAItem) {
-            candlesTA = formatTime(matchingTAItem.date);
+      const processedData = dataPT.items
+        .filter((item: any) => item.category === 'parashat' || 
+                              (item.category === 'candles' || 
+                               item.category === 'havdalah'))
+        .reduce((acc: any, item: any, idx: number, arr: any[]) => {
+          if (item.category === 'parashat') {
+            acc.parashat = item.title;
+            acc.parashatHebrew = item.hebrew;
+            
+            // Check if this Shabbat has a holiday
+            const holiday = holidaysDb.find((h: any) => 
+              h.subcat === 'shabbat' && 
+              h.category === 'holiday'
+            );
+            
+            if (holiday) {
+              acc.holiday = holiday.title;
+              acc.holidayHebrew = holiday.hebrew;
+            }
+          } else if (item.category === 'candles') {
+            acc.candlesPT = formatTime(item.date);
+            
+            // Find matching Tel Aviv candle lighting
+            const taCandleItem = dataTA.items.find((taItem: any) => 
+              taItem.category === 'candles' && 
+              format(new Date(taItem.date), 'yyyy-MM-dd') === format(new Date(item.date), 'yyyy-MM-dd')
+            );
+            
+            if (taCandleItem) {
+              acc.candlesTA = formatTime(taCandleItem.date);
+            }
+          } else if (item.category === 'havdalah') {
+            acc.havdalah = formatTime(item.date);
           }
-        }
-        
-        console.log('Processed candles PT:', candlesPT);
-        console.log('Processed candles TA:', candlesTA);
-        console.log('Processed havdalah:', havdalah);
-        
-        const processedData: ShabbatData = {
-          title: 'שבת',
-          parashat: parashat.title,
-          parashatHebrew: parashat.hebrew,
-          candlesPT,
-          candlesTA,
-          havdalah
-        };
-        
-        if (holiday) {
-          processedData.holiday = holiday.title;
-          processedData.holidayHebrew = holiday.hebrew;
-        }
-        
-        shabbatDatabase = [processedData];
-        console.log('Processed Shabbat data:', processedData);
-      } else {
-        console.warn('No parashat information found in the API response');
-      }
+          
+          return acc;
+        }, { title: 'שבת' } as ShabbatData);
+      
+      shabbatDatabase = [processedData];
     }
     
     return shabbatDatabase;
@@ -197,16 +168,10 @@ export const getFridaySunsetTime = async (): Promise<string> => {
     
     // Format date for API call
     const formattedDate = format(nextFriday, 'yyyy-MM-dd');
-    console.log(`Getting sunset time for next Friday: ${formattedDate}`);
     
     // Fetch Friday's zmanim data
     const response = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${formattedDate}`);
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-    
     const data = await response.json();
-    console.log('Friday zmanim data:', data);
     
     // Extract sunset time
     if (data && data.times && data.times.sunset) {
