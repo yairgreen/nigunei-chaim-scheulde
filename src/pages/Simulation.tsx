@@ -138,6 +138,7 @@ const Simulation = () => {
               isRoshChodesh={isRoshChodesh}
               currentDate={appliedDate}
               dataLoaded={true}
+              getHebrewDate={getHebrewDate}
             />
           </>
         )}
