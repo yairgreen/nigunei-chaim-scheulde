@@ -1,4 +1,3 @@
-
 import { 
   initDatabase, 
   updateDatabase, 
@@ -106,9 +105,21 @@ const scheduleWeeklyUpdate = () => {
 // For testing purposes - force an immediate update
 export const forceUpdate = async () => {
   try {
+    console.log('Starting forced update of all data...');
+    
+    // Update zmanim database first
+    console.log('Updating zmanim database...');
     await updateDatabase();
+    
+    // Update Shabbat information
+    console.log('Updating Shabbat information...');
     await updateShabbatInfo();
+    
+    // Update prayer times
+    console.log('Updating prayer times...');
     await updatePrayerTimes();
+    
+    console.log('All updates completed successfully');
     return true;
   } catch (error) {
     console.error('Forced update failed:', error);

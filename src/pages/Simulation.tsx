@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { TestTube, Database, AlertCircle } from 'lucide-react';
+import { TestTube, Database, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useSimulationData, runHebrewDateTests } from '@/hooks/useSimulationData';
@@ -11,6 +10,7 @@ import SimulationDebugPanel from '@/components/simulation/SimulationDebugPanel';
 import SimulationDisplay from '@/components/simulation/SimulationDisplay';
 import DatabaseViewer from '@/components/simulation/DatabaseViewer';
 import { useScheduleData } from '@/hooks/useScheduleData';
+import { forceUpdate } from '@/lib/scheduler';
 
 const Simulation = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -62,12 +62,35 @@ const Simulation = () => {
     }
   };
 
+  const handleForceUpdate = async () => {
+    try {
+      toast.loading('מעדכן את כל הנתונים...');
+      const success = await forceUpdate();
+      if (success) {
+        toast.success('כל הנתונים עודכנו בהצלחה');
+      } else {
+        toast.error('אירעה שגיאה בעדכון הנתונים');
+      }
+    } catch (error) {
+      console.error('Error during force update:', error);
+      toast.error('אירעה שגיאה בעדכון הנתונים');
+    }
+  };
+
   return (
     <Layout hideLogin={true}>
       <div className="py-6 px-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">סימולציית לוח זמנים</h1>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleForceUpdate}
+              className="text-sm flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              עדכן נתונים
+            </Button>
             <Button 
               variant="outline" 
               onClick={runTests}
