@@ -109,6 +109,3 @@ export const fetchShabbat = async (): Promise<ShabbatData[]> => {
     return [];
   }
 };
-
-export { calculateShabbatMinchaTime, calculateShabbatKabalatTime };
-

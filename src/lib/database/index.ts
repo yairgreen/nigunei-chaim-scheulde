@@ -1,8 +1,8 @@
-
 import { getLastUpdated, setLastUpdated } from './core';
 import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays, getZmanimDatabase as getSupabaseZmanimDB, getHolidaysDatabase as getSupabaseHolidaysDB } from '@/lib/supabase/zmanim';
 import type { ZmanimData } from './zmanim';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { getThisWeekShabbat, fetchShabbat, getFridaySunsetTime } from './shabbat';
 
 // Initialize zmanim database
 let zmanimDatabase: ZmanimData[] = [];
@@ -66,15 +66,6 @@ export const recalculatePrayerTimes = () => {
   };
 };
 
-export const getThisWeekShabbat = async (specificDate?: Date) => {
-  const today = specificDate || new Date();
-  const dayOfWeek = today.getDay();
-  const daysToSaturday = dayOfWeek === 6 ? 0 : 6 - dayOfWeek;
-  const saturday = addDays(today, daysToSaturday);
-  
-  return await getShabbatTimes(format(saturday, 'yyyy-MM-dd'));
-};
-
 // Update database functions
 export const updateDatabase = async () => {
   console.log('Updating database...');
@@ -112,11 +103,10 @@ export const getHolidaysDatabase = async () => {
 export * from './core';
 export type { ZmanimData } from './zmanim';
 export type { HolidayData } from './holidays';
-export type { ShabbatData } from './shabbat';
+export type { ShabbatData } from './types/shabbat';
 export { 
   calculateShabbatMinchaTime, 
-  calculateShabbatKabalatTime,
-  getFridaySunsetTime 
-} from './shabbat';
+  calculateShabbatKabalatTime 
+} from './utils/shabbatCalculations';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 export { forceUpdate } from '@/lib/scheduler';

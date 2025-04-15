@@ -15,4 +15,3 @@ export interface ShabbatData {
   candles_pt?: string;
   candles_ta?: string;
 }
-
