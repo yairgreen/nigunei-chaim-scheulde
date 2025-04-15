@@ -5,6 +5,7 @@ import { useDailyTimes, DailyTimesData } from './useDailyTimes';
 import { useShabbatData, ShabbatData } from './useShabbatData';
 import { useDailySchedule, DailyScheduleData } from './useDailySchedule';
 import { useDateInfo, DateInfo } from './useDateInfo';
+import { toast } from 'sonner';
 
 export interface ScheduleData extends DateInfo, DailyTimesData, DailyScheduleData, ShabbatData {
   dataLoaded: boolean;
@@ -26,8 +27,12 @@ export function useScheduleData(): ScheduleData {
     try {
       await forceUpdate();
       console.log('Manual refresh completed successfully');
+      // Display success message to the user
+      toast.success('הנתונים עודכנו בהצלחה');
     } catch (error) {
       console.error('Error during manual refresh:', error);
+      // Display error message to the user
+      toast.error('שגיאה בעדכון הנתונים');
     } finally {
       setRefreshCounter(prev => prev + 1);
       setTimeout(() => {
