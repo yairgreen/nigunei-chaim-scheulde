@@ -6,6 +6,7 @@ import {
   calculateShabbatKabalatTime,
   getFridaySunsetTime
 } from '@/lib/database';
+import { format } from 'date-fns';
 
 export interface ShabbatData {
   shabbatData: {
@@ -22,10 +23,10 @@ export interface ShabbatData {
 export function useShabbatData(specificDate?: Date): ShabbatData {
   const [shabbatData, setShabbatData] = useState({
     title: 'שבת',
-    subtitle: '',
-    candlesPT: '19:15',
-    candlesTA: '19:10',
-    havdala: '20:15',
+    subtitle: 'טוען פרשת השבוע...',
+    candlesPT: '--:--',
+    candlesTA: '--:--',
+    havdala: '--:--',
     prayers: [] as { name: string; time: string }[],
     classes: [] as { name: string; time: string }[]
   });
@@ -64,9 +65,13 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
           { name: 'ערבית מוצ״ש', time: '19:35' } // Same as havdalah time
         ];
         
+        // For demo week in April 2025
+        const currentWeek = format(now, 'yyyy-MM-dd');
+        const parashah = getParashaForDate(currentWeek);
+        
         setShabbatData({
           title: 'שבת',
-          subtitle: 'פרשת פקודי | שבת החודש',
+          subtitle: parashah || 'פרשת השבוע',
           candlesPT: '18:17',
           candlesTA: '18:39',
           havdala: '19:35',
@@ -81,9 +86,9 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
       const minchaTime = calculateShabbatMinchaTime(havdalahTime);
       
       // Set Shabbat subtitle with parashat and holiday information
-      let subtitle = shabbat.parashat_hebrew || 'פרשת השבוע';
-      if (shabbat.holiday_hebrew) {
-        subtitle += ` | ${shabbat.holiday_hebrew}`;
+      let subtitle = shabbat.parashatHebrew || shabbat.parashat_hebrew || 'פרשת השבוע';
+      if (shabbat.holidayHebrew || shabbat.holiday_hebrew) {
+        subtitle += ` | ${shabbat.holidayHebrew || shabbat.holiday_hebrew}`;
       }
       
       // Set Shabbat prayers with dynamic kabalat time
@@ -103,8 +108,8 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
       setShabbatData({
         title: 'שבת',
         subtitle: subtitle,
-        candlesPT: shabbat.candles_pt || '18:17',
-        candlesTA: shabbat.candles_ta || '18:39',
+        candlesPT: shabbat.candlesPT || shabbat.candles_pt || '18:17',
+        candlesTA: shabbat.candlesTA || shabbat.candles_ta || '18:39',
         havdala: shabbat.havdalah || '19:35',
         prayers: shabbatPrayers,
         classes: shabbatClasses
@@ -133,9 +138,13 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
         { name: 'ערבית מוצ״ש', time: '19:35' }
       ];
       
+      // For demo week in April 2025
+      const currentWeek = format(now, 'yyyy-MM-dd');
+      const parashah = getParashaForDate(currentWeek);
+      
       setShabbatData({
         title: 'שבת',
-        subtitle: 'פרשת השבוע',
+        subtitle: parashah,
         candlesPT: '18:17',
         candlesTA: '18:39',
         havdala: '19:35',
@@ -143,6 +152,30 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
         classes: []
       });
     }
+  };
+
+  // Helper function to get parasha for a specific date (demo data for April 2025)
+  const getParashaForDate = (dateStr: string): string => {
+    // For April 2025 we'll use these parshiyot
+    const parshiyotApril2025: Record<string, string> = {
+      "2025-04-05": "פרשת צו | שבת הגדול",
+      "2025-04-12": "פרשת שמיני",
+      "2025-04-19": "פרשת תזריע-מצורע",
+      "2025-04-26": "פרשת אחרי מות-קדושים"
+    };
+    
+    // Find the closest Saturday (Shabbat)
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
+    const daysUntilSaturday = dayOfWeek <= 6 ? 6 - dayOfWeek : 0;
+    
+    const saturday = new Date(date);
+    saturday.setDate(date.getDate() + daysUntilSaturday);
+    
+    const saturdayString = format(saturday, 'yyyy-MM-dd');
+    
+    // Return the parasha for this Saturday or a default
+    return parshiyotApril2025[saturdayString] || "פרשת השבוע";
   };
 
   useEffect(() => {

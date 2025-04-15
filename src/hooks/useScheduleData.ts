@@ -8,6 +8,7 @@ import { useDateInfo, DateInfo } from './useDateInfo';
 
 export interface ScheduleData extends DateInfo, DailyTimesData, DailyScheduleData, ShabbatData {
   dataLoaded: boolean;
+  forceRefresh: () => Promise<void>;
 }
 
 export function useScheduleData(): ScheduleData {
@@ -16,13 +17,31 @@ export function useScheduleData(): ScheduleData {
   const { dailyPrayers, dailyClasses, isRoshChodesh } = useDailySchedule();
   const { shabbatData } = useShabbatData();
   const [dataLoaded, setDataLoaded] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  const forceRefresh = async () => {
+    console.log('Manually forcing data refresh...');
+    setDataLoaded(false);
+    
+    try {
+      await forceUpdate();
+      console.log('Manual refresh completed successfully');
+    } catch (error) {
+      console.error('Error during manual refresh:', error);
+    } finally {
+      setRefreshCounter(prev => prev + 1);
+      setTimeout(() => {
+        setDataLoaded(true);
+      }, 500);
+    }
+  };
 
   useEffect(() => {
     // Initialize app and load data
     const loadData = async () => {
       try {
         console.log('Loading initial data...');
+        setDataLoaded(false);
         await initDatabase();
         
         // Trigger an immediate update after initialization
@@ -47,24 +66,30 @@ export function useScheduleData(): ScheduleData {
     // Set up event listeners for data updates
     const handleZmanimUpdate = () => {
       console.log('Detected zmanim update event, refreshing data...');
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshCounter(prev => prev + 1);
     };
     
     const handleShabbatUpdate = () => {
       console.log('Detected Shabbat update event, refreshing data...');
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshCounter(prev => prev + 1);
     };
     
     const handlePrayersUpdate = () => {
       console.log('Detected prayers update event, refreshing data...');
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshCounter(prev => prev + 1);
     };
     
     window.addEventListener('zmanim-updated', handleZmanimUpdate);
     window.addEventListener('shabbat-updated', handleShabbatUpdate);
     window.addEventListener('prayers-updated', handlePrayersUpdate);
     
+    // Set up a refresh every hour
+    const hourlyRefresh = setInterval(() => {
+      forceRefresh();
+    }, 60 * 60 * 1000); // Every hour
+    
     return () => {
+      clearInterval(hourlyRefresh);
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
       window.removeEventListener('shabbat-updated', handleShabbatUpdate);
       window.removeEventListener('prayers-updated', handlePrayersUpdate);
@@ -80,6 +105,7 @@ export function useScheduleData(): ScheduleData {
     dailyClasses,
     shabbatData,
     dataLoaded,
-    isRoshChodesh
+    isRoshChodesh,
+    forceRefresh
   };
 }

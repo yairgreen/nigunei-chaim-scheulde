@@ -20,6 +20,7 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
   className
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [localTimes, setLocalTimes] = useState<TimeItem[]>(times);
   
   // Update current time every minute
   useEffect(() => {
@@ -37,27 +38,28 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
     hour12: false
   });
   
-  // Find the next time item
+  // Update times when prop times change or current time changes
   useEffect(() => {
-    const updateNextTime = () => {
-      // Reset all isNext flags
-      times.forEach(item => {
-        if ('isNext' in item) {
-          delete item.isNext;
-        }
-      });
-      
-      // Current time in HH:MM format
-      const now = formattedTime;
-      
-      // Find the next time that hasn't passed yet
-      const nextTimeIndex = times.findIndex(item => item.time > now);
-      if (nextTimeIndex !== -1) {
-        times[nextTimeIndex].isNext = true;
-      }
-    };
+    if (times.length === 0) return;
     
-    updateNextTime();
+    // Make a deep copy of the times array to avoid modifying props
+    const timesCopy = times.map(item => ({ ...item }));
+    
+    // Reset all isNext flags
+    timesCopy.forEach(item => {
+      item.isNext = false;
+    });
+    
+    // Current time in HH:MM format
+    const now = formattedTime;
+    
+    // Find the next time that hasn't passed yet
+    const nextTimeIndex = timesCopy.findIndex(item => item.time > now);
+    if (nextTimeIndex !== -1) {
+      timesCopy[nextTimeIndex].isNext = true;
+    }
+    
+    setLocalTimes(timesCopy);
   }, [times, formattedTime]);
   
   return (
@@ -78,7 +80,7 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
       </div>
       
       <div className="space-y-1">
-        {times.map((item, index) => (
+        {localTimes.map((item, index) => (
           <div 
             key={index} 
             className={cn(
