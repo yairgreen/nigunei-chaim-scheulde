@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
@@ -12,6 +13,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
   const refreshDailyTimes = async () => {
     try {
+      console.log('Refreshing daily times...');
       // If a specific date is provided, get zmanim for that date
       // Otherwise get today's zmanim
       const data = date 
@@ -23,6 +25,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         return;
       }
 
+      console.log('Zmanim data received:', data);
       setZmanimData(data);
       
       const times = [
@@ -40,6 +43,8 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         { name: 'צאת הכוכבים', time: data.beinHaShmashos, isNext: false }
       ];
 
+      console.log('Processed daily times:', times);
+
       // Update with correct next time marker based on current time
       const now = new Date();
       const currentTimeStr = now.toLocaleTimeString('he-IL', {
@@ -48,10 +53,15 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         hour12: false
       });
 
+      console.log('Current time for next marker:', currentTimeStr);
+
       // Find the next time that hasn't passed yet
       const nextTimeIndex = times.findIndex(item => item.time > currentTimeStr);
       if (nextTimeIndex !== -1) {
         times[nextTimeIndex].isNext = true;
+        console.log('Next time is:', times[nextTimeIndex].name, 'at', times[nextTimeIndex].time);
+      } else {
+        console.log('No next time found');
       }
 
       setDailyTimes(times);

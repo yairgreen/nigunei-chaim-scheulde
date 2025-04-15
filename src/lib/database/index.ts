@@ -1,6 +1,7 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
 import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays, getZmanimDatabase as getSupabaseZmanimDB, getHolidaysDatabase as getSupabaseHolidaysDB } from '@/lib/supabase/zmanim';
+import { fetchZmanim } from './zmanim';
 import type { ZmanimData } from './zmanim';
 import { format, addDays, startOfWeek } from 'date-fns';
 
@@ -15,14 +16,41 @@ export const initDatabase = async () => {
     const startOfCurrentWeek = startOfWeek(today);
     const endOfWeek = addDays(startOfCurrentWeek, 6);
     
+    // First try to use the Supabase data
+    try {
+      const supabaseData = await getSupabaseZmanimDB();
+      if (supabaseData && supabaseData.length > 0) {
+        console.log('Database initialized with Supabase zmanim data');
+        zmanimDatabase = supabaseData;
+        setLastUpdated(new Date());
+        return supabaseData;
+      }
+    } catch (error) {
+      console.error('Error loading from Supabase, falling back to API:', error);
+    }
+    
+    // If Supabase fails or returns no data, fall back to API
     // Get zmanim for the current week
+    try {
+      const apiData = await fetchZmanim();
+      if (apiData && apiData.length > 0) {
+        zmanimDatabase = apiData;
+        console.log('Database initialized with API zmanim data:', apiData);
+        setLastUpdated(new Date());
+        return apiData;
+      }
+    } catch (apiError) {
+      console.error('API data fetch failed:', apiError);
+    }
+    
+    // Last resort: Use the getZmanimForWeek function which has fallback data
     const weeklyZmanim = await getZmanimForWeek(
       format(startOfCurrentWeek, 'yyyy-MM-dd'),
       format(endOfWeek, 'yyyy-MM-dd')
     );
     
     zmanimDatabase = weeklyZmanim;
-    console.log('Database initialized with weekly zmanim:', weeklyZmanim);
+    console.log('Database initialized with weekly zmanim fallback:', weeklyZmanim);
     
     setLastUpdated(new Date());
     return weeklyZmanim;
@@ -72,12 +100,46 @@ export const getThisWeekShabbat = async (specificDate?: Date) => {
 };
 
 export const updateDatabase = async () => {
+  console.log('Updating database...');
   await initDatabase();
+  // Dispatch events to notify components about data changes
+  window.dispatchEvent(new Event('zmanim-updated'));
 };
 
 export const updateShabbatInfo = async () => {
+  console.log('Updating Shabbat information...');
   const shabbat = await getThisWeekShabbat();
+  // Dispatch events to notify components about Shabbat data changes
+  window.dispatchEvent(new Event('shabbat-updated'));
   return shabbat;
+};
+
+// Force update all data
+export const forceUpdate = async () => {
+  console.log('Starting forced update of all data...');
+  
+  try {
+    // Update zmanim database
+    console.log('Updating zmanim database...');
+    await updateDatabase();
+    
+    // Update Shabbat information
+    console.log('Updating Shabbat information...');
+    await updateShabbatInfo();
+    
+    // Update prayer times
+    console.log('Updating prayer times...');
+    // Recalculate prayer times based on updated zmanim
+    const prayers = recalculatePrayerTimes();
+    // Dispatch event to notify components about prayer time changes
+    window.dispatchEvent(new Event('prayers-updated'));
+    
+    console.log('All updates completed successfully');
+    return true;
+  } catch (error) {
+    console.error('Error during force update:', error);
+    throw error;
+  }
 };
 
 // Export database access functions
@@ -111,4 +173,3 @@ export {
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 export { forceUpdate } from '@/lib/scheduler';
-
