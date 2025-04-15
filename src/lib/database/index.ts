@@ -1,6 +1,6 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
-import { getZmanimForDate, getZmanimForWeek } from '@/lib/supabase/zmanim';
+import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays } from '@/lib/supabase/zmanim';
 import type { ZmanimData } from './zmanim';
 import { format, addDays, startOfWeek } from 'date-fns';
 
@@ -44,6 +44,34 @@ export const getZmanimForSpecificDate = async (date: Date): Promise<ZmanimData |
   return await getZmanimForDate(formattedDate);
 };
 
+// Helper functions
+export const isRoshChodeshToday = () => {
+  // This will be implemented with actual logic later
+  return false;
+};
+
+export const recalculatePrayerTimes = () => {
+  return {
+    minchaTime: '17:30',
+    arvitTime: '18:30'
+  };
+};
+
+export const getThisWeekShabbat = async () => {
+  const today = new Date();
+  const saturday = addDays(startOfWeek(today), 6);
+  return await getShabbatTimes(format(saturday, 'yyyy-MM-dd'));
+};
+
+export const updateDatabase = async () => {
+  await initDatabase();
+};
+
+export const updateShabbatInfo = async () => {
+  const shabbat = await getThisWeekShabbat();
+  return shabbat;
+};
+
 // Export other functions
 export * from './core';
 export type { ZmanimData } from './zmanim';
@@ -55,3 +83,4 @@ export {
   getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
+
