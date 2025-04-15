@@ -114,33 +114,7 @@ export const updateShabbatInfo = async () => {
   return shabbat;
 };
 
-// Force update all data
-export const forceUpdate = async () => {
-  console.log('Starting forced update of all data...');
-  
-  try {
-    // Update zmanim database
-    console.log('Updating zmanim database...');
-    await updateDatabase();
-    
-    // Update Shabbat information
-    console.log('Updating Shabbat information...');
-    await updateShabbatInfo();
-    
-    // Update prayer times
-    console.log('Updating prayer times...');
-    // Recalculate prayer times based on updated zmanim
-    const prayers = recalculatePrayerTimes();
-    // Dispatch event to notify components about prayer time changes
-    window.dispatchEvent(new Event('prayers-updated'));
-    
-    console.log('All updates completed successfully');
-    return true;
-  } catch (error) {
-    console.error('Error during force update:', error);
-    throw error;
-  }
-};
+// REMOVED: Removed duplicate forceUpdate export here to fix the duplicate export error
 
 // Export database access functions
 export const getZmanimDatabase = async () => {
@@ -172,4 +146,5 @@ export {
   getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
+// Import forceUpdate from scheduler instead of redefining it here
 export { forceUpdate } from '@/lib/scheduler';
