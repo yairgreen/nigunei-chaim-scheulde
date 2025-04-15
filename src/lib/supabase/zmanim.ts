@@ -2,9 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
+// Use import.meta.env instead of process.env for Vite projects
 const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
+  import.meta.env.VITE_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
 export const getZmanimForDate = async (date: string): Promise<ZmanimData | null> => {
@@ -83,4 +84,3 @@ export const getHolidaysDatabase = async () => {
   const { data } = await supabase.from('holidays').select('*').order('date');
   return data || [];
 };
-
