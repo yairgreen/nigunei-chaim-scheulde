@@ -177,11 +177,15 @@ export const runSimulationTests = async () => {
   });
   
   // Test database access
-  const zmanimDB = getZmanimDatabase();
-  console.log("\nDatabase content:");
-  console.log(`Zmanim database contains ${zmanimDB.length} records`);
-  if (zmanimDB.length > 0) {
-    console.log("First zmanim record:", zmanimDB[0]);
+  try {
+    const zmanimDB = await getZmanimDatabase();
+    console.log("\nDatabase content:");
+    console.log(`Zmanim database contains ${zmanimDB.length} records`);
+    if (zmanimDB.length > 0) {
+      console.log("First zmanim record:", zmanimDB[0]);
+    }
+  } catch (error) {
+    console.error("Error accessing database:", error);
   }
   
   console.log("\nSimulation tests completed");
@@ -191,8 +195,12 @@ export const runSimulationTests = async () => {
  * Exports the current database content for inspection
  * This is primarily used for development and debugging purposes
  */
-export const getDatabaseContent = () => {
-  return {
-    zmanim: getZmanimDatabase(),
-  };
+export const getDatabaseContent = async () => {
+  try {
+    const zmanim = await getZmanimDatabase();
+    return { zmanim };
+  } catch (error) {
+    console.error("Error getting database content:", error);
+    return { zmanim: [] };
+  }
 };

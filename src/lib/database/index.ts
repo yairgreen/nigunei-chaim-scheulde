@@ -1,6 +1,6 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
-import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays } from '@/lib/supabase/zmanim';
+import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays, getZmanimDatabase as getSupabaseZmanimDB, getHolidaysDatabase as getSupabaseHolidaysDB } from '@/lib/supabase/zmanim';
 import type { ZmanimData } from './zmanim';
 import { format, addDays, startOfWeek } from 'date-fns';
 
@@ -72,6 +72,25 @@ export const updateShabbatInfo = async () => {
   return shabbat;
 };
 
+// Export database access functions
+export const getZmanimDatabase = async () => {
+  try {
+    return await getSupabaseZmanimDB();
+  } catch (error) {
+    console.error('Error getting zmanim database:', error);
+    return [];
+  }
+};
+
+export const getHolidaysDatabase = async () => {
+  try {
+    return await getSupabaseHolidaysDB();
+  } catch (error) {
+    console.error('Error getting holidays database:', error);
+    return [];
+  }
+};
+
 // Export other functions
 export * from './core';
 export type { ZmanimData } from './zmanim';
@@ -83,4 +102,3 @@ export {
   getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
-

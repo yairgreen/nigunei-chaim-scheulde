@@ -53,4 +53,3 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
   return { dailyTimes };
 }
-

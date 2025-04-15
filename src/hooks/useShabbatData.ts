@@ -43,7 +43,7 @@ export function useShabbatData(): ShabbatData {
       }
       
       // Get Shabbat data
-      const shabbat = getThisWeekShabbat();
+      const shabbat = await getThisWeekShabbat();
       console.log('Shabbat data:', shabbat);
       
       // Calculate Kabalat Shabbat time using Friday sunset
@@ -88,9 +88,9 @@ export function useShabbatData(): ShabbatData {
       const minchaTime = calculateShabbatMinchaTime(havdalahTime);
       
       // Set Shabbat subtitle
-      let subtitle = shabbat.parashatHebrew || 'פרשת השבוע';
-      if (shabbat.holidayHebrew) {
-        subtitle += ` | ${shabbat.holidayHebrew}`;
+      let subtitle = shabbat.parashat_hebrew || 'פרשת השבוע';
+      if (shabbat.holiday_hebrew) {
+        subtitle += ` | ${shabbat.holiday_hebrew}`;
       }
       
       // Set Shabbat prayers with dynamic kabalat time
@@ -110,8 +110,8 @@ export function useShabbatData(): ShabbatData {
       setShabbatData({
         title: 'שבת',
         subtitle: subtitle,
-        candlesPT: shabbat.candlesPT || '18:17',
-        candlesTA: shabbat.candlesTA || '18:39',
+        candlesPT: shabbat.candles_pt || '18:17',
+        candlesTA: shabbat.candles_ta || '18:39',
         havdala: shabbat.havdalah || '19:35',
         prayers: shabbatPrayers,
         classes: shabbatClasses

@@ -4,7 +4,7 @@ import ScheduleDisplay from '@/components/ScheduleDisplay';
 import Header from '@/components/Header';
 import TimeSelector from '@/components/simulation/TimeSelector';
 import DatabaseViewer from '@/components/simulation/DatabaseViewer';
-import { useSimulationData, runSimulationTests, getDatabaseContent } from '@/hooks/simulation';
+import { useSimulationData, runSimulationTests, getDatabaseContent } from '@/hooks/useSimulationData';
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -31,6 +31,10 @@ const Simulation = () => {
   const [showDatabase, setShowDatabase] = useState(false);
   const [testResults, setTestResults] = useState<string | null>(null);
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const [databaseInfo, setDatabaseInfo] = useState<any>({
+    zmanim: [],
+    holidays: []
+  });
   
   // Get real schedule data for the daily classes
   const { dailyClasses, isRoshChodesh } = useScheduleData();
@@ -55,6 +59,22 @@ const Simulation = () => {
   // Ensure initial simulation is run
   useEffect(() => {
     setAppliedDate(new Date(selectedDate));
+    
+    // Load database info
+    const loadDatabaseInfo = async () => {
+      try {
+        const [zmanim, holidays] = await Promise.all([
+          getZmanimDatabase(),
+          getHolidaysDatabase()
+        ]);
+        setDatabaseInfo({ zmanim, holidays });
+      } catch (error) {
+        console.error("Error loading database info for debugging:", error);
+        setDatabaseInfo({ zmanim: [], holidays: [] });
+      }
+    };
+    
+    loadDatabaseInfo();
   }, []);
   
   // Get the Hebrew display day of week
@@ -121,6 +141,14 @@ const Simulation = () => {
       setTestResults(logs.join('\n'));
       setTestStatus('success');
       toast.success('בדיקות בוצעו בהצלחה');
+      
+      // Refresh database info after tests
+      const [zmanim, holidays] = await Promise.all([
+        getZmanimDatabase(),
+        getHolidaysDatabase()
+      ]);
+      setDatabaseInfo({ zmanim, holidays });
+      
     } catch (error) {
       console.error('Error running tests:', error);
       setTestStatus('error');
@@ -128,19 +156,6 @@ const Simulation = () => {
       toast.error('שגיאה בהרצת הבדיקות');
     }
   };
-  
-  // Get database information
-  const getDatabaseInfo = () => {
-    const zmanimData = getZmanimDatabase();
-    const holidaysData = getHolidaysDatabase();
-    
-    return {
-      zmanim: zmanimData,
-      holidays: holidaysData
-    };
-  };
-  
-  const databaseInfo = getDatabaseInfo();
 
   return (
     <Layout hideLogin={true}>

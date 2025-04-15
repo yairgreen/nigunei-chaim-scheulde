@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   Accordion, 
@@ -10,6 +10,7 @@ import {
 import { getZmanimDatabase, getHolidaysDatabase } from '@/lib/database';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 /**
  * Database Viewer Component
@@ -18,8 +19,37 @@ import { format } from 'date-fns';
  * This component is primarily used for debugging and development purposes.
  */
 const DatabaseViewer = () => {
-  const zmanimData = getZmanimDatabase();
-  const holidaysData = getHolidaysDatabase();
+  const [zmanimData, setZmanimData] = useState([]);
+  const [holidaysData, setHolidaysData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch data when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const zmanim = await getZmanimDatabase();
+        const holidays = await getHolidaysDatabase();
+        
+        setZmanimData(zmanim);
+        setHolidaysData(holidays);
+      } catch (error) {
+        console.error('Error fetching database data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8 flex justify-center items-center h-40">
+        <LoadingSpinner />
+      </div>
+    );
+  }
   
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-8">
