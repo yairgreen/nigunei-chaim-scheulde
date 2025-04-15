@@ -224,3 +224,28 @@ export const runHebrewDateTests = async () => {
   
   console.log("\nNote: For accurate Hebrew dates in production, the API should be used consistently.");
 };
+
+/**
+ * Exports the current database content for inspection
+ * This is primarily used for development and debugging purposes
+ */
+export const getDatabaseContent = async () => {
+  try {
+    const zmanim = await getZmanimDatabase();
+    return { zmanim };
+  } catch (error) {
+    console.error("Error getting database content:", error);
+    return { zmanim: [] };
+  }
+};
+
+// Helper function to get zmanim database content
+const getZmanimDatabase = async () => {
+  try {
+    // This is a mock function for now
+    return [];
+  } catch (error) {
+    console.error("Error accessing database:", error);
+    return [];
+  }
+};

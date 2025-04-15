@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { TestTube, Database, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useSimulationData, runSimulationTests } from '@/hooks/useSimulationData';
+import { useSimulationData, runHebrewDateTests } from '@/hooks/useSimulationData';
 import SimulationControls from '@/components/simulation/SimulationControls';
 import SimulationDebugPanel from '@/components/simulation/SimulationDebugPanel';
 import SimulationDisplay from '@/components/simulation/SimulationDisplay';
@@ -52,7 +52,7 @@ const Simulation = () => {
     setTestResults(null);
     
     try {
-      await runSimulationTests();
+      await runHebrewDateTests();
       setTestStatus('success');
       toast.success('בדיקות בוצעו בהצלחה');
     } catch (error) {

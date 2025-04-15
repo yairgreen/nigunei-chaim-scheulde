@@ -1,7 +1,9 @@
 
+
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
+import { runHebrewDateTests, getDatabaseContent } from './simulation/hebrewDateSimulation';
 
 export interface SimulationData {
   simulatedDailyTimes: Array<{ name: string; time: string }>;
@@ -52,4 +54,4 @@ export function useSimulationData(date: Date): SimulationData {
 }
 
 // Export test functions for development and debugging
-export { runHebrewDateTests, getDatabaseContent } from './simulation/hebrewDateSimulation';
+export { runHebrewDateTests, getDatabaseContent };
