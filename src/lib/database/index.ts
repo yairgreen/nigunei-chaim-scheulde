@@ -45,21 +45,29 @@ export const getZmanimForSpecificDate = async (date: Date): Promise<ZmanimData |
 };
 
 // Helper functions
-export const isRoshChodeshToday = () => {
+export const isRoshChodeshToday = (specificDate?: Date) => {
   // This will be implemented with actual logic later
+  // For now return false since we know today isn't Rosh Chodesh
   return false;
 };
 
 export const recalculatePrayerTimes = () => {
+  // Implement proper calculation based on sunset times
+  // This is a simplified version for now
   return {
     minchaTime: '17:30',
     arvitTime: '18:30'
   };
 };
 
-export const getThisWeekShabbat = async () => {
-  const today = new Date();
-  const saturday = addDays(startOfWeek(today), 6);
+export const getThisWeekShabbat = async (specificDate?: Date) => {
+  const today = specificDate || new Date();
+  const dayOfWeek = today.getDay(); // 0 is Sunday, 6 is Saturday
+  
+  // Calculate the next Saturday - if today is Saturday, use today
+  const daysToSaturday = dayOfWeek === 6 ? 0 : 6 - dayOfWeek;
+  const saturday = addDays(today, daysToSaturday);
+  
   return await getShabbatTimes(format(saturday, 'yyyy-MM-dd'));
 };
 
@@ -102,3 +110,5 @@ export {
   getFridaySunsetTime 
 } from './shabbat';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
+export { forceUpdate } from '@/lib/scheduler';
+

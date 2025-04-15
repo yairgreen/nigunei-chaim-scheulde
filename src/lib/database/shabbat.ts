@@ -158,10 +158,10 @@ export const calculateShabbatKabalatTime = (sunset: string): string => {
 };
 
 // Get Friday sunset time for Shabbat calculations
-export const getFridaySunsetTime = async (): Promise<string> => {
+export const getFridaySunsetTime = async (specificDate?: Date): Promise<string> => {
   try {
-    // Determine the next Friday's date
-    const today = new Date();
+    // Determine the next Friday's date based on provided date or current date
+    const today = specificDate || new Date();
     const dayOfWeek = today.getDay(); // 0 is Sunday, 5 is Friday
     const daysUntilFriday = (dayOfWeek <= 5) ? 5 - dayOfWeek : 5 + 7 - dayOfWeek;
     const nextFriday = addDays(today, daysUntilFriday);

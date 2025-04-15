@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { getTodayZmanim } from '@/lib/database/index';
+import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
 export interface DailyTimesData {
@@ -13,7 +12,11 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
   const refreshDailyTimes = async () => {
     try {
-      const zmanimData = await getTodayZmanim();
+      // If a specific date is provided, get zmanim for that date
+      // Otherwise get today's zmanim
+      const zmanimData = date 
+        ? await getZmanimForSpecificDate(date) 
+        : await getTodayZmanim();
       
       if (!zmanimData) {
         console.error('No zmanim data available');
@@ -42,6 +45,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   };
 
   useEffect(() => {
+    // Refresh data whenever the date changes
     refreshDailyTimes();
     
     // Set up event listener for zmanim updates

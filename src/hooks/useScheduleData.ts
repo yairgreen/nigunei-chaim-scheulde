@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { initDatabase } from '@/lib/database/index';
+import { initDatabase, forceUpdate } from '@/lib/database/index';
 import { useDailyTimes, DailyTimesData } from './useDailyTimes';
 import { useShabbatData, ShabbatData } from './useShabbatData';
 import { useDailySchedule, DailyScheduleData } from './useDailySchedule';
@@ -24,6 +24,9 @@ export function useScheduleData(): ScheduleData {
       try {
         console.log('Loading initial data...');
         await initDatabase();
+        
+        // Trigger an immediate update after initialization
+        await forceUpdate();
         
         // Set dataLoaded to true to display the UI
         setTimeout(() => {

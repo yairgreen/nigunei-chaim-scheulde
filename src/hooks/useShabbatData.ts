@@ -4,8 +4,7 @@ import {
   getThisWeekShabbat,
   calculateShabbatMinchaTime,
   calculateShabbatKabalatTime,
-  getFridaySunsetTime,
-  getTodayZmanim
+  getFridaySunsetTime
 } from '@/lib/database';
 
 export interface ShabbatData {
@@ -20,7 +19,7 @@ export interface ShabbatData {
   };
 }
 
-export function useShabbatData(): ShabbatData {
+export function useShabbatData(specificDate?: Date): ShabbatData {
   const [shabbatData, setShabbatData] = useState({
     title: 'שבת',
     subtitle: '',
@@ -40,28 +39,16 @@ export function useShabbatData(): ShabbatData {
       const minchaGedolaTime = isDaylightSaving ? '13:20' : '12:30';
       
       // Get Friday's sunset time for Kabalat Shabbat calculation
-      const fridaySunset = await getFridaySunsetTime();
+      const fridaySunset = await getFridaySunsetTime(specificDate);
       console.log('Friday sunset time:', fridaySunset);
       
-      // Validate sunset time for the specific week
-      if (fridaySunset !== "18:57") {
-        console.warn("Warning: Sunset time doesn't match expected value of 18:57, got:", fridaySunset);
-      }
-      
-      // Get Shabbat data
-      const shabbat = await getThisWeekShabbat();
+      // Get Shabbat data for this week or the specific date
+      const shabbat = await getThisWeekShabbat(specificDate);
       console.log('Shabbat data:', shabbat);
       
       // Calculate Kabalat Shabbat time using Friday sunset
-      // This should be between 11-16 minutes before sunset,
-      // rounded to the nearest 5 minutes
       const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
       console.log('Calculated Kabalat time:', kabalatTime, 'using Friday sunset:', fridaySunset);
-      
-      // Validate kabalat time for the specific week
-      if (kabalatTime !== "18:45") {
-        console.warn("Warning: Kabalat time doesn't match expected value of 18:45, got:", kabalatTime);
-      }
       
       if (!shabbat) {
         console.log('No Shabbat data available, using default values');
@@ -93,7 +80,7 @@ export function useShabbatData(): ShabbatData {
       const havdalahTime = shabbat.havdalah || '19:35';
       const minchaTime = calculateShabbatMinchaTime(havdalahTime);
       
-      // Set Shabbat subtitle
+      // Set Shabbat subtitle with parashat and holiday information
       let subtitle = shabbat.parashat_hebrew || 'פרשת השבוע';
       if (shabbat.holiday_hebrew) {
         subtitle += ` | ${shabbat.holiday_hebrew}`;
@@ -132,7 +119,6 @@ export function useShabbatData(): ShabbatData {
       const minchaGedolaTime = isDaylightSaving ? '13:20' : '12:30';
       
       // Set default values in case of error
-      // For this specific week, use hardcoded values
       const fridaySunset = "18:57";
       const kabalatTime = "18:45";
       console.log('Using fallback sunset time:', fridaySunset, 'calculated Kabalat time:', kabalatTime);
@@ -149,7 +135,7 @@ export function useShabbatData(): ShabbatData {
       
       setShabbatData({
         title: 'שבת',
-        subtitle: 'פרשת פקודי | שבת החודש',
+        subtitle: 'פרשת השבוע',
         candlesPT: '18:17',
         candlesTA: '18:39',
         havdala: '19:35',
@@ -162,13 +148,24 @@ export function useShabbatData(): ShabbatData {
   useEffect(() => {
     refreshShabbatData();
     
+    // Set up event listener for Shabbat updates
+    const handleShabbatUpdate = () => {
+      console.log('Shabbat update detected, refreshing data...');
+      refreshShabbatData();
+    };
+    
+    window.addEventListener('shabbat-updated', handleShabbatUpdate);
+    
     // Refresh data every hour
     const refreshInterval = setInterval(() => {
       refreshShabbatData();
     }, 60 * 60 * 1000);
     
-    return () => clearInterval(refreshInterval);
-  }, []);
+    return () => {
+      clearInterval(refreshInterval);
+      window.removeEventListener('shabbat-updated', handleShabbatUpdate);
+    };
+  }, [specificDate]);
 
   return { shabbatData };
 }

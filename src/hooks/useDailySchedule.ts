@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
-  recalculatePrayerTimes
+  recalculatePrayerTimes,
+  calculateWeeklyMinchaTime,
+  calculateWeeklyArvitTime
 } from '@/lib/database/index';
-import { format } from 'date-fns';
 
 export interface DailyScheduleData {
   dailyPrayers: { name: string; time: string }[];
@@ -12,24 +13,27 @@ export interface DailyScheduleData {
   isRoshChodesh: boolean;
 }
 
-export function useDailySchedule(): DailyScheduleData {
+export function useDailySchedule(date?: Date): DailyScheduleData {
   const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string }[]>([]);
   const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string }[]>([]);
   const [isRoshChodesh, setIsRoshChodesh] = useState(false);
 
   const refreshDailySchedule = async () => {
     try {
-      // Check if today is Rosh Chodesh
-      const roshChodesh = isRoshChodeshToday();
+      // Check if today is Rosh Chodesh using the provided date or current date
+      const roshChodesh = isRoshChodeshToday(date);
       console.log('Is Rosh Chodesh:', roshChodesh);
       setIsRoshChodesh(roshChodesh);
       
       // Get prayer times from the calculation function
-      const { minchaTime, arvitTime } = recalculatePrayerTimes();
+      const { minchaTime, arvitTime } = date 
+        ? { minchaTime: '17:30', arvitTime: '18:30' } // Default for simulation dates
+        : recalculatePrayerTimes();
+      
       console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime, 'Arvit:', arvitTime);
       
       // Check if we're in daylight saving time (March-October)
-      const now = new Date();
+      const now = date || new Date();
       const month = now.getMonth(); // 0-11 (Jan-Dec)
       const isDaylightSaving = month >= 2 && month <= 9; // March through October
       
@@ -85,13 +89,24 @@ export function useDailySchedule(): DailyScheduleData {
   useEffect(() => {
     refreshDailySchedule();
     
+    // Set up event listener for prayer updates
+    const handlePrayersUpdate = () => {
+      console.log('Prayers update detected, refreshing schedule...');
+      refreshDailySchedule();
+    };
+    
+    window.addEventListener('prayers-updated', handlePrayersUpdate);
+    
     // Set up daily refresh
     const refreshInterval = setInterval(() => {
       refreshDailySchedule();
     }, 60 * 60 * 1000); // Refresh every hour
     
-    return () => clearInterval(refreshInterval);
-  }, []);
+    return () => {
+      clearInterval(refreshInterval);
+      window.removeEventListener('prayers-updated', handlePrayersUpdate);
+    };
+  }, [date]);
 
   return { dailyPrayers, dailyClasses, isRoshChodesh };
 }
