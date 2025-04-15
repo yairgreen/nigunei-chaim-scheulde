@@ -116,7 +116,7 @@ export const fetchShabbat = async (): Promise<ShabbatData[]> => {
       shabbatDatabase = Array.from(shabbatMap.values());
       
       // For April 2025, ensure we have the correct parashot
-      const aprilParashot = {
+      const aprilParashot: Record<string, any> = {
         '2025-04-05': { parashatHebrew: 'פרשת צו', holidayHebrew: 'שבת הגדול' },
         '2025-04-12': { parashatHebrew: 'פרשת שמיני' },
         '2025-04-19': { parashatHebrew: 'פרשת תזריע-מצורע' },
@@ -129,18 +129,18 @@ export const fetchShabbat = async (): Promise<ShabbatData[]> => {
           // Update existing
           shabbatDatabase[existingIdx] = { 
             ...shabbatDatabase[existingIdx], 
-            ...aprilParashot[date as keyof typeof aprilParashot],
-            parashat_hebrew: aprilParashot[date as keyof typeof aprilParashot].parashatHebrew,
-            holiday_hebrew: aprilParashot[date as keyof typeof aprilParashot].holidayHebrew
+            ...aprilParashot[date],
+            parashat_hebrew: aprilParashot[date].parashatHebrew,
+            holiday_hebrew: aprilParashot[date].holidayHebrew
           };
         } else {
           // Add new
           shabbatDatabase.push({
             date,
             title: 'שבת',
-            ...aprilParashot[date as keyof typeof aprilParashot],
-            parashat_hebrew: aprilParashot[date as keyof typeof aprilParashot].parashatHebrew,
-            holiday_hebrew: aprilParashot[date as keyof typeof aprilParashot].holidayHebrew,
+            ...aprilParashot[date],
+            parashat_hebrew: aprilParashot[date].parashatHebrew,
+            holiday_hebrew: aprilParashot[date]?.holidayHebrew,
             candlesPT: '18:17',
             candlesTA: '18:39', 
             havdalah: '19:35',

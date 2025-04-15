@@ -7,7 +7,7 @@ interface SimulationDisplayProps {
   headerTitle: string;
   hebrewDate: string;
   gregorianDate: string;
-  dailyTimes: Array<{ name: string; time: string }>;
+  dailyTimes: Array<{ name: string; time: string; isNext?: boolean }>;
   dailyPrayers: Array<{ name: string; time: string }>;
   dailyClasses: Array<{ name: string; time: string }>;
   shabbatData: {
@@ -34,6 +34,12 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
   isRoshChodesh,
   currentDate
 }) => {
+  // Mock forceRefresh function for simulation purposes
+  const mockForceRefresh = async () => {
+    console.log('Simulation mode: refresh not available');
+    return Promise.resolve();
+  };
+
   return (
     <>
       <Header 
@@ -52,6 +58,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
         gregorianDate={gregorianDate}
         currentDate={currentDate}
         dataLoaded={true}
+        forceRefresh={mockForceRefresh}
       />
     </>
   );

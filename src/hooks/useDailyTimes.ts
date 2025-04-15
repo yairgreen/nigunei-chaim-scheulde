@@ -26,18 +26,18 @@ export function useDailyTimes(date?: Date): DailyTimesData {
       setZmanimData(data);
       
       const times = [
-        { name: 'עלות השחר (72 ד\')', time: data.alotHaShachar },
-        { name: 'הנץ החמה', time: data.sunrise },
-        { name: 'זמן טלית ותפילין', time: data.misheyakir },
-        { name: 'סוף זמן ק"ש (מג״א)', time: data.sofZmanShmaMGA },
-        { name: 'סוף זמן ק"ש (גר״א)', time: data.sofZmanShma },
-        { name: 'סוף זמן תפילה (מג״א)', time: data.sofZmanTfillaMGA },
-        { name: 'סוף זמן תפילה (גר"א)', time: data.sofZmanTfilla },
-        { name: 'חצות היום והלילה', time: data.chatzot },
-        { name: 'זמן מנחה גדולה', time: data.minchaGedola },
-        { name: 'פלג המנחה', time: data.plagHaMincha },
-        { name: 'שקיעה', time: data.sunset },
-        { name: 'צאת הכוכבים', time: data.beinHaShmashos }
+        { name: 'עלות השחר (72 ד\')', time: data.alotHaShachar, isNext: false },
+        { name: 'הנץ החמה', time: data.sunrise, isNext: false },
+        { name: 'זמן טלית ותפילין', time: data.misheyakir, isNext: false },
+        { name: 'סוף זמן ק"ש (מג״א)', time: data.sofZmanShmaMGA, isNext: false },
+        { name: 'סוף זמן ק"ש (גר״א)', time: data.sofZmanShma, isNext: false },
+        { name: 'סוף זמן תפילה (מג״א)', time: data.sofZmanTfillaMGA, isNext: false },
+        { name: 'סוף זמן תפילה (גר"א)', time: data.sofZmanTfilla, isNext: false },
+        { name: 'חצות היום והלילה', time: data.chatzot, isNext: false },
+        { name: 'זמן מנחה גדולה', time: data.minchaGedola, isNext: false },
+        { name: 'פלג המנחה', time: data.plagHaMincha, isNext: false },
+        { name: 'שקיעה', time: data.sunset, isNext: false },
+        { name: 'צאת הכוכבים', time: data.beinHaShmashos, isNext: false }
       ];
 
       // Update with correct next time marker based on current time
@@ -48,18 +48,13 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         hour12: false
       });
 
-      const timesWithNext = times.map(item => {
-        // Remove any previous next markers
-        return { name: item.name, time: item.time };
-      });
-
       // Find the next time that hasn't passed yet
-      const nextTimeIndex = timesWithNext.findIndex(item => item.time > currentTimeStr);
+      const nextTimeIndex = times.findIndex(item => item.time > currentTimeStr);
       if (nextTimeIndex !== -1) {
-        timesWithNext[nextTimeIndex].isNext = true;
+        times[nextTimeIndex].isNext = true;
       }
 
-      setDailyTimes(timesWithNext);
+      setDailyTimes(times);
     } catch (error) {
       console.error('Error refreshing daily times:', error);
     }
@@ -89,8 +84,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         });
 
         const updatedTimes = dailyTimes.map(item => {
-          // Remove any previous next markers
-          return { name: item.name, time: item.time };
+          return { ...item, isNext: false };
         });
 
         // Find the next time that hasn't passed yet
