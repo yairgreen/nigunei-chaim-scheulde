@@ -33,6 +33,12 @@ export function useShabbatData(): ShabbatData {
 
   const refreshShabbatData = async () => {
     try {
+      // Check if we're in daylight saving time (March-October)
+      const now = new Date();
+      const month = now.getMonth(); // 0-11 (Jan-Dec)
+      const isDaylightSaving = month >= 2 && month <= 9; // March through October
+      const minchaGedolaTime = isDaylightSaving ? '13:20' : '12:30';
+      
       // Get Friday's sunset time for Kabalat Shabbat calculation
       const fridaySunset = await getFridaySunsetTime();
       console.log('Friday sunset time:', fridaySunset);
@@ -66,7 +72,7 @@ export function useShabbatData(): ShabbatData {
           { name: 'מנחה וקבלת שבת', time: kabalatTime },  // Dynamic calculation
           { name: 'שחרית א׳', time: '06:45' },
           { name: 'שחרית ב׳', time: '08:30' },
-          { name: 'מנחה גדולה', time: '12:30' },
+          { name: 'מנחה גדולה', time: minchaGedolaTime }, // Use daylight saving aware time
           { name: 'מנחה', time: '18:35' }, // One hour before havdalah, rounded down to nearest 5 minutes
           { name: 'ערבית מוצ״ש', time: '19:35' } // Same as havdalah time
         ];
@@ -99,7 +105,7 @@ export function useShabbatData(): ShabbatData {
         { name: 'מנחה וקבלת שבת', time: kabalatTime },
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
-        { name: 'מנחה גדולה', time: '12:30' },
+        { name: 'מנחה גדולה', time: minchaGedolaTime }, // Use daylight saving aware time
         { name: 'מנחה', time: minchaTime },
         { name: 'ערבית מוצ״ש', time: havdalahTime } // Arvit at Havdalah time
       ];
@@ -119,6 +125,12 @@ export function useShabbatData(): ShabbatData {
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
       
+      // Check if we're in daylight saving time for fallback values
+      const now = new Date();
+      const month = now.getMonth();
+      const isDaylightSaving = month >= 2 && month <= 9;
+      const minchaGedolaTime = isDaylightSaving ? '13:20' : '12:30';
+      
       // Set default values in case of error
       // For this specific week, use hardcoded values
       const fridaySunset = "18:57";
@@ -130,7 +142,7 @@ export function useShabbatData(): ShabbatData {
         { name: 'מנחה וקבלת שבת', time: kabalatTime },
         { name: 'שחרית א׳', time: '06:45' },
         { name: 'שחרית ב׳', time: '08:30' },
-        { name: 'מנחה גדולה', time: '12:30' },
+        { name: 'מנחה גדולה', time: minchaGedolaTime },
         { name: 'מנחה', time: '18:35' },
         { name: 'ערבית מוצ״ש', time: '19:35' }
       ];

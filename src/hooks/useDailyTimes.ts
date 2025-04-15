@@ -9,6 +9,7 @@ export interface DailyTimesData {
 
 export function useDailyTimes(date?: Date): DailyTimesData {
   const [dailyTimes, setDailyTimes] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   const refreshDailyTimes = async () => {
     try {
@@ -43,12 +44,24 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   useEffect(() => {
     refreshDailyTimes();
     
+    // Set up event listener for zmanim updates
+    const handleZmanimUpdate = () => {
+      console.log('Zmanim update detected in useDailyTimes, refreshing...');
+      refreshDailyTimes();
+      setRefreshCounter(prev => prev + 1);
+    };
+    
+    window.addEventListener('zmanim-updated', handleZmanimUpdate);
+    
     // Refresh times every hour
     const refreshInterval = setInterval(() => {
       refreshDailyTimes();
     }, 60 * 60 * 1000);
     
-    return () => clearInterval(refreshInterval);
+    return () => {
+      clearInterval(refreshInterval);
+      window.removeEventListener('zmanim-updated', handleZmanimUpdate);
+    };
   }, [date]);
 
   return { dailyTimes };

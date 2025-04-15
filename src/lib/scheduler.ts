@@ -1,3 +1,4 @@
+
 import { 
   initDatabase, 
   updateDatabase, 
@@ -47,6 +48,8 @@ const scheduleDailyUpdate = () => {
     updateDatabase()
       .then(() => {
         console.log('Daily zmanim database update completed');
+        // After updating the database, trigger an event to notify components
+        window.dispatchEvent(new CustomEvent('zmanim-updated'));
         // Schedule the next update
         scheduleDailyUpdate();
       })
@@ -91,6 +94,9 @@ const scheduleWeeklyUpdate = () => {
     ])
       .then(() => {
         console.log('Weekly Shabbat and prayer times update completed');
+        // After updating, trigger an event to notify components
+        window.dispatchEvent(new CustomEvent('shabbat-updated'));
+        window.dispatchEvent(new CustomEvent('prayers-updated'));
         // Schedule the next update
         scheduleWeeklyUpdate();
       })
@@ -118,6 +124,11 @@ export const forceUpdate = async () => {
     // Update prayer times
     console.log('Updating prayer times...');
     await updatePrayerTimes();
+    
+    // Dispatch events to notify components
+    window.dispatchEvent(new CustomEvent('zmanim-updated'));
+    window.dispatchEvent(new CustomEvent('shabbat-updated'));
+    window.dispatchEvent(new CustomEvent('prayers-updated'));
     
     console.log('All updates completed successfully');
     return true;

@@ -37,6 +37,10 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
   const formattedDate = format(shabbatDate, 'yyyy-MM-dd');
   const shabbatZmanim = zmanimDatabase.find(z => z.date === formattedDate);
   
+  // Check if we're in daylight saving time (March through October)
+  const month = shabbatDate.getMonth(); // 0-11 (Jan-Dec)
+  const isDaylightSaving = month >= 2 && month <= 9; // March through October
+  
   // Use sunset from zmanim if available, otherwise use simulation
   let sunsetTime, havdalaTime, candleLightingPT, candleLightingTA;
   
@@ -93,7 +97,7 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
     { name: 'מנחה וקבלת שבת', time: kabalatTime },
     { name: 'שחרית א׳', time: '06:45' },
     { name: 'שחרית ב׳', time: '08:30' },
-    { name: 'מנחה גדולה', time: '12:30' },
+    { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
     { name: 'מנחה', time: minchaTime },
     { name: 'ערבית מוצ״ש', time: havdalaTime }
   ];

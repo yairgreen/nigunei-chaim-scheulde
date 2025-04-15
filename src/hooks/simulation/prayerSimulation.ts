@@ -24,11 +24,15 @@ export const simulatePrayerTimes = (selectedDate: Date): Array<{ name: string; t
   // Check if it's Friday (dayOfWeek === 5)
   if (dayOfWeek === 5) {
     // Special case for Friday (no afternoon/evening prayers)
+    // Check if we're in daylight saving time 
+    const month = selectedDate.getMonth(); // 0-11 (Jan-Dec)
+    const isDaylightSaving = month >= 2 && month <= 9; // March through October
+    
     return [
       { name: 'שחרית א׳', time: '06:15' },
       { name: 'שחרית ב׳', time: '07:00' },
       { name: 'שחרית ג׳', time: '08:00' },
-      { name: 'מנחה גדולה', time: '12:30' },
+      { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
       { name: 'מנחה ערב שבת', time: '13:30' }
     ];
   }
@@ -81,12 +85,16 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
   // Check if selected date is Rosh Chodesh (simplified for simulation)
   const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
   
+  // Check if we're in daylight saving time 
+  const month = selectedDate.getMonth(); // 0-11 (Jan-Dec)
+  const isDaylightSaving = month >= 2 && month <= 9; // March through October
+  
   // Main daily classes for weekdays - ensure they appear in the simulation
   const mainClasses = [
     { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
     { name: 'שחרית ב׳', time: '07:00' },
     { name: 'שחרית ג׳', time: '08:00' },
-    { name: 'מנחה גדולה', time: '12:30' },
+    { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
     { name: 'מנחה', time: simulatedMinchaTime },
     { name: 'ערבית א׳', time: simulatedArvitTime },
     { name: 'ערבית ב׳', time: '20:45' }
@@ -104,13 +112,17 @@ const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[])
   // Check if selected date is Rosh Chodesh (simplified for simulation)
   const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
   
+  // Check if we're in daylight saving time 
+  const month = selectedDate.getMonth(); // 0-11 (Jan-Dec)
+  const isDaylightSaving = month >= 2 && month <= 9; // March through October
+  
   // Friday has different times
   if (selectedDate.getDay() === 5) { // Friday
     return [
       { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
       { name: 'שחרית ב׳', time: '07:00' },
       { name: 'שחרית ג׳', time: '08:00' },
-      { name: 'מנחה גדולה', time: '12:30' },
+      { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
       { name: 'מנחה ערב שבת', time: '13:30' }
     ];
   }
@@ -120,7 +132,7 @@ const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[])
     { name: 'שחרית א׳', time: isSelectedDateRoshChodesh ? '06:00' : '06:15' },
     { name: 'שחרית ב׳', time: '07:00' },
     { name: 'שחרית ג׳', time: '08:00' },
-    { name: 'מנחה גדולה', time: '12:30' },
+    { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
     { name: 'מנחה', time: simulatedMinchaTime },
     { name: 'ערבית א׳', time: simulatedArvitTime },
     { name: 'ערבית ב׳', time: '20:45' }

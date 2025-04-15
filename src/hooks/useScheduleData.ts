@@ -16,6 +16,7 @@ export function useScheduleData(): ScheduleData {
   const { dailyPrayers, dailyClasses, isRoshChodesh } = useDailySchedule();
   const { shabbatData } = useShabbatData();
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     // Initialize app and load data
@@ -39,6 +40,32 @@ export function useScheduleData(): ScheduleData {
     };
 
     loadData();
+    
+    // Set up event listeners for data updates
+    const handleZmanimUpdate = () => {
+      console.log('Detected zmanim update event, refreshing data...');
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
+    const handleShabbatUpdate = () => {
+      console.log('Detected Shabbat update event, refreshing data...');
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
+    const handlePrayersUpdate = () => {
+      console.log('Detected prayers update event, refreshing data...');
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
+    window.addEventListener('zmanim-updated', handleZmanimUpdate);
+    window.addEventListener('shabbat-updated', handleShabbatUpdate);
+    window.addEventListener('prayers-updated', handlePrayersUpdate);
+    
+    return () => {
+      window.removeEventListener('zmanim-updated', handleZmanimUpdate);
+      window.removeEventListener('shabbat-updated', handleShabbatUpdate);
+      window.removeEventListener('prayers-updated', handlePrayersUpdate);
+    };
   }, []);
 
   return {

@@ -28,12 +28,17 @@ export function useDailySchedule(): DailyScheduleData {
       const { minchaTime, arvitTime } = recalculatePrayerTimes();
       console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime, 'Arvit:', arvitTime);
       
+      // Check if we're in daylight saving time (March-October)
+      const now = new Date();
+      const month = now.getMonth(); // 0-11 (Jan-Dec)
+      const isDaylightSaving = month >= 2 && month <= 9; // March through October
+      
       // Set daily prayers based on calculated times and Rosh Chodesh status
       const prayers = [
         { name: 'שחרית א׳', time: roshChodesh ? '06:00' : '06:15' },
         { name: 'שחרית ב׳', time: '07:00' },
         { name: 'שחרית ג׳', time: '08:00' },
-        { name: 'מנחה גדולה', time: '12:30' },
+        { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
         { name: 'מנחה', time: minchaTime },
         { name: 'ערבית א׳', time: arvitTime },
         { name: 'ערבית ב׳', time: '20:45' }
@@ -42,7 +47,6 @@ export function useDailySchedule(): DailyScheduleData {
       setDailyPrayers(prayers);
       
       // Set daily classes based on the day of the week
-      const now = new Date();
       const dayOfWeek = now.getDay(); // 0 is Sunday
       const classes = [];
       
