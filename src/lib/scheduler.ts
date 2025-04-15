@@ -18,14 +18,14 @@ export const initializeApp = async () => {
 
 // Schedule automatic updates
 const scheduleUpdates = () => {
-  // Schedule daily update at 00:01
+  // Schedule daily zmanim update at 00:00
   scheduleDailyUpdate();
   
-  // Schedule weekly Shabbat update (Sundays at 05:00)
+  // Schedule weekly prayer and Shabbat updates (Sundays at 05:00)
   scheduleWeeklyUpdate();
 };
 
-// Schedule daily database update
+// Schedule daily zmanim database update
 const scheduleDailyUpdate = () => {
   const now = new Date();
   const nextUpdate = new Date(
@@ -33,21 +33,21 @@ const scheduleDailyUpdate = () => {
     now.getMonth(),
     now.getDate() + 1, // Tomorrow
     0, // 00:00 hours
-    1, // 01 minutes
+    0, // 00 minutes
     0
   );
   
   // Calculate milliseconds until next update
   const msUntilUpdate = nextUpdate.getTime() - now.getTime();
   
-  console.log(`Daily update scheduled for ${nextUpdate.toLocaleString()}, in ${msUntilUpdate / 1000 / 60} minutes`);
+  console.log(`Daily zmanim update scheduled for ${nextUpdate.toLocaleString()}, in ${msUntilUpdate / 1000 / 60} minutes`);
   
   // Set a timeout for the next update
   setTimeout(() => {
-    // Update the database
+    // Update the zmanim database
     updateDatabase()
       .then(() => {
-        console.log('Daily database update completed');
+        console.log('Daily zmanim database update completed');
         // Schedule the next update
         scheduleDailyUpdate();
       })
@@ -59,7 +59,7 @@ const scheduleDailyUpdate = () => {
   }, msUntilUpdate);
 };
 
-// Schedule weekly Shabbat update (Sundays at 05:00)
+// Schedule weekly prayer and Shabbat updates (Sundays at 05:00)
 const scheduleWeeklyUpdate = () => {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 is Sunday
@@ -73,7 +73,7 @@ const scheduleWeeklyUpdate = () => {
     now.getFullYear(),
     now.getMonth(),
     now.getDate() + daysUntilSunday,
-    5, // 05:00 hours (changed from 04:00)
+    5, // 05:00 hours
     0, // 00 minutes
     0
   );
@@ -81,19 +81,22 @@ const scheduleWeeklyUpdate = () => {
   // Calculate milliseconds until next update
   const msUntilUpdate = nextUpdate.getTime() - now.getTime();
   
-  console.log(`Weekly Shabbat update scheduled for ${nextUpdate.toLocaleString()}, in ${msUntilUpdate / 1000 / 60 / 60} hours`);
+  console.log(`Weekly prayer and Shabbat update scheduled for ${nextUpdate.toLocaleString()}, in ${msUntilUpdate / 1000 / 60 / 60} hours`);
   
   // Set a timeout for the next update
   setTimeout(() => {
-    // Update Shabbat information
-    updateShabbatInfo()
+    // Update Shabbat and prayer information
+    Promise.all([
+      updateShabbatInfo(),
+      updatePrayerTimes()
+    ])
       .then(() => {
-        console.log('Weekly Shabbat update completed');
+        console.log('Weekly Shabbat and prayer times update completed');
         // Schedule the next update
         scheduleWeeklyUpdate();
       })
       .catch(error => {
-        console.error('Error during weekly Shabbat update:', error);
+        console.error('Error during weekly update:', error);
         // Try again in 1 hour
         setTimeout(scheduleWeeklyUpdate, 60 * 60 * 1000);
       });
@@ -105,9 +108,23 @@ export const forceUpdate = async () => {
   try {
     await updateDatabase();
     await updateShabbatInfo();
+    await updatePrayerTimes();
     return true;
   } catch (error) {
     console.error('Forced update failed:', error);
+    return false;
+  }
+};
+
+// Helper function to update prayer times
+const updatePrayerTimes = async () => {
+  try {
+    // Update prayer times based on the rules we defined
+    // This will be implemented in the database module
+    await updateDatabase();
+    return true;
+  } catch (error) {
+    console.error('Error updating prayer times:', error);
     return false;
   }
 };
