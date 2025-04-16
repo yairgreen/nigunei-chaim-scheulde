@@ -1,14 +1,14 @@
-
 import { format, addDays } from 'date-fns';
 import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
+import type { ShabbatDataResponse } from '@/types/shabbat';
 
 /**
  * Functions for simulating Shabbat data
  */
 
 // Simulate Shabbat data based on the selected date
-export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any) => {
+export const simulateShabbatData = (selectedDate: Date, currentShabbatData: ShabbatDataResponse): ShabbatDataResponse => {
   // Find the next or current Shabbat date
   const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
   const daysUntilShabbat = (6 - dayOfWeek + 7) % 7; // 0 if it's Shabbat, otherwise days until next Shabbat

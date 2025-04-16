@@ -1,13 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { initDatabase, forceUpdate } from '@/lib/database/index';
 import { useDailyTimes, DailyTimesData } from './useDailyTimes';
-import { useShabbatData, ShabbatData } from './useShabbatData';
+import { useShabbatData, ShabbatHookData } from './useShabbatData';
 import { useDailySchedule, DailyScheduleData } from './useDailySchedule';
 import { useDateInfo, DateInfo } from './useDateInfo';
 import { toast } from 'sonner';
 
-export interface ScheduleData extends DateInfo, DailyTimesData, DailyScheduleData, ShabbatData {
+export interface ScheduleData extends DateInfo, DailyTimesData, DailyScheduleData, ShabbatHookData {
   dataLoaded: boolean;
   forceRefresh: () => Promise<void>;
 }

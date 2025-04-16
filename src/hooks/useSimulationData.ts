@@ -1,19 +1,13 @@
+
 import { useScheduleData } from '@/hooks/useScheduleData';
 import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
+import type { ShabbatDataResponse } from '@/types/shabbat';
 
 export interface SimulationData {
   simulatedDailyTimes: Array<{ name: string; time: string }>;
   simulatedDailyPrayers: Array<{ name: string; time: string }>;
-  simulatedShabbatData: {
-    title: string;
-    subtitle: string;
-    candlesPT: string;
-    candlesTA: string;
-    havdala: string;
-    prayers: Array<{ name: string; time: string }>;
-    classes: Array<{ name: string; time: string }>;
-  };
+  simulatedShabbatData: ShabbatDataResponse;
   simulatedHebrewDate: string;
   simulatedGregorianDate: string;
   isLoading: boolean;

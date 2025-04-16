@@ -24,7 +24,7 @@ export function useShabbatState() {
   });
   
   useEffect(() => {
-    if (shabbatData.prayers.length) {
+    if (shabbatData && shabbatData.prayers && shabbatData.prayers.length) {
       setShabbatPrayers([...shabbatData.prayers]);
       setShabbatTimes({
         candlesPT: shabbatData.candlesPT,

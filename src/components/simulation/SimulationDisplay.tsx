@@ -2,6 +2,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
+import { ShabbatDataResponse } from '@/types/shabbat';
 
 interface SimulationDisplayProps {
   headerTitle: string;
@@ -10,15 +11,7 @@ interface SimulationDisplayProps {
   dailyTimes: Array<{ name: string; time: string; isNext?: boolean }>;
   dailyPrayers: Array<{ name: string; time: string }>;
   dailyClasses: Array<{ name: string; time: string }>;
-  shabbatData: {
-    title: string;
-    subtitle: string;
-    candlesPT: string;
-    candlesTA: string;
-    havdala: string;
-    prayers: Array<{ name: string; time: string }>;
-    classes: Array<{ name: string; time: string }>;
-  };
+  shabbatData: ShabbatDataResponse;
   isRoshChodesh: boolean;
   currentDate: Date;
 }
