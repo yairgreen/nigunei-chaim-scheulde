@@ -98,6 +98,7 @@ export type Database = {
           candle_lighting_petah_tikva: string | null
           candle_lighting_tel_aviv: string | null
           date: string
+          early_mincha_time: string | null
           havdalah_petah_tikva: string | null
           id: string
           parasha: string | null
@@ -108,6 +109,7 @@ export type Database = {
           candle_lighting_petah_tikva?: string | null
           candle_lighting_tel_aviv?: string | null
           date: string
+          early_mincha_time?: string | null
           havdalah_petah_tikva?: string | null
           id: string
           parasha?: string | null
@@ -118,6 +120,7 @@ export type Database = {
           candle_lighting_petah_tikva?: string | null
           candle_lighting_tel_aviv?: string | null
           date?: string
+          early_mincha_time?: string | null
           havdalah_petah_tikva?: string | null
           id?: string
           parasha?: string | null

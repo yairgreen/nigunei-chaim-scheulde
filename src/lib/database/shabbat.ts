@@ -1,4 +1,3 @@
-
 import { format, addDays } from 'date-fns';
 import { formatTime } from './core';
 import { ShabbatData } from './types/shabbat';
@@ -14,6 +13,7 @@ export const getThisWeekShabbat = async (specificDate?: Date): Promise<ShabbatDa
   try {
     // First refresh the database if it's empty
     if (shabbatDatabase.length === 0) {
+      console.log('שליפת נתוני שבת: מאגר ריק, מרענן נתונים...');
       await fetchShabbat();
     }
     
@@ -24,21 +24,70 @@ export const getThisWeekShabbat = async (specificDate?: Date): Promise<ShabbatDa
     saturday.setDate(targetDate.getDate() + daysUntilSaturday);
     
     const saturdayFormatted = format(saturday, 'yyyy-MM-dd');
+    console.log('מחפש נתונים עבור שבת בתאריך:', saturdayFormatted);
     
     // Find that Shabbat in our database
     const shabbat = shabbatDatabase.find(item => item.date === saturdayFormatted);
     
     if (!shabbat) {
-      console.log(`No Shabbat found for date ${saturdayFormatted}, creating default`);
+      console.log(`לא נמצאו נתונים עבור שבת ${saturdayFormatted}, יוצר נתוני ברירת מחדל`);
       const demoData = getDemoShabbatData(saturdayFormatted);
       shabbatDatabase.push(demoData);
       return demoData;
     }
     
+    console.log('נמצאו נתוני שבת:', {
+      תאריך: shabbat.date,
+      פרשה: shabbat.parasha || shabbat.parashat_hebrew,
+      'שבת מיוחדת': shabbat.special_shabbat || shabbat.holiday_hebrew,
+      'הדלקת נרות פ"ת': shabbat.candle_lighting_petah_tikva,
+      'הדלקת נרות ת"א': shabbat.candle_lighting_tel_aviv,
+      'צאת השבת': shabbat.havdalah_petah_tikva
+    });
+    
     return shabbat;
   } catch (error) {
-    console.error('Error in getThisWeekShabbat:', error);
+    console.error('שגיאה בשליפת נתוני שבת:', error);
     return getDemoShabbatData(format(specificDate || new Date(), 'yyyy-MM-dd'));
+  }
+};
+
+// Fetch Shabbat data from Supabase
+export const fetchShabbat = async (): Promise<ShabbatData[]> => {
+  try {
+    console.log('מתחיל שליפת נתוני שבת מ-Supabase...');
+    
+    const { data, error } = await supabase
+      .from('shabbat_times')
+      .select('*')
+      .order('date');
+
+    if (error) {
+      console.error('שגיאה בשליפה מ-Supabase:', error);
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      console.log(`נשלפו ${data.length} רשומות שבת מ-Supabase`);
+      shabbatDatabase = data;
+      return data;
+    }
+    
+    console.log('לא נמצאו נתונים ב-Supabase, משתמש בנתוני דמו');
+    // Return demo data if no data in Supabase
+    const demoData = [
+      getDemoShabbatData('2025-04-05'),
+      getDemoShabbatData('2025-04-12'),
+      getDemoShabbatData('2025-04-19'),
+      getDemoShabbatData('2025-04-26')
+    ];
+    
+    shabbatDatabase = demoData;
+    return demoData;
+  } catch (error) {
+    console.error('שגיאה בשליפת נתוני שבת:', error);
+    shabbatDatabase = [];
+    return [];
   }
 };
 
@@ -75,37 +124,5 @@ export const getFridaySunsetTime = async (specificDate?: Date): Promise<string> 
     console.error('Error fetching Friday sunset time:', error);
     const now = new Date();
     return now.getMonth() >= 3 && now.getMonth() <= 8 ? "19:15" : "17:00";
-  }
-};
-
-// Fetch Shabbat data from Supabase
-export const fetchShabbat = async (): Promise<ShabbatData[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('shabbat_times')
-      .select('*')
-      .order('date');
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      shabbatDatabase = data;
-      return data;
-    }
-    
-    // Return demo data if no data in Supabase
-    const demoData = [
-      getDemoShabbatData('2025-04-05'),
-      getDemoShabbatData('2025-04-12'),
-      getDemoShabbatData('2025-04-19'),
-      getDemoShabbatData('2025-04-26')
-    ];
-    
-    shabbatDatabase = demoData;
-    return demoData;
-  } catch (error) {
-    console.error('Error fetching Shabbat data:', error);
-    shabbatDatabase = [];
-    return [];
   }
 };
