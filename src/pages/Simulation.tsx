@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -43,8 +44,7 @@ const Simulation = () => {
   };
   
   const getHeaderTitle = () => {
-    const dayOfWeek = appliedDate.getDay();
-    return dayOfWeek === 6 ? simulatedShabbatData.title : getHebrewDayOfWeek(appliedDate);
+    return getHebrewDayOfWeek(appliedDate);
   };
   
   const runTests = async () => {

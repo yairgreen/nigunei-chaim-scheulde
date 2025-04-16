@@ -108,13 +108,14 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: any)
   // Check if the Shabbat has a special name (מברכין, החודש, etc)
   const specialShabbat = getSpecialShabbatName(shabbatDate);
   
-  // Generate title based on parasha
-  const title = parashatName ? `שבת פרשת ${parashatName}` : 'שבת';
+  // Generate title and subtitle for Shabbat
+  const title = 'שבת';
+  const subtitle = parashatName ? (specialShabbat ? `פרשת ${parashatName} | ${specialShabbat}` : `פרשת ${parashatName}`) : (specialShabbat || '');
   
   // Generate simulated Shabbat data using current data as template
   return {
     title: title,
-    subtitle: specialShabbat,
+    subtitle: subtitle,
     candlesPT: candleLightingPT,
     candlesTA: candleLightingTA,
     havdala: havdalaTime,
