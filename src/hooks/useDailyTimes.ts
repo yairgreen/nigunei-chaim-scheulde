@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
-import { format } from 'date-fns';
 
 export interface DailyTimesData {
   dailyTimes: { name: string; time: string; isNext?: boolean }[];
@@ -11,25 +11,11 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   const [dailyTimes, setDailyTimes] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
   const [zmanimData, setZmanimData] = useState<ZmanimData | null>(null);
 
-  // Helper function to format time to HH:MM
-  const formatTimeToHHMM = (timeStr: string): string => {
-    if (!timeStr) return '--:--';
-    
-    try {
-      // If timeStr is already in HH:MM format, return as is
-      if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-      
-      // If it's a full date/time string, parse and format
-      const parsedTime = new Date(timeStr);
-      return format(parsedTime, 'HH:mm');
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return '--:--';
-    }
-  };
-
   const refreshDailyTimes = async () => {
     try {
+      console.log('Refreshing daily times...');
+      // If a specific date is provided, get zmanim for that date
+      // Otherwise get today's zmanim
       const data = date 
         ? await getZmanimForSpecificDate(date) 
         : await getTodayZmanim();
@@ -39,22 +25,27 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         return;
       }
 
+      console.log('Zmanim data received:', data);
+      setZmanimData(data);
+      
       const times = [
-        { name: 'עלות השחר (72 ד\')', time: formatTimeToHHMM(data.alotHaShachar), isNext: false },
-        { name: 'הנץ החמה', time: formatTimeToHHMM(data.sunrise), isNext: false },
-        { name: 'זמן טלית ותפילין', time: formatTimeToHHMM(data.misheyakir), isNext: false },
-        { name: 'סוף זמן ק"ש (מג״א)', time: formatTimeToHHMM(data.sofZmanShmaMGA), isNext: false },
-        { name: 'סוף זמן ק"ש (גר״א)', time: formatTimeToHHMM(data.sofZmanShma), isNext: false },
-        { name: 'סוף זמן תפילה (מג״א)', time: formatTimeToHHMM(data.sofZmanTfillaMGA), isNext: false },
-        { name: 'סוף זמן תפילה (גר"א)', time: formatTimeToHHMM(data.sofZmanTfilla), isNext: false },
-        { name: 'חצות היום והלילה', time: formatTimeToHHMM(data.chatzot), isNext: false },
-        { name: 'זמן מנחה גדולה', time: formatTimeToHHMM(data.minchaGedola), isNext: false },
-        { name: 'פלג המנחה', time: formatTimeToHHMM(data.plagHaMincha), isNext: false },
-        { name: 'שקיעה', time: formatTimeToHHMM(data.sunset), isNext: false },
-        { name: 'צאת הכוכבים', time: formatTimeToHHMM(data.beinHaShmashos), isNext: false }
+        { name: 'עלות השחר (72 ד\')', time: data.alotHaShachar, isNext: false },
+        { name: 'הנץ החמה', time: data.sunrise, isNext: false },
+        { name: 'זמן טלית ותפילין', time: data.misheyakir, isNext: false },
+        { name: 'סוף זמן ק"ש (מג״א)', time: data.sofZmanShmaMGA, isNext: false },
+        { name: 'סוף זמן ק"ש (גר״א)', time: data.sofZmanShma, isNext: false },
+        { name: 'סוף זמן תפילה (מג״א)', time: data.sofZmanTfillaMGA, isNext: false },
+        { name: 'סוף זמן תפילה (גר"א)', time: data.sofZmanTfilla, isNext: false },
+        { name: 'חצות היום והלילה', time: data.chatzot, isNext: false },
+        { name: 'זמן מנחה גדולה', time: data.minchaGedola, isNext: false },
+        { name: 'פלג המנחה', time: data.plagHaMincha, isNext: false },
+        { name: 'שקיעה', time: data.sunset, isNext: false },
+        { name: 'צאת הכוכבים', time: data.beinHaShmashos, isNext: false }
       ];
 
-      // Current time in HH:MM format
+      console.log('Processed daily times:', times);
+
+      // Update with correct next time marker based on current time
       const now = new Date();
       const currentTimeStr = now.toLocaleTimeString('he-IL', {
         hour: '2-digit',
@@ -62,10 +53,15 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         hour12: false
       });
 
+      console.log('Current time for next marker:', currentTimeStr);
+
       // Find the next time that hasn't passed yet
       const nextTimeIndex = times.findIndex(item => item.time > currentTimeStr);
       if (nextTimeIndex !== -1) {
         times[nextTimeIndex].isNext = true;
+        console.log('Next time is:', times[nextTimeIndex].name, 'at', times[nextTimeIndex].time);
+      } else {
+        console.log('No next time found');
       }
 
       setDailyTimes(times);
@@ -75,6 +71,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   };
 
   useEffect(() => {
+    // Initial refresh
     refreshDailyTimes();
     
     // Set up event listener for zmanim updates
