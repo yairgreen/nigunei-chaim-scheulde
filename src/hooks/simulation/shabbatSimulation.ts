@@ -1,6 +1,6 @@
 
 import { format, addDays } from 'date-fns';
-import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/shabbat';
+import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
 
 /**

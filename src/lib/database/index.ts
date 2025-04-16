@@ -1,3 +1,4 @@
+
 import { getLastUpdated, setLastUpdated } from './core';
 import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays, getZmanimDatabase as getSupabaseZmanimDB, getHolidaysDatabase as getSupabaseHolidaysDB } from '@/lib/supabase/zmanim';
 import type { ZmanimData } from './zmanim';
@@ -110,3 +111,6 @@ export {
 } from './utils/shabbatCalculations';
 export { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from './prayers';
 export { forceUpdate } from '@/lib/scheduler';
+
+// Re-export functions from shabbat.ts
+export { getThisWeekShabbat, fetchShabbat, getFridaySunsetTime } from './shabbat';
