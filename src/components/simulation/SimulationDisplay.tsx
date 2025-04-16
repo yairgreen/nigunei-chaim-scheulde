@@ -43,7 +43,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
   return (
     <>
       <Header 
-        shabbatName={shabbatData.title}
+        shabbatName={headerTitle}
         hebrewDate={hebrewDate}
         gregorianDate={gregorianDate}
       />

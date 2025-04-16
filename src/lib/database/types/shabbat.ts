@@ -14,4 +14,10 @@ export interface ShabbatData {
   holiday_hebrew?: string;
   candles_pt?: string;
   candles_ta?: string;
+  // Supabase field names
+  parasha?: string;
+  special_shabbat?: string;
+  candle_lighting_petah_tikva?: string;
+  candle_lighting_tel_aviv?: string;
+  havdalah_petah_tikva?: string;
 }

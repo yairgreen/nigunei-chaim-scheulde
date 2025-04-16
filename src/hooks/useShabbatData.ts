@@ -82,13 +82,13 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
       }
       
       // Calculate Mincha time: one hour before havdalah, rounded down to nearest 5 minutes
-      const havdalahTime = shabbat.havdalah || '19:35';
+      const havdalahTime = shabbat.havdalah || shabbat.havdalah_petah_tikva || '19:35';
       const minchaTime = calculateShabbatMinchaTime(havdalahTime);
       
       // Set Shabbat subtitle with parashat and special_shabbat information
       // Get parasha and special_shabbat from the database
-      const parasha = shabbat.parasha || shabbat.parashat_hebrew || '';
-      const specialShabbat = shabbat.special_shabbat || shabbat.holiday_hebrew || '';
+      const parasha = shabbat.parasha || shabbat.parashat || shabbat.parashat_hebrew || '';
+      const specialShabbat = shabbat.special_shabbat || shabbat.holiday || shabbat.holiday_hebrew || '';
       
       // Create subtitle based on available information
       let subtitle = '';
@@ -119,8 +119,8 @@ export function useShabbatData(specificDate?: Date): ShabbatData {
       setShabbatData({
         title: 'שבת',
         subtitle: subtitle,
-        candlesPT: shabbat.candle_lighting_petah_tikva || shabbat.candles_pt || '18:17',
-        candlesTA: shabbat.candle_lighting_tel_aviv || shabbat.candles_ta || '18:39',
+        candlesPT: shabbat.candle_lighting_petah_tikva || shabbat.candlesPT || shabbat.candles_pt || '18:17',
+        candlesTA: shabbat.candle_lighting_tel_aviv || shabbat.candlesTA || shabbat.candles_ta || '18:39',
         havdala: shabbat.havdalah_petah_tikva || shabbat.havdalah || '19:35',
         prayers: shabbatPrayers,
         classes: shabbatClasses
