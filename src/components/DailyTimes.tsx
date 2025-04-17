@@ -38,29 +38,13 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
     hour12: false
   });
   
-  // Update times when prop times change or current time changes
+  // Update times when prop times change
   useEffect(() => {
     if (times.length === 0) return;
     
-    // Make a deep copy of the times array to avoid modifying props
-    const timesCopy = times.map(item => ({ ...item }));
-    
-    // Reset all isNext flags
-    timesCopy.forEach(item => {
-      item.isNext = false;
-    });
-    
-    // Current time in HH:MM format
-    const now = formattedTime;
-    
-    // Find the next time that hasn't passed yet
-    const nextTimeIndex = timesCopy.findIndex(item => item.time > now);
-    if (nextTimeIndex !== -1) {
-      timesCopy[nextTimeIndex].isNext = true;
-    }
-    
-    setLocalTimes(timesCopy);
-  }, [times, formattedTime]);
+    // Update our local times state when props change
+    setLocalTimes(times);
+  }, [times]);
   
   return (
     <div className={cn('schedule-card bg-times animate-fade-in-up delay-200', className)}>

@@ -11,9 +11,40 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   const [dailyTimes, setDailyTimes] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
   const [zmanimData, setZmanimData] = useState<ZmanimData | null>(null);
 
-  const refreshDailyTimes = async () => {
+  // Format time to HH:MM format
+  const formatToHHMM = (timeString: string): string => {
     try {
-      console.log('Refreshing daily times...');
+      // If the time is already in HH:MM format, return it
+      if (timeString.match(/^\d{2}:\d{2}$/)) return timeString;
+      
+      // Try to parse as HH:MM:SS format
+      const match = timeString.match(/^(\d{2}):(\d{2}):\d{2}$/);
+      if (match) {
+        return `${match[1]}:${match[2]}`;
+      }
+      
+      // If it's a valid date string, convert to HH:MM
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('he-IL', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      }
+      
+      // Return original if parsing fails
+      return timeString;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString;
+    }
+  };
+
+  // Fetch zmanim data from the database
+  const fetchZmanimData = async () => {
+    try {
+      console.log('Fetching daily zmanim data...');
       // If a specific date is provided, get zmanim for that date
       // Otherwise get today's zmanim
       const data = date 
@@ -28,96 +59,121 @@ export function useDailyTimes(date?: Date): DailyTimesData {
       console.log('Zmanim data received:', data);
       setZmanimData(data);
       
-      const times = [
-        { name: 'עלות השחר (72 ד\')', time: data.alotHaShachar, isNext: false },
-        { name: 'הנץ החמה', time: data.sunrise, isNext: false },
-        { name: 'זמן טלית ותפילין', time: data.misheyakir, isNext: false },
-        { name: 'סוף זמן ק"ש (מג״א)', time: data.sofZmanShmaMGA, isNext: false },
-        { name: 'סוף זמן ק"ש (גר״א)', time: data.sofZmanShma, isNext: false },
-        { name: 'סוף זמן תפילה (מג״א)', time: data.sofZmanTfillaMGA, isNext: false },
-        { name: 'סוף זמן תפילה (גר"א)', time: data.sofZmanTfilla, isNext: false },
-        { name: 'חצות היום והלילה', time: data.chatzot, isNext: false },
-        { name: 'זמן מנחה גדולה', time: data.minchaGedola, isNext: false },
-        { name: 'פלג המנחה', time: data.plagHaMincha, isNext: false },
-        { name: 'שקיעה', time: data.sunset, isNext: false },
-        { name: 'צאת הכוכבים', time: data.beinHaShmashos, isNext: false }
-      ];
-
-      console.log('Processed daily times:', times);
-
-      // Update with correct next time marker based on current time
-      const now = new Date();
-      const currentTimeStr = now.toLocaleTimeString('he-IL', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-
-      console.log('Current time for next marker:', currentTimeStr);
-
-      // Find the next time that hasn't passed yet
-      const nextTimeIndex = times.findIndex(item => item.time > currentTimeStr);
-      if (nextTimeIndex !== -1) {
-        times[nextTimeIndex].isNext = true;
-        console.log('Next time is:', times[nextTimeIndex].name, 'at', times[nextTimeIndex].time);
-      } else {
-        console.log('No next time found');
-      }
-
-      setDailyTimes(times);
+      // Process the data into times array with formatted times
+      updateTimesFromData(data);
     } catch (error) {
-      console.error('Error refreshing daily times:', error);
+      console.error('Error fetching daily times:', error);
     }
   };
 
+  // Update the dailyTimes array based on zmanimData
+  const updateTimesFromData = (data: ZmanimData) => {
+    const times = [
+      { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar), isNext: false },
+      { name: 'הנץ החמה', time: formatToHHMM(data.sunrise), isNext: false },
+      { name: 'זמן טלית ותפילין', time: formatToHHMM(data.misheyakir), isNext: false },
+      { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(data.sofZmanShmaMGA), isNext: false },
+      { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(data.sofZmanShma), isNext: false },
+      { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(data.sofZmanTfillaMGA), isNext: false },
+      { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(data.sofZmanTfilla), isNext: false },
+      { name: 'חצות היום והלילה', time: formatToHHMM(data.chatzot), isNext: false },
+      { name: 'זמן מנחה גדולה', time: formatToHHMM(data.minchaGedola), isNext: false },
+      { name: 'פלג המנחה', time: formatToHHMM(data.plagHaMincha), isNext: false },
+      { name: 'שקיעה', time: formatToHHMM(data.sunset), isNext: false },
+      { name: 'צאת הכוכבים', time: formatToHHMM(data.beinHaShmashos), isNext: false }
+    ];
+
+    updateNextTimeIndicator(times);
+  };
+
+  // Update the "next" indicator based on current time
+  const updateNextTimeIndicator = (times: Array<{ name: string; time: string; isNext?: boolean }>) => {
+    const now = new Date();
+    const currentTimeStr = now.toLocaleTimeString('he-IL', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
+    console.log('Current time for next marker:', currentTimeStr);
+
+    // Reset all isNext flags
+    const updatedTimes = times.map(item => {
+      return { ...item, isNext: false };
+    });
+
+    // Find the next time that hasn't passed yet
+    const nextTimeIndex = updatedTimes.findIndex(item => item.time > currentTimeStr);
+    if (nextTimeIndex !== -1) {
+      updatedTimes[nextTimeIndex].isNext = true;
+      console.log('Next time is:', updatedTimes[nextTimeIndex].name, 'at', updatedTimes[nextTimeIndex].time);
+    } else {
+      console.log('No next time found');
+    }
+
+    setDailyTimes(updatedTimes);
+  };
+
   useEffect(() => {
-    // Initial refresh
-    refreshDailyTimes();
+    // Initial data fetch
+    fetchZmanimData();
     
     // Set up event listener for zmanim updates
     const handleZmanimUpdate = () => {
       console.log('Zmanim update detected in useDailyTimes, refreshing...');
-      refreshDailyTimes();
+      fetchZmanimData();
     };
     
     window.addEventListener('zmanim-updated', handleZmanimUpdate);
     
-    // Refresh times every minute to update the "next" indicator
-    const refreshInterval = setInterval(() => {
-      // If we have zmanim data, just update the next indicator without fetching new data
+    // Set up interval to update the "next" indicator every minute
+    const minuteInterval = setInterval(() => {
       if (zmanimData) {
-        const now = new Date();
-        const currentTimeStr = now.toLocaleTimeString('he-IL', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-
-        const updatedTimes = dailyTimes.map(item => {
-          return { ...item, isNext: false };
-        });
-
-        // Find the next time that hasn't passed yet
-        const nextTimeIndex = updatedTimes.findIndex(item => item.time > currentTimeStr);
-        if (nextTimeIndex !== -1) {
-          updatedTimes[nextTimeIndex].isNext = true;
-        }
-
-        setDailyTimes(updatedTimes);
-      } else {
-        // If no data, do a full refresh
-        refreshDailyTimes();
+        // Just update the "next" indicator without fetching new data
+        const times = [
+          { name: 'עלות השחר (72 ד\')', time: formatToHHMM(zmanimData.alotHaShachar), isNext: false },
+          { name: 'הנץ החמה', time: formatToHHMM(zmanimData.sunrise), isNext: false },
+          { name: 'זמן טלית ותפילין', time: formatToHHMM(zmanimData.misheyakir), isNext: false },
+          { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(zmanimData.sofZmanShmaMGA), isNext: false },
+          { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(zmanimData.sofZmanShma), isNext: false },
+          { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(zmanimData.sofZmanTfillaMGA), isNext: false },
+          { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(zmanimData.sofZmanTfilla), isNext: false },
+          { name: 'חצות היום והלילה', time: formatToHHMM(zmanimData.chatzot), isNext: false },
+          { name: 'זמן מנחה גדולה', time: formatToHHMM(zmanimData.minchaGedola), isNext: false },
+          { name: 'פלג המנחה', time: formatToHHMM(zmanimData.plagHaMincha), isNext: false },
+          { name: 'שקיעה', time: formatToHHMM(zmanimData.sunset), isNext: false },
+          { name: 'צאת הכוכבים', time: formatToHHMM(zmanimData.beinHaShmashos), isNext: false }
+        ];
+        updateNextTimeIndicator(times);
       }
-    }, 60 * 1000); // Check every minute
+    }, 60 * 1000); // Update every minute
     
-    // Full data refresh every hour
-    const hourlyRefreshInterval = setInterval(() => {
-      refreshDailyTimes();
-    }, 60 * 60 * 1000);
+    // Full data refresh every day at midnight
+    const setupDailyRefresh = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      const msUntilMidnight = tomorrow.getTime() - now.getTime();
+      
+      console.log(`Scheduling next daily zmanim refresh in ${msUntilMidnight / 1000 / 60} minutes`);
+      
+      return setTimeout(() => {
+        console.log('Performing scheduled daily zmanim refresh');
+        fetchZmanimData();
+        // Set up the next day's refresh
+        const nextRefresh = setupDailyRefresh();
+        return nextRefresh;
+      }, msUntilMidnight);
+    };
+    
+    // Initialize the daily refresh scheduler
+    const dailyRefreshTimeout = setupDailyRefresh();
     
     return () => {
-      clearInterval(refreshInterval);
-      clearInterval(hourlyRefreshInterval);
+      clearInterval(minuteInterval);
+      clearTimeout(dailyRefreshTimeout);
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
     };
   }, [date, zmanimData]);
