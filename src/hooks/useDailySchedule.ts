@@ -97,13 +97,9 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
     
     window.addEventListener('prayers-updated', handlePrayersUpdate);
     
-    // Set up daily refresh
-    const refreshInterval = setInterval(() => {
-      refreshDailySchedule();
-    }, 60 * 60 * 1000); // Refresh every hour
+    // Removed hourly refresh interval
     
     return () => {
-      clearInterval(refreshInterval);
       window.removeEventListener('prayers-updated', handlePrayersUpdate);
     };
   }, [date]);

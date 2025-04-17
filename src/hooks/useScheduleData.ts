@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { initDatabase, forceUpdate } from '@/lib/database/index';
 import { useDailyTimes, DailyTimesData } from './useDailyTimes';
@@ -87,13 +88,9 @@ export function useScheduleData(): ScheduleData {
     window.addEventListener('shabbat-updated', handleShabbatUpdate);
     window.addEventListener('prayers-updated', handlePrayersUpdate);
     
-    // Set up a refresh every hour
-    const hourlyRefresh = setInterval(() => {
-      forceRefresh();
-    }, 60 * 60 * 1000); // Every hour
+    // Removed hourly refresh interval
     
     return () => {
-      clearInterval(hourlyRefresh);
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
       window.removeEventListener('shabbat-updated', handleShabbatUpdate);
       window.removeEventListener('prayers-updated', handlePrayersUpdate);

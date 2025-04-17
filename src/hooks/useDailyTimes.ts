@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
@@ -126,7 +125,8 @@ export function useDailyTimes(date?: Date): DailyTimesData {
     
     window.addEventListener('zmanim-updated', handleZmanimUpdate);
     
-    // Set up interval to update the "next" indicator every minute
+    // Still keep the minute interval just to update the "next" indicator
+    // This doesn't fetch new data, only updates the UI based on current time
     const minuteInterval = setInterval(() => {
       if (zmanimData) {
         // Just update the "next" indicator without fetching new data
