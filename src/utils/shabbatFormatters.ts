@@ -1,14 +1,18 @@
 
 export const formatShabbatSubtitle = (parasha: string, specialShabbat: string): string => {
+  // If both parasha and specialShabbat exist, concatenate them
   if (parasha && specialShabbat) {
-    return `פרשת ${parasha} | ${specialShabbat}`;
+    return `${parasha} | ${specialShabbat}`;
   }
+  // If only parasha exists, return it
   if (parasha) {
-    return `פרשת ${parasha}`;
+    return parasha;
   }
+  // If only specialShabbat exists, return it
   if (specialShabbat) {
     return specialShabbat;
   }
+  // Default case
   return 'פרשת השבוע';
 };
 

@@ -109,9 +109,18 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: Shab
   // Check if the Shabbat has a special name (מברכין, החודש, etc)
   const specialShabbat = getSpecialShabbatName(shabbatDate);
   
-  // Generate title and subtitle based on our new logic
+  // Generate title and subtitle based on our logic
   const title = specialShabbat || (parashatName ? `פרשת ${parashatName}` : 'שבת');
-  const subtitle = parashatName ? (specialShabbat ? `פרשת ${parashatName} | ${specialShabbat}` : `פרשת ${parashatName}`) : (specialShabbat || '');
+  
+  // Apply the same subtitle logic as in the formatter
+  let subtitle = '';
+  if (parashatName && specialShabbat) {
+    subtitle = `${parashatName} | ${specialShabbat}`;
+  } else if (parashatName) {
+    subtitle = parashatName;
+  } else if (specialShabbat) {
+    subtitle = specialShabbat;
+  }
   
   // Generate simulated Shabbat data using current data as template
   return {
