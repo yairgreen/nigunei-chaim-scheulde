@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface TimeItem {
   name: string;
-  time: string;
+  time: string | null;
   isNext?: boolean;
 }
 
@@ -38,11 +38,15 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
     hour12: false
   });
   
+  // Format time helper function
+  const formatTime = (time: string | null): string => {
+    if (!time) return '--:--';
+    return time.slice(0, 5);
+  };
+
   // Update times when prop times change
   useEffect(() => {
-    if (times.length === 0) return;
-    
-    // Update our local times state when props change
+    if (!times || times.length === 0) return;
     setLocalTimes(times);
   }, [times]);
   
@@ -69,7 +73,8 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
             key={index} 
             className={cn(
               "time-item",
-              item.isNext && "bg-accent1/10 rounded-lg px-2 -mx-2 border-accent1/20"
+              item.isNext && "bg-accent1/10 rounded-lg px-2 -mx-2 border-accent1/20",
+              !item.time && "opacity-50"
             )}
           >
             <span className="font-medium">{item.name}</span>
@@ -77,7 +82,7 @@ const DailyTimes: React.FC<DailyTimesProps> = ({
               "text-title",
               item.isNext && "font-bold text-accent1"
             )}>
-              {item.time}
+              {formatTime(item.time)}
               {item.isNext && <span className="text-xs mr-2 py-1 px-2 bg-accent1/20 rounded-full">הבא</span>}
             </span>
           </div>
