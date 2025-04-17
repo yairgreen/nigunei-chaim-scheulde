@@ -1,4 +1,3 @@
-
 import { getShabbatParashaName, getSpecialShabbatName, formatShabbatSubtitle, getShabbatPrayerTimes } from '@/utils/shabbatFormatters';
 import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 import type { ShabbatDataResponse } from '@/types/shabbat';
@@ -34,13 +33,18 @@ export const processShabbatData = (shabbat: any | null, fridaySunset: string): S
   // Get parasha and special Shabbat
   const parasha = getShabbatParashaName(shabbat);
   const specialShabbat = getSpecialShabbatName(shabbat);
+  
+  // Format the title based on whether this is a holiday Shabbat or a regular parasha
+  const title = specialShabbat || (parasha ? `פרשת ${parasha}` : 'שבת');
+  
+  // Keep the subtitle logic for backward compatibility
   const subtitle = formatShabbatSubtitle(parasha, specialShabbat);
 
   // Get prayer times
   const shabbatPrayers = getShabbatPrayerTimes(isDaylightSaving, kabalatTime, minchaTime, havdalahTime);
 
   return {
-    title: 'שבת',
+    title: title,
     subtitle,
     candlesPT: shabbat.candle_lighting_petah_tikva || shabbat.candlesPT || shabbat.candles_pt || '18:17',
     candlesTA: shabbat.candle_lighting_tel_aviv || shabbat.candlesTA || shabbat.candles_ta || '18:39',

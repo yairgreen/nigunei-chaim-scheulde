@@ -1,3 +1,4 @@
+
 import { format, addDays } from 'date-fns';
 import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
@@ -108,8 +109,8 @@ export const simulateShabbatData = (selectedDate: Date, currentShabbatData: Shab
   // Check if the Shabbat has a special name (מברכין, החודש, etc)
   const specialShabbat = getSpecialShabbatName(shabbatDate);
   
-  // Generate title and subtitle for Shabbat
-  const title = 'שבת';
+  // Generate title and subtitle based on our new logic
+  const title = specialShabbat || (parashatName ? `פרשת ${parashatName}` : 'שבת');
   const subtitle = parashatName ? (specialShabbat ? `פרשת ${parashatName} | ${specialShabbat}` : `פרשת ${parashatName}`) : (specialShabbat || '');
   
   // Generate simulated Shabbat data using current data as template
