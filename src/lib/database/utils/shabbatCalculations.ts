@@ -1,5 +1,5 @@
 
-import { format } from 'date-fns';
+import { formatToHHMM } from '@/lib/utils/timeFormatters';
 
 // Calculate Shabbat mincha time - one hour before havdalah, rounded down to 5 min
 export const calculateShabbatMinchaTime = (havdalah: string): string => {
@@ -18,7 +18,7 @@ export const calculateShabbatMinchaTime = (havdalah: string): string => {
   const minchaHours = Math.floor(roundedMinutes / 60);
   const minchaMinutes = roundedMinutes % 60;
   
-  return `${String(minchaHours).padStart(2, '0')}:${String(minchaMinutes).padStart(2, '0')}`;
+  return formatToHHMM(`${String(minchaHours).padStart(2, '0')}:${String(minchaMinutes).padStart(2, '0')}`);
 };
 
 // Calculate Shabbat kabalat time
@@ -44,6 +44,5 @@ export const calculateShabbatKabalatTime = (sunset: string): string => {
   const kabalatHours = Math.floor(finalMinutes / 60);
   const kabalatMinutesPart = finalMinutes % 60;
   
-  return `${String(kabalatHours).padStart(2, '0')}:${String(kabalatMinutesPart).padStart(2, '0')}`;
+  return formatToHHMM(`${String(kabalatHours).padStart(2, '0')}:${String(kabalatMinutesPart).padStart(2, '0')}`);
 };
-

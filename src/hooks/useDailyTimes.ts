@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
+import { formatToHHMM } from '@/lib/utils/timeFormatters';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
 export interface DailyTimesData {

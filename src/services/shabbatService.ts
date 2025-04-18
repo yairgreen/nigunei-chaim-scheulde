@@ -1,5 +1,5 @@
-
 import type { ShabbatDataResponse } from '@/types/shabbat';
+import { formatToHHMM } from '@/lib/utils/timeFormatters';
 import { calculateShabbatMinchaTime, calculateShabbatKabalatTime, isIsraeliDaylightTime } from '@/lib/utils/shabbatCalculations';
 
 export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatDataResponse => {
@@ -28,15 +28,15 @@ export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatD
   } else if (shabbat.special_shabbat) {
     subtitle = shabbat.special_shabbat;
   }
-
+  
   // Get the early mincha time from the shabbat record or use the provided fallback
-  const earlyMinchaTime = shabbat.early_mincha_time || '17:30';
+  const earlyMinchaTime = formatToHHMM(shabbat.early_mincha_time || '17:30');
   
   // Calculate mincha time before Shabbat (for kabalat Shabbat) using sunset
-  const kabalatShabbatTime = calculateShabbatKabalatTime(fridaySunset);
+  const kabalatShabbatTime = formatToHHMM(calculateShabbatKabalatTime(fridaySunset));
   
   // Calculate afternoon (mincha) time on Shabbat - one hour before havdalah
-  const shabbatMinchaTime = calculateShabbatMinchaTime(shabbat.havdalah_petah_tikva || '19:45');
+  const shabbatMinchaTime = formatToHHMM(calculateShabbatMinchaTime(shabbat.havdalah_petah_tikva || '19:45'));
   
   // Determine if we're in DST for the proper mincha gedola time
   const shabbatDate = shabbat.date ? new Date(shabbat.date) : new Date();
@@ -51,15 +51,15 @@ export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatD
     { name: 'שחרית ב׳', time: '08:30' },
     { name: 'מנחה גדולה', time: minchaGedolaTime },
     { name: 'מנחה', time: shabbatMinchaTime },
-    { name: 'ערבית מוצ״ש', time: shabbat.havdalah_petah_tikva || '--:--' }
+    { name: 'ערבית מוצ״ש', time: formatToHHMM(shabbat.havdalah_petah_tikva) }
   ];
 
   return {
     title,
     subtitle,
-    candlesPT: shabbat.candle_lighting_petah_tikva || '--:--',
-    candlesTA: shabbat.candle_lighting_tel_aviv || '--:--',
-    havdala: shabbat.havdalah_petah_tikva || '--:--',
+    candlesPT: formatToHHMM(shabbat.candle_lighting_petah_tikva),
+    candlesTA: formatToHHMM(shabbat.candle_lighting_tel_aviv),
+    havdala: formatToHHMM(shabbat.havdalah_petah_tikva),
     prayers,
     classes: []
   };
