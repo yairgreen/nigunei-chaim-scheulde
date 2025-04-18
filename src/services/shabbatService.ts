@@ -1,5 +1,6 @@
 
 import type { ShabbatDataResponse } from '@/types/shabbat';
+import { calculateShabbatMinchaTime, calculateShabbatKabalatTime, isIsraeliDaylightTime } from '@/lib/utils/shabbatCalculations';
 
 export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatDataResponse => {
   if (!shabbat) {
@@ -28,14 +29,28 @@ export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatD
     subtitle = shabbat.special_shabbat;
   }
 
-  // Get prayer times using the provided sunset time
+  // Get the early mincha time from the shabbat record or use the provided fallback
+  const earlyMinchaTime = shabbat.early_mincha_time || '17:30';
+  
+  // Calculate mincha time before Shabbat (for kabalat Shabbat) using sunset
+  const kabalatShabbatTime = calculateShabbatKabalatTime(fridaySunset);
+  
+  // Calculate afternoon (mincha) time on Shabbat - one hour before havdalah
+  const shabbatMinchaTime = calculateShabbatMinchaTime(shabbat.havdalah_petah_tikva || '19:45');
+  
+  // Determine if we're in DST for the proper mincha gedola time
+  const shabbatDate = shabbat.date ? new Date(shabbat.date) : new Date();
+  const isDST = isIsraeliDaylightTime(shabbatDate);
+  const minchaGedolaTime = isDST ? '13:20' : '12:30';
+
+  // Get prayer times using all the calculated values
   const prayers = [
-    { name: 'קבלת שבת מוקדמת', time: '17:30' },
-    { name: 'מנחה וקבלת שבת', time: fridaySunset },
+    { name: 'קבלת שבת מוקדמת', time: earlyMinchaTime },
+    { name: 'מנחה וקבלת שבת', time: kabalatShabbatTime },
     { name: 'שחרית א׳', time: '06:45' },
     { name: 'שחרית ב׳', time: '08:30' },
-    { name: 'מנחה גדולה', time: '13:20' },
-    { name: 'מנחה', time: '17:30' },
+    { name: 'מנחה גדולה', time: minchaGedolaTime },
+    { name: 'מנחה', time: shabbatMinchaTime },
     { name: 'ערבית מוצ״ש', time: shabbat.havdalah_petah_tikva || '--:--' }
   ];
 

@@ -36,7 +36,30 @@ export function useShabbatData(): ShabbatHookData {
 
       if (nextShabbat) {
         console.log('Found next Shabbat:', nextShabbat);
-        const processedData = processShabbatData(nextShabbat, nextShabbat.early_mincha_time || '18:57');
+        
+        // Get the Friday sunset time for this Shabbat from daily_zmanim
+        let fridaySunset = '';
+        try {
+          const { data: fridayZmanim, error: fridayError } = await supabase
+            .from('daily_zmanim')
+            .select('sunset')
+            .eq('gregorian_date', nextShabbat.date)
+            .single();
+            
+          if (!fridayError && fridayZmanim && fridayZmanim.sunset) {
+            fridaySunset = fridayZmanim.sunset;
+            console.log(`Found Friday sunset time for Shabbat: ${fridaySunset}`);
+          } else {
+            console.warn('Could not find sunset time for Friday, using default');
+            fridaySunset = '19:00'; // Default if not found
+          }
+        } catch (zmanimError) {
+          console.error('Error getting Friday zmanim:', zmanimError);
+          fridaySunset = '19:00'; // Default if error
+        }
+        
+        // Process the Shabbat data with the correct Friday sunset time
+        const processedData = processShabbatData(nextShabbat, fridaySunset);
         setShabbatData(processedData);
       }
     } catch (error) {
