@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { getThisWeekShabbat, getFridaySunsetTime } from '@/lib/database';
-import type { ShabbatHookData } from '@/types/shabbat';
+import { supabase } from '@/integrations/supabase/client';
 import { processShabbatData } from '@/services/shabbatService';
+import type { ShabbatHookData } from '@/types/shabbat';
 
-export function useShabbatData(specificDate?: Date): ShabbatHookData {
+export function useShabbatData(): ShabbatHookData {
   const [shabbatData, setShabbatData] = useState({
     title: 'שבת',
-    subtitle: 'טוען פרשת השבוע...',
+    subtitle: '',
     candlesPT: '--:--',
     candlesTA: '--:--',
     havdala: '--:--',
@@ -17,27 +17,36 @@ export function useShabbatData(specificDate?: Date): ShabbatHookData {
 
   const refreshShabbatData = async () => {
     try {
-      // Get Friday's sunset time for Kabalat Shabbat calculation
-      const fridaySunset = await getFridaySunsetTime(specificDate);
-      console.log('Friday sunset time:', fridaySunset);
+      // Get the current date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
       
-      // Get Shabbat data for this week or the specific date
-      const shabbat = await getThisWeekShabbat(specificDate);
-      console.log('Shabbat data:', shabbat);
-      
-      const processedData = processShabbatData(shabbat, fridaySunset);
-      setShabbatData(processedData);
+      // Query for the next Shabbat
+      const { data: nextShabbat, error } = await supabase
+        .from('shabbat_times')
+        .select('*')
+        .gte('date', today)
+        .order('date')
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching Shabbat data:', error);
+        return;
+      }
+
+      if (nextShabbat) {
+        console.log('Found next Shabbat:', nextShabbat);
+        const processedData = processShabbatData(nextShabbat, nextShabbat.early_mincha_time || '18:57');
+        setShabbatData(processedData);
+      }
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
-      const processedData = processShabbatData(null, '18:57');
-      setShabbatData(processedData);
     }
   };
 
   useEffect(() => {
     refreshShabbatData();
     
-    // Set up event listener for Shabbat updates
     const handleShabbatUpdate = () => {
       console.log('Shabbat update detected, refreshing data...');
       refreshShabbatData();
@@ -48,9 +57,9 @@ export function useShabbatData(specificDate?: Date): ShabbatHookData {
     return () => {
       window.removeEventListener('shabbat-updated', handleShabbatUpdate);
     };
-  }, [specificDate]);
+  }, []);
 
   return { shabbatData };
 }
 
-export type { ShabbatHookData, ShabbatDataResponse } from '@/types/shabbat';
+export type { ShabbatHookData } from '@/types/shabbat';

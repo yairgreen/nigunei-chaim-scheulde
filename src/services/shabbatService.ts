@@ -1,56 +1,51 @@
 
-import { getShabbatParashaName, getSpecialShabbatName, formatShabbatSubtitle, getShabbatPrayerTimes } from '@/utils/shabbatFormatters';
-import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 import type { ShabbatDataResponse } from '@/types/shabbat';
 
-export const processShabbatData = (shabbat: any | null, fridaySunset: string): ShabbatDataResponse => {
+export const processShabbatData = (shabbat: any, fridaySunset: string): ShabbatDataResponse => {
   if (!shabbat) {
-    console.log('No Shabbat data available, using default values');
-    const defaultPrayers = getShabbatPrayerTimes(true, '18:45', '18:35', '19:35');
-    
+    console.log('No Shabbat data available');
     return {
       title: 'שבת',
-      subtitle: 'פרשת השבוע',
-      candlesPT: '18:17',
-      candlesTA: '18:39',
-      havdala: '19:35',
-      prayers: defaultPrayers,
+      subtitle: '',
+      candlesPT: '--:--',
+      candlesTA: '--:--',
+      havdala: '--:--',
+      prayers: [],
       classes: []
     };
   }
 
-  // Get havdalah time and calculate Mincha time
-  const havdalahTime = shabbat.havdalah || shabbat.havdalah_petah_tikva || '19:35';
-  const minchaTime = calculateShabbatMinchaTime(havdalahTime);
-  
-  // Calculate Kabalat Shabbat time using Friday sunset
-  const kabalatTime = calculateShabbatKabalatTime(fridaySunset);
-  
-  // Check if we're in daylight saving time
-  const now = new Date();
-  const month = now.getMonth();
-  const isDaylightSaving = month >= 2 && month <= 9;
-
-  // Get parasha and special Shabbat
-  const parasha = getShabbatParashaName(shabbat);
-  const specialShabbat = getSpecialShabbatName(shabbat);
-  
-  // Format the title based on whether this is a holiday Shabbat or a regular parasha
-  const title = specialShabbat || (parasha ? `פרשת ${parasha}` : 'שבת');
+  // Format the title based on whether this is a special Shabbat or regular parasha
+  const title = shabbat.special_shabbat || (shabbat.parasha ? `פרשת ${shabbat.parasha}` : 'שבת');
   
   // Format the subtitle according to the provided logic
-  const subtitle = formatShabbatSubtitle(parasha, specialShabbat);
+  let subtitle = '';
+  if (shabbat.parasha && shabbat.special_shabbat) {
+    subtitle = `${shabbat.parasha} | ${shabbat.special_shabbat}`;
+  } else if (shabbat.parasha) {
+    subtitle = shabbat.parasha;
+  } else if (shabbat.special_shabbat) {
+    subtitle = shabbat.special_shabbat;
+  }
 
-  // Get prayer times
-  const shabbatPrayers = getShabbatPrayerTimes(isDaylightSaving, kabalatTime, minchaTime, havdalahTime);
+  // Get prayer times using the provided sunset time
+  const prayers = [
+    { name: 'קבלת שבת מוקדמת', time: '17:30' },
+    { name: 'מנחה וקבלת שבת', time: fridaySunset },
+    { name: 'שחרית א׳', time: '06:45' },
+    { name: 'שחרית ב׳', time: '08:30' },
+    { name: 'מנחה גדולה', time: '13:20' },
+    { name: 'מנחה', time: '17:30' },
+    { name: 'ערבית מוצ״ש', time: shabbat.havdalah_petah_tikva || '--:--' }
+  ];
 
   return {
-    title: title,
+    title,
     subtitle,
-    candlesPT: shabbat.candle_lighting_petah_tikva || shabbat.candlesPT || shabbat.candles_pt || '18:17',
-    candlesTA: shabbat.candle_lighting_tel_aviv || shabbat.candlesTA || shabbat.candles_ta || '18:39',
-    havdala: havdalahTime,
-    prayers: shabbatPrayers,
+    candlesPT: shabbat.candle_lighting_petah_tikva || '--:--',
+    candlesTA: shabbat.candle_lighting_tel_aviv || '--:--',
+    havdala: shabbat.havdalah_petah_tikva || '--:--',
+    prayers,
     classes: []
   };
 };
