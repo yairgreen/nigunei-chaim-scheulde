@@ -100,16 +100,6 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
   // Update times from zmanim data
   const updateTimesFromData = (data: ZmanimData, weeklyZmanim: ZmanimData[]) => {
-    console.log('Updating times from data:', data);
-    
-    // Make sure we have valid data to work with
-    if (!data) {
-      console.error('No zmanim data provided to updateTimesFromData');
-      setDailyTimes([]);
-      return;
-    }
-    
-    // Create times array with formatted values
     const times = [
       { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar) },
       { name: 'הנץ החמה', time: formatToHHMM(data.sunrise) },
@@ -153,67 +143,23 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   useEffect(() => {
     const fetchZmanimData = async () => {
       try {
-        console.log('Fetching zmanim data...');
-        
         // Get start of current week
         const weekStart = startOfWeek(date || new Date(), { weekStartsOn: 0 });
-        console.log('Week start:', format(weekStart, 'yyyy-MM-dd'));
         
         // Get zmanim for the whole week
         const weeklyZmanim = getZmanimForWeek(weekStart);
-        console.log('Weekly zmanim:', weeklyZmanim);
         
         // Get specific date's zmanim
         const targetDate = date || new Date();
         const formattedDate = format(targetDate, 'yyyy-MM-dd');
-        console.log('Looking for zmanim for date:', formattedDate);
-        
         const todayZmanim = weeklyZmanim.find(z => z.date === formattedDate);
-        console.log('Today zmanim:', todayZmanim);
 
         if (todayZmanim) {
           setZmanimData(todayZmanim);
           updateTimesFromData(todayZmanim, weeklyZmanim);
-        } else {
-          console.error('No zmanim found for today:', formattedDate);
-          // Use default times if no data available
-          const defaultTimes = [
-            { name: 'עלות השחר (72 ד\')', time: '05:00' },
-            { name: 'הנץ החמה', time: '06:00' },
-            { name: 'זמן טלית ותפילין', time: '05:40' },
-            { name: 'סוף זמן ק"ש (מג״א)', time: '08:30' },
-            { name: 'סוף זמן ק"ש (גר״א)', time: '09:10' },
-            { name: 'סוף זמן תפילה (מג״א)', time: '09:40' },
-            { name: 'סוף זמן תפילה (גר"א)', time: '10:10' },
-            { name: 'חצות היום והלילה', time: '12:00' },
-            { name: 'זמן מנחה גדולה', time: '12:30' },
-            { name: 'מנחה', time: '17:30' },
-            { name: 'שקיעה', time: '18:00' },
-            { name: 'צאת הכוכבים', time: '18:30' },
-            { name: 'ערבית א׳', time: '18:45' }
-          ];
-          updateNextTimeIndicator(defaultTimes);
         }
       } catch (error) {
         console.error('Error fetching daily times:', error);
-        
-        // Set default times in case of error
-        const defaultTimes = [
-          { name: 'עלות השחר (72 ד\')', time: '05:00' },
-          { name: 'הנץ החמה', time: '06:00' },
-          { name: 'זמן טלית ותפילין', time: '05:40' },
-          { name: 'סוף זמן ק"ש (מג״א)', time: '08:30' },
-          { name: 'סוף זמן ק"ש (גר״א)', time: '09:10' },
-          { name: 'סוף זמן תפילה (מג״א)', time: '09:40' },
-          { name: 'סוף זמן תפילה (גר"א)', time: '10:10' },
-          { name: 'חצות היום והלילה', time: '12:00' },
-          { name: 'זמן מנחה גדולה', time: '12:30' },
-          { name: 'מנחה', time: '17:30' },
-          { name: 'שקיעה', time: '18:00' },
-          { name: 'צאת הכוכבים', time: '18:30' },
-          { name: 'ערבית א׳', time: '18:45' }
-        ];
-        updateNextTimeIndicator(defaultTimes);
       }
     };
 
@@ -225,14 +171,11 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         const weekStart = startOfWeek(date || new Date(), { weekStartsOn: 0 });
         const weeklyZmanim = getZmanimForWeek(weekStart);
         updateTimesFromData(zmanimData, weeklyZmanim);
-      } else {
-        // Try to fetch data again if it wasn't available
-        fetchZmanimData();
       }
     }, 60 * 1000);
     
     return () => clearInterval(minuteInterval);
-  }, [date]);
+  }, [date, zmanimData]);
 
   return { dailyTimes };
 }
