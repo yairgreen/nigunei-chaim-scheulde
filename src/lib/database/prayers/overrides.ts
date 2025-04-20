@@ -3,12 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import type { PrayerOverride } from '../types/prayers';
 import type { PrayerOverrideFormData } from '@/components/admin/PrayerOverrideForm';
 
+// Create a type-safe but generic way to access any table
+const typeSafeSupabase = {
+  from: (table: string) => supabase.from(table as any)
+};
+
 export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
-  // Use the generic query method to avoid type errors
-  const { data, error } = await supabase
+  // Use the generic wrapper to avoid type errors
+  const { data, error } = await typeSafeSupabase
     .from('prayer_overrides')
     .select('*')
-    .eq('is_active', true) as any;
+    .eq('is_active', true);
     
   if (error) {
     console.error('Error fetching prayer overrides:', error);
@@ -19,12 +24,12 @@ export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
 }
 
 export async function addPrayerOverride(override: PrayerOverrideFormData): Promise<PrayerOverride | null> {
-  // Use the generic query method with 'as any' to avoid type errors
-  const { data, error } = await supabase
+  // Use the generic wrapper to avoid type errors
+  const { data, error } = await typeSafeSupabase
     .from('prayer_overrides')
     .insert([override])
     .select()
-    .single() as any;
+    .single();
     
   if (error) {
     console.error('Error adding prayer override:', error);
@@ -35,11 +40,11 @@ export async function addPrayerOverride(override: PrayerOverrideFormData): Promi
 }
 
 export async function deletePrayerOverride(id: string): Promise<boolean> {
-  // Use the generic query method with 'as any' to avoid type errors
-  const { error } = await supabase
+  // Use the generic wrapper to avoid type errors
+  const { error } = await typeSafeSupabase
     .from('prayer_overrides')
     .update({ is_active: false })
-    .eq('id', id) as any;
+    .eq('id', id);
     
   if (error) {
     console.error('Error deleting prayer override:', error);
