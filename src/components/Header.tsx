@@ -6,6 +6,7 @@ interface HeaderProps {
   shabbatName: string;
   hebrewDate: string;
   gregorianDate: string;
+  todayHoliday?: string;
   className?: string;
 }
 
@@ -13,8 +14,12 @@ const Header: React.FC<HeaderProps> = ({
   shabbatName,
   hebrewDate,
   gregorianDate,
+  todayHoliday,
   className
 }) => {
+  // Combine gregorian date with holiday if exists
+  const dateDisplay = todayHoliday ? `${gregorianDate} | ${todayHoliday}` : gregorianDate;
+
   return (
     <div className="mb-8">
       <div className="flex justify-between items-start mb-6">
@@ -33,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({
           </h1>
           <div className="space-y-1">
             <p className="text-xl text-subtitle font-medium">{hebrewDate}</p>
-            <p className="text-sm text-subtitle/80">{gregorianDate}</p>
+            <p className="text-sm text-subtitle/80">{dateDisplay}</p>
           </div>
         </div>
         <div className="w-20 h-1 bg-accent1 mx-auto mt-6 rounded-full animate-fade-in"></div>

@@ -1,18 +1,20 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
+import { getTodayHoliday } from '@/lib/database/holidays';
 
 export interface DateInfo {
   currentDate: Date;
   hebrewDate: string;
   gregorianDate: string;
+  todayHoliday: string;
 }
 
 export function useDateInfo(): DateInfo {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hebrewDate, setHebrewDate] = useState('כ״ג אדר תשפ״ה');
   const [gregorianDate, setGregorianDate] = useState('');
+  const [todayHoliday, setTodayHoliday] = useState('');
 
   const fetchHebrewDate = async () => {
     try {
@@ -25,6 +27,10 @@ export function useDateInfo(): DateInfo {
       }
       
       const data = await response.json();
+      
+      // Get holiday info
+      const holidayInfo = await getTodayHoliday();
+      setTodayHoliday(holidayInfo);
       
       if (data.items && data.items.length > 0) {
         // Find the Hebrew date from the items array
@@ -45,7 +51,7 @@ export function useDateInfo(): DateInfo {
       setGregorianDate(format(today, 'dd MMMM yyyy', { locale: he }));
       
     } catch (error) {
-      console.error('Error fetching Hebrew date:', error);
+      console.error('Error fetching date info:', error);
       // Fallback to known correct date
       setHebrewDate('כ״ג אדר תשפ״ה');
       setGregorianDate(format(new Date(), 'dd MMMM yyyy', { locale: he }));
@@ -64,5 +70,5 @@ export function useDateInfo(): DateInfo {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  return { currentDate, hebrewDate, gregorianDate };
+  return { currentDate, hebrewDate, gregorianDate, todayHoliday };
 }

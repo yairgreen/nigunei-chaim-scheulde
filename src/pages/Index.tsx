@@ -8,7 +8,7 @@ import ScheduleDisplay from '@/components/ScheduleDisplay';
 
 const Index = () => {
   const scheduleData = useScheduleData();
-  const { dataLoaded, hebrewDate, gregorianDate } = scheduleData;
+  const { dataLoaded, hebrewDate, gregorianDate, todayHoliday } = scheduleData;
 
   return (
     <Layout hideLogin={true}>
@@ -16,6 +16,7 @@ const Index = () => {
         shabbatName='לוח זמנים - בית כנסת "ניגוני חיים"'
         hebrewDate={hebrewDate}
         gregorianDate={gregorianDate}
+        todayHoliday={todayHoliday}
       />
       
       {dataLoaded ? (

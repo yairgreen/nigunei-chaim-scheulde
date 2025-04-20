@@ -1,6 +1,6 @@
-
 import { format } from 'date-fns';
 import { formatTime } from './core';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface HolidayData {
   title: string;
@@ -16,17 +16,22 @@ export interface HolidayData {
 // In-memory storage
 let holidaysDatabase: HolidayData[] = [];
 
-// Fetch holidays data from the API
 export const fetchHolidays = async (): Promise<HolidayData[]> => {
   try {
     const today = new Date();
     const formattedDate = format(today, 'yyyy-MM-dd');
     
-    const response = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&start=${formattedDate}&end=${formattedDate}&c=on&ss=on&mf=on&c=on&b=40&d=on&geo=geoname&geonameid=293918&M=on&s=on`);
-    const data = await response.json();
+    const { data: holidays, error } = await supabase
+      .from('holidays')
+      .select('*')
+      .eq('date', formattedDate)
+      .eq('category', 'holiday')
+      .order('subcat', { ascending: true });  // 'major' comes before 'minor'
     
-    if (data.items) {
-      holidaysDatabase = data.items.map((item: any) => ({
+    if (error) throw error;
+    
+    if (holidays) {
+      holidaysDatabase = holidays.map((item: any) => ({
         title: item.title || '',
         hebrew: item.hebrew || '',
         date: item.date || '',
@@ -41,52 +46,40 @@ export const fetchHolidays = async (): Promise<HolidayData[]> => {
     return holidaysDatabase;
   } catch (error) {
     console.error('Error fetching holidays data:', error);
-    
-    // Add fallback data for today
-    const fallbackHoliday = {
-      title: "Regular Day",
-      hebrew: "יום רגיל",
-      date: format(new Date(), 'yyyy-MM-dd'),
-      category: "regular",
-      hdate: "23 Adar 5785"
-    };
-    
-    holidaysDatabase = [fallbackHoliday];
-    return holidaysDatabase;
+    return [];
   }
 };
 
 // Get today's holiday if any
-export const getTodayHoliday = (): HolidayData | null => {
-  const today = format(new Date(), 'yyyy-MM-dd');
+export const getTodayHoliday = async (): Promise<string> => {
+  const holidays = await fetchHolidays();
   
-  // Find an exact match for today
-  const exactMatch = holidaysDatabase.find(item => item.date.startsWith(today));
+  // If no holidays, return empty string
+  if (!holidays.length) return '';
   
-  if (exactMatch) {
-    return exactMatch;
-  }
+  // Sort holidays: major first, then minor, then others
+  const sortedHolidays = holidays.sort((a, b) => {
+    if (a.subcat === 'major') return -1;
+    if (b.subcat === 'major') return 1;
+    if (a.subcat === 'minor') return -1;
+    if (b.subcat === 'minor') return 1;
+    return 0;
+  });
   
-  // If no holiday found, return a default object with the current Hebrew date
-  return {
-    title: "Regular Day",
-    hebrew: "כ״ג אדר תשפ״ה",
-    date: today,
-    category: "regular",
-    hdate: "23 Adar 5785"
-  };
+  // Combine holiday names with separator
+  return sortedHolidays.map(holiday => holiday.hebrew).join(' | ');
 };
 
-// Check if it's Rosh Chodesh today
+// Get holidays database
+export const getHolidaysDatabase = (): HolidayData[] => {
+  return holidaysDatabase;
+};
+
+// Get today's holiday if any
 export const isRoshChodeshToday = (): boolean => {
   const today = format(new Date(), 'yyyy-MM-dd');
   return holidaysDatabase.some(item => 
     item.date.startsWith(today) && 
     item.category === 'roshchodesh'
   );
-};
-
-// Get holidays database
-export const getHolidaysDatabase = (): HolidayData[] => {
-  return holidaysDatabase;
 };
