@@ -4,6 +4,7 @@ import type { PrayerOverride } from '../types/prayers';
 import type { PrayerOverrideFormData } from '@/components/admin/PrayerOverrideForm';
 
 export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
+  // Access table directly with explicit typing for the results
   const { data, error } = await supabase
     .from('prayer_overrides')
     .select('*')
@@ -14,13 +15,15 @@ export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
     return [];
   }
   
-  return data;
+  // Cast the data to the correct type
+  return data as unknown as PrayerOverride[];
 }
 
 export async function addPrayerOverride(override: PrayerOverrideFormData): Promise<PrayerOverride | null> {
+  // Access table directly with an explicit cast for the inserted data
   const { data, error } = await supabase
     .from('prayer_overrides')
-    .insert([override])
+    .insert([override as any])
     .select()
     .single();
     
@@ -29,13 +32,15 @@ export async function addPrayerOverride(override: PrayerOverrideFormData): Promi
     return null;
   }
   
-  return data;
+  // Cast the returned data to the correct type
+  return data as unknown as PrayerOverride;
 }
 
 export async function deletePrayerOverride(id: string): Promise<boolean> {
+  // Access table directly to update the is_active flag
   const { error } = await supabase
     .from('prayer_overrides')
-    .update({ is_active: false })
+    .update({ is_active: false } as any)
     .eq('id', id);
     
   if (error) {
@@ -54,6 +59,7 @@ export function getActiveOverride(
   const dayOfWeek = date.getDay();
   const dateStr = date.toISOString().split('T')[0];
   
+  // Find an active override for the current prayer and date
   return overrides.find(override => 
     override.prayer_name === prayerName &&
     override.is_active &&
