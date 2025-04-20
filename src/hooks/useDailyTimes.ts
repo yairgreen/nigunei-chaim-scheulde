@@ -100,6 +100,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
   // Update times from zmanim data
   const updateTimesFromData = (data: ZmanimData, weeklyZmanim: ZmanimData[]) => {
+    console.log('Updating times from data:', data);
     const times = [
       { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar) },
       { name: 'הנץ החמה', time: formatToHHMM(data.sunrise) },
@@ -148,15 +149,19 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         
         // Get zmanim for the whole week
         const weeklyZmanim = getZmanimForWeek(weekStart);
+        console.log('Weekly zmanim:', weeklyZmanim);
         
         // Get specific date's zmanim
         const targetDate = date || new Date();
         const formattedDate = format(targetDate, 'yyyy-MM-dd');
         const todayZmanim = weeklyZmanim.find(z => z.date === formattedDate);
+        console.log('Today zmanim:', todayZmanim);
 
         if (todayZmanim) {
           setZmanimData(todayZmanim);
           updateTimesFromData(todayZmanim, weeklyZmanim);
+        } else {
+          console.error('No zmanim found for today:', formattedDate);
         }
       } catch (error) {
         console.error('Error fetching daily times:', error);
