@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
 import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from '@/lib/database/prayers';
@@ -69,22 +70,11 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
     } else { // Fall and Winter
       sunsetHour = 16 + (Math.floor(day / 15) % 2);
     }
-
-    // Calculate tzait_hakochavim (stars out) as approximately 18-25 minutes after sunset
-    const tzaitMinutes = 20 + (day % 6); // Between 20-25 minutes after sunset
-    let tzaitHour = sunsetHour;
-    let tzaitMinute = 50 + (day % 10) + tzaitMinutes;
-    
-    if (tzaitMinute >= 60) {
-      tzaitHour += 1;
-      tzaitMinute -= 60;
-    }
     
     // Create synthetic zmanim data for this day with some variation
     return {
       date,
-      sunset: `${sunsetHour}:${50 + (day % 10)}`,
-      tzait_hakochavim: `${tzaitHour}:${String(tzaitMinute).padStart(2, '0')}`
+      sunset: `${sunsetHour}:${50 + (day % 10)}`
     };
   });
 

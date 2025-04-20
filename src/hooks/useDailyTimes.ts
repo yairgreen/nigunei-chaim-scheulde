@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { getZmanimForWeek, ZmanimData } from '@/lib/database/zmanim';
+import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import { formatToHHMM } from '@/lib/utils/timeFormatters';
-import { startOfWeek, addDays, format } from 'date-fns';
+import type { ZmanimData } from '@/lib/database/zmanim';
 
 export interface DailyTimesData {
   dailyTimes: { name: string; time: string; isNext?: boolean }[];
@@ -12,108 +12,76 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   const [dailyTimes, setDailyTimes] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
   const [zmanimData, setZmanimData] = useState<ZmanimData | null>(null);
 
-  // Calculate Mincha time based on earliest sunset
-  const calculateMinchaTime = (weeklyZmanim: ZmanimData[]): string => {
-    // Filter for Sunday-Thursday only
-    const weekdayZmanim = weeklyZmanim.filter(item => {
-      const dayOfWeek = new Date(item.date).getDay();
-      return dayOfWeek >= 0 && dayOfWeek <= 4;
-    });
-
-    if (weekdayZmanim.length === 0) return "17:30"; // Fallback
-
-    // Find earliest sunset
-    const earliestSunset = weekdayZmanim
-      .map(z => z.sunset)
-      .filter(Boolean)
-      .reduce((earliest, current) => !earliest || current < earliest ? current : earliest);
-
-    if (!earliestSunset) return "17:30";
-
-    // Convert sunset to minutes
-    const [hours, minutes] = earliestSunset.split(':').map(Number);
-    const sunsetMinutes = hours * 60 + minutes;
-
-    // Calculate range: 11-16 minutes before sunset
-    const latestPossible = sunsetMinutes - 11;
-    const earliestPossible = sunsetMinutes - 16;
-
-    // Find nearest 5-minute interval within range
-    let minchaMinutes = Math.round(((latestPossible + earliestPossible) / 2) / 5) * 5;
-    
-    // Ensure time is within allowed range
-    if (minchaMinutes > latestPossible) {
-      minchaMinutes = Math.floor(latestPossible / 5) * 5;
+  // Format time to HH:MM format
+  const formatToHHMM = (timeString: string): string => {
+    try {
+      // If the time is already in HH:MM format, return it
+      if (timeString.match(/^\d{2}:\d{2}$/)) return timeString;
+      
+      // Try to parse as HH:MM:SS format
+      const match = timeString.match(/^(\d{2}):(\d{2}):\d{2}$/);
+      if (match) {
+        return `${match[1]}:${match[2]}`;
+      }
+      
+      // If it's a valid date string, convert to HH:MM
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('he-IL', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      }
+      
+      // Return original if parsing fails
+      return timeString;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString;
     }
-    if (minchaMinutes < earliestPossible) {
-      minchaMinutes = Math.ceil(earliestPossible / 5) * 5;
-    }
-
-    // Convert back to HH:MM format
-    const minchaHours = Math.floor(minchaMinutes / 60);
-    const minchaMinutesPart = minchaMinutes % 60;
-    return `${String(minchaHours).padStart(2, '0')}:${String(minchaMinutesPart).padStart(2, '0')}`;
   };
 
-  // Calculate Arvit time based on latest tzait hakochavim
-  const calculateArvitTime = (weeklyZmanim: ZmanimData[]): string => {
-    // Filter for Sunday-Thursday only
-    const weekdayZmanim = weeklyZmanim.filter(item => {
-      const dayOfWeek = new Date(item.date).getDay();
-      return dayOfWeek >= 0 && dayOfWeek <= 4;
-    });
+  // Fetch zmanim data from the database
+  const fetchZmanimData = async () => {
+    try {
+      console.log('Fetching daily zmanim data...');
+      // If a specific date is provided, get zmanim for that date
+      // Otherwise get today's zmanim
+      const data = date 
+        ? await getZmanimForSpecificDate(date) 
+        : await getTodayZmanim();
+      
+      if (!data) {
+        console.error('No zmanim data available');
+        return;
+      }
 
-    if (weekdayZmanim.length === 0) return "18:45"; // Fallback
-
-    // Find latest tzait hakochavim
-    const latestTzait = weekdayZmanim
-      .map(z => z.beinHaShmashos)
-      .filter(Boolean)
-      .reduce((latest, current) => !latest || current > latest ? current : latest);
-
-    if (!latestTzait) return "18:45";
-
-    // Convert tzait to minutes
-    const [hours, minutes] = latestTzait.split(':').map(Number);
-    const tzaitMinutes = hours * 60 + minutes;
-
-    // Calculate range: 1 minute before to 4 minutes after
-    const earliestPossible = tzaitMinutes - 1;
-    const latestPossible = tzaitMinutes + 4;
-
-    // Find nearest 5-minute interval within range
-    let arvitMinutes = Math.round(((latestPossible + earliestPossible) / 2) / 5) * 5;
-    
-    // Ensure time is within allowed range
-    if (arvitMinutes < earliestPossible) {
-      arvitMinutes = Math.ceil(earliestPossible / 5) * 5;
+      console.log('Zmanim data received:', data);
+      setZmanimData(data);
+      
+      // Process the data into times array with formatted times
+      updateTimesFromData(data);
+    } catch (error) {
+      console.error('Error fetching daily times:', error);
     }
-    if (arvitMinutes > latestPossible) {
-      arvitMinutes = Math.floor(latestPossible / 5) * 5;
-    }
-
-    // Convert back to HH:MM format
-    const arvitHours = Math.floor(arvitMinutes / 60);
-    const arvitMinutesPart = arvitMinutes % 60;
-    return `${String(arvitHours).padStart(2, '0')}:${String(arvitMinutesPart).padStart(2, '0')}`;
   };
 
-  // Update times from zmanim data
-  const updateTimesFromData = (data: ZmanimData, weeklyZmanim: ZmanimData[]) => {
+  // Update the dailyTimes array based on zmanimData
+  const updateTimesFromData = (data: ZmanimData) => {
     const times = [
-      { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar) },
-      { name: 'הנץ החמה', time: formatToHHMM(data.sunrise) },
-      { name: 'זמן טלית ותפילין', time: formatToHHMM(data.misheyakir) },
-      { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(data.sofZmanShmaMGA) },
-      { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(data.sofZmanShma) },
-      { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(data.sofZmanTfillaMGA) },
-      { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(data.sofZmanTfilla) },
-      { name: 'חצות היום והלילה', time: formatToHHMM(data.chatzot) },
-      { name: 'זמן מנחה גדולה', time: formatToHHMM(data.minchaGedola) },
-      { name: 'מנחה', time: calculateMinchaTime(weeklyZmanim) },
-      { name: 'שקיעה', time: formatToHHMM(data.sunset) },
-      { name: 'צאת הכוכבים', time: formatToHHMM(data.beinHaShmashos) },
-      { name: 'ערבית א׳', time: calculateArvitTime(weeklyZmanim) }
+      { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar), isNext: false },
+      { name: 'הנץ החמה', time: formatToHHMM(data.sunrise), isNext: false },
+      { name: 'זמן טלית ותפילין', time: formatToHHMM(data.misheyakir), isNext: false },
+      { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(data.sofZmanShmaMGA), isNext: false },
+      { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(data.sofZmanShma), isNext: false },
+      { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(data.sofZmanTfillaMGA), isNext: false },
+      { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(data.sofZmanTfilla), isNext: false },
+      { name: 'חצות היום והלילה', time: formatToHHMM(data.chatzot), isNext: false },
+      { name: 'זמן מנחה גדולה', time: formatToHHMM(data.minchaGedola), isNext: false },
+      { name: 'פלג המנחה', time: formatToHHMM(data.plagHaMincha), isNext: false },
+      { name: 'שקיעה', time: formatToHHMM(data.sunset), isNext: false },
+      { name: 'צאת הכוכבים', time: formatToHHMM(data.beinHaShmashos), isNext: false }
     ];
 
     updateNextTimeIndicator(times);
@@ -128,53 +96,88 @@ export function useDailyTimes(date?: Date): DailyTimesData {
       hour12: false
     });
 
+    console.log('Current time for next marker:', currentTimeStr);
+
     // Reset all isNext flags
-    const updatedTimes = times.map(item => ({ ...item, isNext: false }));
+    const updatedTimes = times.map(item => {
+      return { ...item, isNext: false };
+    });
 
     // Find the next time that hasn't passed yet
     const nextTimeIndex = updatedTimes.findIndex(item => item.time > currentTimeStr);
     if (nextTimeIndex !== -1) {
       updatedTimes[nextTimeIndex].isNext = true;
+      console.log('Next time is:', updatedTimes[nextTimeIndex].name, 'at', updatedTimes[nextTimeIndex].time);
+    } else {
+      console.log('No next time found');
     }
 
     setDailyTimes(updatedTimes);
   };
 
   useEffect(() => {
-    const fetchZmanimData = async () => {
-      try {
-        // Get start of current week
-        const weekStart = startOfWeek(date || new Date(), { weekStartsOn: 0 });
-        
-        // Get zmanim for the whole week
-        const weeklyZmanim = getZmanimForWeek(weekStart);
-        
-        // Get specific date's zmanim
-        const targetDate = date || new Date();
-        const formattedDate = format(targetDate, 'yyyy-MM-dd');
-        const todayZmanim = weeklyZmanim.find(z => z.date === formattedDate);
-
-        if (todayZmanim) {
-          setZmanimData(todayZmanim);
-          updateTimesFromData(todayZmanim, weeklyZmanim);
-        }
-      } catch (error) {
-        console.error('Error fetching daily times:', error);
-      }
-    };
-
+    // Initial data fetch
     fetchZmanimData();
     
-    // Set up minute interval for updating "next" indicator
+    // Set up event listener for zmanim updates
+    const handleZmanimUpdate = () => {
+      console.log('Zmanim update detected in useDailyTimes, refreshing...');
+      fetchZmanimData();
+    };
+    
+    window.addEventListener('zmanim-updated', handleZmanimUpdate);
+    
+    // Still keep the minute interval just to update the "next" indicator
+    // This doesn't fetch new data, only updates the UI based on current time
     const minuteInterval = setInterval(() => {
       if (zmanimData) {
-        const weekStart = startOfWeek(date || new Date(), { weekStartsOn: 0 });
-        const weeklyZmanim = getZmanimForWeek(weekStart);
-        updateTimesFromData(zmanimData, weeklyZmanim);
+        // Just update the "next" indicator without fetching new data
+        const times = [
+          { name: 'עלות השחר (72 ד\')', time: formatToHHMM(zmanimData.alotHaShachar), isNext: false },
+          { name: 'הנץ החמה', time: formatToHHMM(zmanimData.sunrise), isNext: false },
+          { name: 'זמן טלית ותפילין', time: formatToHHMM(zmanimData.misheyakir), isNext: false },
+          { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(zmanimData.sofZmanShmaMGA), isNext: false },
+          { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(zmanimData.sofZmanShma), isNext: false },
+          { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(zmanimData.sofZmanTfillaMGA), isNext: false },
+          { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(zmanimData.sofZmanTfilla), isNext: false },
+          { name: 'חצות היום והלילה', time: formatToHHMM(zmanimData.chatzot), isNext: false },
+          { name: 'זמן מנחה גדולה', time: formatToHHMM(zmanimData.minchaGedola), isNext: false },
+          { name: 'פלג המנחה', time: formatToHHMM(zmanimData.plagHaMincha), isNext: false },
+          { name: 'שקיעה', time: formatToHHMM(zmanimData.sunset), isNext: false },
+          { name: 'צאת הכוכבים', time: formatToHHMM(zmanimData.beinHaShmashos), isNext: false }
+        ];
+        updateNextTimeIndicator(times);
       }
-    }, 60 * 1000);
+    }, 60 * 1000); // Update every minute
     
-    return () => clearInterval(minuteInterval);
+    // Full data refresh every day at midnight
+    const setupDailyRefresh = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      const msUntilMidnight = tomorrow.getTime() - now.getTime();
+      
+      console.log(`Scheduling next daily zmanim refresh in ${msUntilMidnight / 1000 / 60} minutes`);
+      
+      return setTimeout(() => {
+        console.log('Performing scheduled daily zmanim refresh');
+        fetchZmanimData();
+        // Set up the next day's refresh
+        const nextRefresh = setupDailyRefresh();
+        return nextRefresh;
+      }, msUntilMidnight);
+    };
+    
+    // Initialize the daily refresh scheduler
+    const dailyRefreshTimeout = setupDailyRefresh();
+    
+    return () => {
+      clearInterval(minuteInterval);
+      clearTimeout(dailyRefreshTimeout);
+      window.removeEventListener('zmanim-updated', handleZmanimUpdate);
+    };
   }, [date, zmanimData]);
 
   return { dailyTimes };
