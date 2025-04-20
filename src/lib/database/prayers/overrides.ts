@@ -20,8 +20,8 @@ export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
     return [];
   }
   
-  // Use explicit type casting to convert the data to PrayerOverride[]
-  return (data || []) as PrayerOverride[];
+  // First convert to unknown, then to PrayerOverride[] as TypeScript suggests
+  return (data as unknown) as PrayerOverride[];
 }
 
 export async function addPrayerOverride(override: PrayerOverrideFormData): Promise<PrayerOverride | null> {
@@ -37,8 +37,8 @@ export async function addPrayerOverride(override: PrayerOverrideFormData): Promi
     return null;
   }
   
-  // Use explicit type casting to convert the data to PrayerOverride
-  return data as PrayerOverride;
+  // First convert to unknown, then to PrayerOverride as TypeScript suggests
+  return (data as unknown) as PrayerOverride;
 }
 
 export async function deletePrayerOverride(id: string): Promise<boolean> {
