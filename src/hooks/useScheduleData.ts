@@ -13,7 +13,7 @@ export interface ScheduleData extends DateInfo, DailyTimesData, DailyScheduleDat
 }
 
 export function useScheduleData(): ScheduleData {
-  const { currentDate, hebrewDate, gregorianDate } = useDateInfo();
+  const { currentDate, hebrewDate, gregorianDate, todayHoliday } = useDateInfo();
   const { dailyTimes } = useDailyTimes();
   const { dailyPrayers, dailyClasses, isRoshChodesh } = useDailySchedule();
   const { shabbatData } = useShabbatData();
@@ -101,6 +101,7 @@ export function useScheduleData(): ScheduleData {
     currentDate,
     hebrewDate,
     gregorianDate,
+    todayHoliday,
     dailyTimes,
     dailyPrayers,
     dailyClasses,

@@ -10,6 +10,7 @@ export interface SimulationData {
   simulatedShabbatData: ShabbatDataResponse;
   simulatedHebrewDate: string;
   simulatedGregorianDate: string;
+  simulatedTodayHoliday: string;  // Added this line
   isLoading: boolean;
   validationResult?: {
     isValid: boolean;
@@ -24,7 +25,8 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedHebrewDate, 
     simulatedGregorianDate, 
     validationResult, 
-    isLoading 
+    isLoading,
+    simulatedTodayHoliday  // Added this line
   } = useHebrewDateSimulation(date);
   
   const { 
@@ -39,6 +41,7 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedShabbatData,
     simulatedHebrewDate,
     simulatedGregorianDate,
+    simulatedTodayHoliday: simulatedTodayHoliday || "",  // Added this line with fallback to empty string
     isLoading,
     validationResult
   };
