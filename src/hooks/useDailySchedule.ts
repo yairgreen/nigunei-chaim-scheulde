@@ -26,11 +26,12 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
       setIsRoshChodesh(roshChodesh);
       
       // Get prayer times from the calculation function
+      // If zmanim data is unavailable, these will be empty strings
       const { minchaTime, arvitTime } = date 
-        ? { minchaTime: '17:30', arvitTime: '18:30' } // Default for simulation dates
+        ? { minchaTime: '', arvitTime: '' } // For simulation dates, let code calculate actual values
         : recalculatePrayerTimes();
       
-      console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime, 'Arvit:', arvitTime);
+      console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime || 'Not available', 'Arvit:', arvitTime || 'Not available');
       
       // Check if we're in daylight saving time (March-October)
       const now = date || new Date();
@@ -43,10 +44,26 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
         { name: 'שחרית ב׳', time: '07:00' },
         { name: 'שחרית ג׳', time: '08:00' },
         { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
-        { name: 'מנחה', time: minchaTime },
-        { name: 'ערבית א׳', time: arvitTime },
-        { name: 'ערבית ב׳', time: '20:45' }
       ];
+      
+      // Add mincha time if available
+      if (minchaTime) {
+        prayers.push({ name: 'מנחה', time: minchaTime });
+      } else {
+        // Fallback to hardcoded time only if calculation failed
+        prayers.push({ name: 'מנחה', time: '17:30' });
+      }
+      
+      // Add arvit times if available
+      if (arvitTime) {
+        prayers.push({ name: 'ערבית א׳', time: arvitTime });
+      } else {
+        // Fallback to hardcoded time only if calculation failed
+        prayers.push({ name: 'ערבית א׳', time: '18:30' });
+      }
+      
+      // Fixed second arvit time
+      prayers.push({ name: 'ערבית ב׳', time: '20:45' });
       
       setDailyPrayers(prayers);
       

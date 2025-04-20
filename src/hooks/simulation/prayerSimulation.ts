@@ -71,16 +71,23 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
       sunsetHour = 16 + (Math.floor(day / 15) % 2);
     }
     
+    const sunsetMinute = 50 + (day % 10);
+    
     // Create synthetic zmanim data for this day with some variation
     return {
       date,
-      sunset: `${sunsetHour}:${50 + (day % 10)}`
+      sunset: `${sunsetHour}:${sunsetMinute}`,
+      beinHaShmashos: `${sunsetHour + (sunsetMinute + 18 >= 60 ? 1 : 0)}:${(sunsetMinute + 18) % 60}`
     };
   });
 
   // Calculate mincha and arvit times for the simulated week
   const simulatedMinchaTime = calculateWeeklyMinchaTime(syntheticZmanimForWeek);
   const simulatedArvitTime = calculateWeeklyArvitTime(syntheticZmanimForWeek);
+  
+  // Use empty string as fallback when calculation fails
+  const minchaTime = simulatedMinchaTime || "17:30";
+  const arvitTime = simulatedArvitTime || "18:30";
   
   // Check if selected date is Rosh Chodesh (simplified for simulation)
   const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
@@ -95,8 +102,8 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
     { name: 'שחרית ב׳', time: '07:00' },
     { name: 'שחרית ג׳', time: '08:00' },
     { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
-    { name: 'מנחה', time: simulatedMinchaTime },
-    { name: 'ערבית א׳', time: simulatedArvitTime },
+    { name: 'מנחה', time: minchaTime },
+    { name: 'ערבית א׳', time: arvitTime },
     { name: 'ערבית ב׳', time: '20:45' }
   ];
   
@@ -105,9 +112,28 @@ const generateSyntheticPrayerTimes = (selectedDate: Date, weekDays: string[]): A
 
 // Generate prayer times from real zmanim data
 const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[]): Array<{ name: string; time: string }> => {
+  // Add beinHaShmashos property based on sunset time if it doesn't exist
+  const enhancedZmanim = zmanimForWeek.map(zmanim => {
+    if (zmanim.sunset && !zmanim.beinHaShmashos) {
+      const [hours, minutes] = zmanim.sunset.split(':').map(Number);
+      const totalMinutes = hours * 60 + minutes + 18; // Add 18 minutes for tzait
+      const tzaitHours = Math.floor(totalMinutes / 60);
+      const tzaitMinutes = totalMinutes % 60;
+      return {
+        ...zmanim,
+        beinHaShmashos: `${String(tzaitHours).padStart(2, '0')}:${String(tzaitMinutes).padStart(2, '0')}`
+      };
+    }
+    return zmanim;
+  });
+
   // Calculate mincha and arvit times from actual zmanim data
-  const simulatedMinchaTime = calculateWeeklyMinchaTime(zmanimForWeek);
-  const simulatedArvitTime = calculateWeeklyArvitTime(zmanimForWeek);
+  const simulatedMinchaTime = calculateWeeklyMinchaTime(enhancedZmanim);
+  const simulatedArvitTime = calculateWeeklyArvitTime(enhancedZmanim);
+  
+  // Use empty string as fallback when calculation fails
+  const minchaTime = simulatedMinchaTime || "17:30";
+  const arvitTime = simulatedArvitTime || "18:30";
   
   // Check if selected date is Rosh Chodesh (simplified for simulation)
   const isSelectedDateRoshChodesh = selectedDate.getDate() === 1 || selectedDate.getDate() === 30;
@@ -133,8 +159,8 @@ const generatePrayerTimesFromZmanim = (selectedDate: Date, zmanimForWeek: any[])
     { name: 'שחרית ב׳', time: '07:00' },
     { name: 'שחרית ג׳', time: '08:00' },
     { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
-    { name: 'מנחה', time: simulatedMinchaTime },
-    { name: 'ערבית א׳', time: simulatedArvitTime },
+    { name: 'מנחה', time: minchaTime },
+    { name: 'ערבית א׳', time: arvitTime },
     { name: 'ערבית ב׳', time: '20:45' }
   ];
 };
