@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { simulateHebrewDate, fetchRealHebrewDate, runHebrewDateTests, validateHebrewDate } from './hebrewDateSimulation';
+import { simulateHebrewDate, fetchRealHebrewDate, validateHebrewDate } from './utils/hebrewDateUtils';
 import { simulateZmanimData } from './zmanimSimulation';
 import { simulatePrayerTimes } from './prayerSimulation';
 import { simulateShabbatData } from './shabbatSimulation';
@@ -23,6 +22,7 @@ export interface SimulationData {
   };
   simulatedHebrewDate: string;
   simulatedGregorianDate: string;
+  simulatedTodayHoliday: string;
   isLoading: boolean;
   validationResult?: {
     isValid: boolean;
@@ -46,6 +46,7 @@ export function useSimulationData(date: Date): SimulationData {
   const [simulatedShabbatData, setSimulatedShabbatData] = useState(shabbatData);
   const [simulatedHebrewDate, setSimulatedHebrewDate] = useState<string>("");
   const [simulatedGregorianDate, setSimulatedGregorianDate] = useState<string>("");
+  const [simulatedTodayHoliday, setSimulatedTodayHoliday] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [validationResult, setValidationResult] = useState<{
     isValid: boolean;
@@ -119,6 +120,7 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedShabbatData,
     simulatedHebrewDate,
     simulatedGregorianDate,
+    simulatedTodayHoliday,
     isLoading,
     validationResult
   };
@@ -128,67 +130,9 @@ export function useSimulationData(date: Date): SimulationData {
  * Helper function to run tests for the simulation components
  * This is primarily used for development and debugging purposes
  */
-export const runSimulationTests = async () => {
-  console.log("Running simulation tests...");
-  
-  // Run Hebrew date tests
-  await runHebrewDateTests();
-  
-  // Test simulation for different days of the week
-  const testDates = [
-    new Date(2025, 2, 23), // Sunday
-    new Date(2025, 2, 25), // Tuesday
-    new Date(2025, 2, 28), // Friday
-    new Date(2025, 2, 29), // Saturday
-  ];
-  
-  console.log("\nTesting simulation for different days of the week:");
-  testDates.forEach(date => {
-    console.log(`\nTesting simulation for ${date.toDateString()}`);
-    console.log(`Day of week: ${date.getDay()}`);
-    
-    // Test Hebrew date
-    const hebrewDate = simulateHebrewDate(date);
-    console.log(`Simulated Hebrew date: ${hebrewDate}`);
-    
-    // Test zmanim data
-    const zmanimData = simulateZmanimData(date);
-    console.log(`Generated ${zmanimData.length} zmanim items`);
-    
-    // Test prayer times
-    const prayerTimes = simulatePrayerTimes(date);
-    console.log(`Generated ${prayerTimes.length} prayer times`);
-    
-    // Test shabbat data for Saturday
-    if (date.getDay() === 6) { // Saturday
-      const mockShabbatData = {
-        title: "Test Shabbat",
-        subtitle: "Test Subtitle",
-        candlesPT: "16:30",
-        candlesTA: "16:45",
-        havdala: "17:30",
-        prayers: [],
-        classes: []
-      };
-      const shabbatData = simulateShabbatData(date, mockShabbatData);
-      console.log(`Shabbat title: ${shabbatData.title}`);
-      console.log(`Havdala time: ${shabbatData.havdala}`);
-    }
-  });
-  
-  // Test database access
-  try {
-    const zmanimDB = await getZmanimDatabase();
-    console.log("\nDatabase content:");
-    console.log(`Zmanim database contains ${zmanimDB.length} records`);
-    if (zmanimDB.length > 0) {
-      console.log("First zmanim record:", zmanimDB[0]);
-    }
-  } catch (error) {
-    console.error("Error accessing database:", error);
-  }
-  
-  console.log("\nSimulation tests completed");
+export const runHebrewDateTests = async () => {
+  const { runHebrewDateTests: runTests } = await import('./utils/hebrewDateTesting');
+  return runTests();
 };
 
 /**
