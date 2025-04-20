@@ -27,9 +27,19 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
       
       // Get prayer times from the calculation function
       // If zmanim data is unavailable, these will be empty strings
-      const { minchaTime, arvitTime } = date 
-        ? { minchaTime: '', arvitTime: '' } // For simulation dates, let code calculate actual values
-        : recalculatePrayerTimes();
+      let minchaTime = '';
+      let arvitTime = '';
+      
+      if (date) {
+        // For simulation dates, let code calculate actual values
+        minchaTime = '';
+        arvitTime = '';
+      } else {
+        // For current date, get calculated values
+        const prayerTimes = await recalculatePrayerTimes();
+        minchaTime = prayerTimes.minchaTime;
+        arvitTime = prayerTimes.arvitTime;
+      }
       
       console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime || 'Not available', 'Arvit:', arvitTime || 'Not available');
       

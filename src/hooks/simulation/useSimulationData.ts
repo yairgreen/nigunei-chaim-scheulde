@@ -1,6 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { simulateHebrewDate, fetchRealHebrewDate, validateHebrewDate } from './utils/hebrewDateUtils';
+import { simulateHebrewDate } from './utils/hebrewDateUtils';
+import { fetchRealHebrewDate } from './services/hebrewDateApi';
+import { validateHebrewDate } from './services/hebrewDateValidation';
 import { simulateZmanimData } from './zmanimSimulation';
 import { simulatePrayerTimes } from './prayerSimulation';
 import { simulateShabbatData } from './shabbatSimulation';
