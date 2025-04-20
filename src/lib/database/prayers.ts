@@ -1,60 +1,105 @@
 
 import { format } from 'date-fns';
+import { formatToHHMM } from '@/lib/utils/timeFormatters';
 
-// Calculate mincha time based on sunset times
-export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: string}[]): string => {
-  if (zmanimForWeek.length === 0) return "17:30"; // Fallback
-  
-  // Get sunset times for each day
-  const sunsetTimes = zmanimForWeek.map(item => {
-    if (!item.sunset) return Infinity; // Skip days without sunset data
-    const [hours, minutes] = item.sunset.split(':').map(Number);
-    return hours * 60 + minutes; // Convert to minutes
+// Calculate mincha time based on earliest sunset time between Sunday-Thursday
+export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: string, tzait_hakochavim: string}[]): string => {
+  if (!zmanimForWeek || zmanimForWeek.length === 0) return "17:30"; // Fallback
+
+  // Filter for Sunday-Thursday only (0-4 are Sunday-Thursday)
+  const weekdayZmanim = zmanimForWeek.filter(item => {
+    const date = new Date(item.date);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek >= 0 && dayOfWeek <= 4;
   });
-  
+
+  if (weekdayZmanim.length === 0) return "17:30";
+
   // Find earliest sunset
-  const earliestSunsetMinutes = Math.min(...sunsetTimes);
+  let earliestSunsetMinutes = Infinity;
   
-  // If no valid sunset times were found, return default
+  weekdayZmanim.forEach(item => {
+    if (!item.sunset) return;
+    
+    const [hours, minutes] = item.sunset.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    
+    if (totalMinutes < earliestSunsetMinutes) {
+      earliestSunsetMinutes = totalMinutes;
+    }
+  });
+
   if (earliestSunsetMinutes === Infinity) return "17:30";
+
+  // Calculate range: 11-16 minutes before sunset
+  const latestPossibleMincha = earliestSunsetMinutes - 11;
+  const earliestPossibleMincha = earliestSunsetMinutes - 16;
+
+  // Find nearest 5-minute interval within range
+  let minchaMinutes = Math.floor(((latestPossibleMincha + earliestPossibleMincha) / 2) / 5) * 5;
   
-  // Subtract 11-15 minutes (use 15 for maximum buffer) and round to nearest 5 minutes (always up)
-  const minchaMinutes = earliestSunsetMinutes - 15;
-  const roundedMinutes = Math.ceil(minchaMinutes / 5) * 5;
+  // Ensure time is within allowed range
+  if (minchaMinutes > latestPossibleMincha) {
+    minchaMinutes = Math.floor(latestPossibleMincha / 5) * 5;
+  }
+  if (minchaMinutes < earliestPossibleMincha) {
+    minchaMinutes = Math.ceil(earliestPossibleMincha / 5) * 5;
+  }
+
+  // Convert to HH:MM format
+  const hours = Math.floor(minchaMinutes / 60);
+  const minutes = minchaMinutes % 60;
   
-  // Convert back to HH:MM format
-  const hours = Math.floor(roundedMinutes / 60);
-  const minutes = roundedMinutes % 60;
-  
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  return formatToHHMM(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
 };
 
-// Calculate arvit time based on sunset times (sunset + 18 minutes)
-export const calculateWeeklyArvitTime = (zmanimForWeek: {date: string, sunset: string}[]): string => {
-  if (zmanimForWeek.length === 0) return "18:45"; // Fallback
+// Calculate arvit time based on latest tzait hakochavim time
+export const calculateWeeklyArvitTime = (zmanimForWeek: {date: string, sunset: string, tzait_hakochavim: string}[]): string => {
+  if (!zmanimForWeek || zmanimForWeek.length === 0) return "18:45"; // Fallback
   
-  // Get sunset times for each day
-  const sunsetTimes = zmanimForWeek.map(item => {
-    if (!item.sunset) return -Infinity; // Skip days without sunset data
-    const [hours, minutes] = item.sunset.split(':').map(Number);
-    return hours * 60 + minutes; // Convert to minutes
+  // Filter for Sunday-Thursday only
+  const weekdayZmanim = zmanimForWeek.filter(item => {
+    const date = new Date(item.date);
+    const dayOfWeek = date.getDay();
+    return dayOfWeek >= 0 && dayOfWeek <= 4;
   });
+
+  if (weekdayZmanim.length === 0) return "18:45";
+
+  // Find latest tzait hakochavim
+  let latestTzaitMinutes = -Infinity;
   
-  // Find latest sunset
-  const latestSunsetMinutes = Math.max(...sunsetTimes);
+  weekdayZmanim.forEach(item => {
+    if (!item.tzait_hakochavim) return;
+    
+    const [hours, minutes] = item.tzait_hakochavim.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    
+    if (totalMinutes > latestTzaitMinutes) {
+      latestTzaitMinutes = totalMinutes;
+    }
+  });
+
+  if (latestTzaitMinutes === -Infinity) return "18:45";
+
+  // Calculate range: 1 minute before to 4 minutes after tzait
+  const earliestPossibleArvit = latestTzaitMinutes - 1;
+  const latestPossibleArvit = latestTzaitMinutes + 4;
+
+  // Find nearest 5-minute interval within range
+  let arvitMinutes = Math.round(((latestPossibleArvit + earliestPossibleArvit) / 2) / 5) * 5;
   
-  // If no valid sunset times were found, return default
-  if (latestSunsetMinutes === -Infinity) return "18:45";
+  // Ensure time is within allowed range
+  if (arvitMinutes < earliestPossibleArvit) {
+    arvitMinutes = Math.ceil(earliestPossibleArvit / 5) * 5;
+  }
+  if (arvitMinutes > latestPossibleArvit) {
+    arvitMinutes = Math.floor(latestPossibleArvit / 5) * 5;
+  }
+
+  // Convert to HH:MM format
+  const hours = Math.floor(arvitMinutes / 60);
+  const minutes = arvitMinutes % 60;
   
-  // Add 18 minutes to represent tzet (star appearance) time
-  const arvitMinutes = latestSunsetMinutes + 18;
-  
-  // Round up to the nearest 5 minutes
-  const roundedMinutes = Math.ceil(arvitMinutes / 5) * 5;
-  
-  // Convert back to HH:MM format
-  const hours = Math.floor(roundedMinutes / 60);
-  const minutes = roundedMinutes % 60;
-  
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  return formatToHHMM(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
 };
