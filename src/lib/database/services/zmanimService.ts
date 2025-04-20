@@ -28,7 +28,13 @@ export const getZmanimForWeek = (startDate: Date | string, daysCount = 7): Zmani
     dates.push(format(currentDate, 'yyyy-MM-dd'));
   }
   
-  return zmanimDatabase.filter(item => dates.includes(item.date));
+  const filteredZmanim = zmanimDatabase.filter(item => dates.includes(item.date));
+  
+  // For debugging
+  console.log('Dates to look for:', dates);
+  console.log('Found zmanim count:', filteredZmanim.length);
+  
+  return filteredZmanim;
 };
 
 // Function to update the memory database with data from Supabase
