@@ -20,7 +20,8 @@ export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
     return [];
   }
   
-  return data as PrayerOverride[];
+  // Use explicit type casting to convert the data to PrayerOverride[]
+  return (data || []) as PrayerOverride[];
 }
 
 export async function addPrayerOverride(override: PrayerOverrideFormData): Promise<PrayerOverride | null> {
@@ -36,6 +37,7 @@ export async function addPrayerOverride(override: PrayerOverrideFormData): Promi
     return null;
   }
   
+  // Use explicit type casting to convert the data to PrayerOverride
   return data as PrayerOverride;
 }
 
