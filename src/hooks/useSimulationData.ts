@@ -48,5 +48,5 @@ export function useSimulationData(date: Date): SimulationData {
 }
 
 // Import and re-export test functions
-import { runHebrewDateTests, getDatabaseContent } from './simulation/utils/hebrewDateTesting';
-export { runHebrewDateTests, getDatabaseContent };
+import { runHebrewDateTests } from './simulation/utils/hebrewDateTesting';
+export { runHebrewDateTests };
