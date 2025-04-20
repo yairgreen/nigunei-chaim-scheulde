@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
@@ -6,6 +5,9 @@ import {
   calculateWeeklyMinchaTime,
   calculateWeeklyArvitTime
 } from '@/lib/database/index';
+
+import { getPrayerOverrides, getActiveOverride } from '@/lib/database/prayers/overrides';
+import type { PrayerOverride } from '@/lib/database/types/prayers';
 
 export interface DailyScheduleData {
   dailyPrayers: { name: string; time: string }[];
@@ -17,6 +19,7 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
   const [dailyPrayers, setDailyPrayers] = useState<{ name: string; time: string }[]>([]);
   const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string }[]>([]);
   const [isRoshChodesh, setIsRoshChodesh] = useState(false);
+  const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
 
   const refreshDailySchedule = async () => {
     try {
@@ -24,6 +27,10 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
       const roshChodesh = isRoshChodeshToday(date);
       console.log('Is Rosh Chodesh:', roshChodesh);
       setIsRoshChodesh(roshChodesh);
+      
+      // Load prayer overrides
+      const prayerOverrides = await getPrayerOverrides();
+      setOverrides(prayerOverrides);
       
       // Get prayer times from the calculation function
       // If zmanim data is unavailable, these will be empty strings
@@ -56,24 +63,34 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
         { name: 'מנחה גדולה', time: isDaylightSaving ? '13:20' : '12:30' },
       ];
       
-      // Add mincha time if available
+      // Add mincha time if available, considering overrides
       if (minchaTime) {
-        prayers.push({ name: 'מנחה', time: minchaTime });
+        const override = getActiveOverride('מנחה', now, overrides);
+        prayers.push({ 
+          name: 'מנחה', 
+          time: override?.override_time || minchaTime 
+        });
       } else {
-        // Fallback to hardcoded time only if calculation failed
         prayers.push({ name: 'מנחה', time: '17:30' });
       }
       
-      // Add arvit times if available
+      // Add arvit times if available, considering overrides
       if (arvitTime) {
-        prayers.push({ name: 'ערבית א׳', time: arvitTime });
+        const override = getActiveOverride('ערבית א׳', now, overrides);
+        prayers.push({ 
+          name: 'ערבית א׳', 
+          time: override?.override_time || arvitTime 
+        });
       } else {
-        // Fallback to hardcoded time only if calculation failed
         prayers.push({ name: 'ערבית א׳', time: '18:30' });
       }
       
       // Fixed second arvit time
-      prayers.push({ name: 'ערבית ב׳', time: '20:45' });
+      const arvit2Override = getActiveOverride('ערבית ב׳', now, overrides);
+      prayers.push({ 
+        name: 'ערבית ב׳', 
+        time: arvit2Override?.override_time || '20:45' 
+      });
       
       setDailyPrayers(prayers);
       
