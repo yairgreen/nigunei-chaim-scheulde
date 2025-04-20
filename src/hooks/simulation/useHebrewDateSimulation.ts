@@ -11,6 +11,7 @@ export interface HebrewDateSimulationResult {
     actualDate: string;
   };
   isLoading: boolean;
+  simulatedTodayHoliday?: string; // Added this property to the interface
 }
 
 export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult {
@@ -22,6 +23,7 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
     actualDate: string;
   } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [simulatedTodayHoliday, setSimulatedTodayHoliday] = useState<string>(""); // Added state for holiday
 
   useEffect(() => {
     const simulateDate = async () => {
@@ -40,6 +42,22 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
         
         if (!validation.isValid) {
           console.warn("Hebrew date validation failed:", validation);
+        }
+
+        // For simulation purposes, we'll set some holiday data based on the date
+        // This is a simple implementation - in a real app, this would come from an API or database
+        const month = date.getMonth();
+        const day = date.getDate();
+        
+        // Simple mapping for demo holidays
+        if (month === 2 && day === 15) { // March 15
+          setSimulatedTodayHoliday("פורים");
+        } else if (month === 3 && day === 15) { // April 15
+          setSimulatedTodayHoliday("פסח");
+        } else if (month === 8 && day === 25) { // September 25
+          setSimulatedTodayHoliday("ראש השנה");
+        } else {
+          setSimulatedTodayHoliday("");
         }
       } catch (error) {
         // If API call fails, fall back to simulated date
@@ -65,6 +83,7 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
     simulatedHebrewDate,
     simulatedGregorianDate,
     validationResult,
-    isLoading
+    isLoading,
+    simulatedTodayHoliday // Return the holiday property
   };
 }
