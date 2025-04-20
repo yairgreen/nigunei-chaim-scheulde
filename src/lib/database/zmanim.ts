@@ -3,7 +3,8 @@ export type { ZmanimData } from './types/zmanim';
 export { 
   getZmanimForDate,
   getZmanimForWeek,
-  getZmanimDatabase 
+  getZmanimDatabase,
+  refreshZmanimDatabase
 } from './services/zmanimService';
 export {
   getZmanimFromMemory,

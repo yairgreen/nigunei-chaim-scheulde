@@ -1,57 +1,44 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
 import type { ZmanimData } from '../types/zmanim';
-import { mapSupabaseToZmanim } from '../utils/zmanimMappers';
+import { getZmanimFromMemory, setZmanimDatabase } from '../handlers/zmanimHandler';
+import { getZmanimDatabase as fetchZmanimDatabase } from '@/lib/supabase/zmanim';
+import { format, addDays } from 'date-fns';
 
-export const getZmanimForDate = async (date: string): Promise<ZmanimData | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('daily_zmanim')
-      .select('*')
-      .eq('gregorian_date', date)
-      .single();
-
-    if (error) throw error;
-    return mapSupabaseToZmanim(data, date);
-  } catch (error) {
-    console.error('Error fetching zmanim from Supabase:', error);
-    return null;
-  }
+// Get all zmanim from the database
+export const getZmanimDatabase = (): ZmanimData[] => {
+  return getZmanimFromMemory();
 };
 
-export const getZmanimForWeek = async (startDate: string, endDate: string): Promise<ZmanimData[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('daily_zmanim')
-      .select('*')
-      .gte('gregorian_date', startDate)
-      .lte('gregorian_date', endDate)
-      .order('gregorian_date');
-
-    if (error) throw error;
-    return data.map(item => 
-      mapSupabaseToZmanim(item, format(new Date(item.gregorian_date), 'yyyy-MM-dd'))
-    );
-  } catch (error) {
-    console.error('Error fetching weekly zmanim from Supabase:', error);
-    return [];
-  }
+// Get zmanim for a specific date
+export const getZmanimForDate = (date: Date): ZmanimData | undefined => {
+  const formattedDate = format(date, 'yyyy-MM-dd');
+  const zmanimDatabase = getZmanimFromMemory();
+  
+  return zmanimDatabase.find(z => z.date === formattedDate);
 };
 
-export const getZmanimDatabase = async (): Promise<ZmanimData[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('daily_zmanim')
-      .select('*')
-      .order('gregorian_date');
+// Get zmanim for a week
+export const getZmanimForWeek = (startDate: Date, daysCount = 7): ZmanimData[] => {
+  const zmanimDatabase = getZmanimFromMemory();
+  const dates = [];
+  
+  for (let i = 0; i < daysCount; i++) {
+    const currentDate = addDays(startDate, i);
+    dates.push(format(currentDate, 'yyyy-MM-dd'));
+  }
+  
+  return zmanimDatabase.filter(item => dates.includes(item.date));
+};
 
-    if (error) throw error;
-    return data.map(item => 
-      mapSupabaseToZmanim(item, format(new Date(item.gregorian_date), 'yyyy-MM-dd'))
-    );
+// Function to update the memory database with data from Supabase
+export const refreshZmanimDatabase = async (): Promise<ZmanimData[]> => {
+  try {
+    const data = await fetchZmanimDatabase();
+    setZmanimDatabase(data);
+    return data;
   } catch (error) {
-    console.error('Error getting zmanim database from Supabase:', error);
-    return [];
+    console.error('Error refreshing zmanim database:', error);
+    // Return current data if refresh fails
+    return getZmanimFromMemory();
   }
 };
