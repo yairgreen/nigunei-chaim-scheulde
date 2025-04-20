@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { getZmanimDatabase } from '@/lib/database/zmanim';
 import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from '@/lib/database/prayers';

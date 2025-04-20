@@ -1,7 +1,4 @@
 
-import { format } from 'date-fns';
-import { formatToHHMM } from '@/lib/utils/timeFormatters';
-
 // Calculate mincha time based on earliest sunset time between Sunday-Thursday
 export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: string, tzait_hakochavim: string}[]): string => {
   if (!zmanimForWeek || zmanimForWeek.length === 0) return "17:30"; // Fallback
@@ -50,7 +47,7 @@ export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: 
   const hours = Math.floor(minchaMinutes / 60);
   const minutes = minchaMinutes % 60;
   
-  return formatToHHMM(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
 // Calculate arvit time based on latest tzait hakochavim time
@@ -101,5 +98,5 @@ export const calculateWeeklyArvitTime = (zmanimForWeek: {date: string, sunset: s
   const hours = Math.floor(arvitMinutes / 60);
   const minutes = arvitMinutes % 60;
   
-  return formatToHHMM(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
