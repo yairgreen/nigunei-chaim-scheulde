@@ -1,6 +1,6 @@
 
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
+import { useHebrewDateSimulation, runHebrewDateTests } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
 import type { ShabbatDataResponse } from '@/types/shabbat';
 
@@ -41,12 +41,23 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedShabbatData,
     simulatedHebrewDate,
     simulatedGregorianDate,
-    simulatedTodayHoliday: simulatedTodayHoliday || "",  // Added this line with fallback to empty string
+    simulatedTodayHoliday: simulatedTodayHoliday || "",  // Added fallback to empty string
     isLoading,
     validationResult
   };
 }
 
-// Import and re-export test functions from hebrewDateSimulation
-import { runHebrewDateTests, getDatabaseContent } from './simulation/hebrewDateSimulation';
-export { runHebrewDateTests, getDatabaseContent };
+// Import and re-export test functions from useHebrewDateSimulation
+export { runHebrewDateTests };
+
+// Add a function to get database content from simulation/utils/hebrewDateTesting
+export const getDatabaseContent = async () => {
+  try {
+    const { getZmanimDatabase } = await import('@/lib/database/zmanim');
+    const zmanim = await getZmanimDatabase();
+    return { zmanim };
+  } catch (error) {
+    console.error("Error getting database content:", error);
+    return { zmanim: [] };
+  }
+};

@@ -4,8 +4,10 @@ import { HebrewDateSimulationResult } from './types/hebrewDateTypes';
 import { fetchRealHebrewDate } from './services/hebrewDateApi';
 import { validateHebrewDate } from './services/hebrewDateValidation';
 import { simulateHebrewDate } from './utils/hebrewDateUtils';
+import { runHebrewDateTests as _runHebrewDateTests } from './utils/hebrewDateTesting';
 
-export { runHebrewDateTests } from './utils/hebrewDateTesting';
+// Re-export the runHebrewDateTests function
+export const runHebrewDateTests = _runHebrewDateTests;
 
 export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult {
   const [simulatedHebrewDate, setSimulatedHebrewDate] = useState<string>("");
