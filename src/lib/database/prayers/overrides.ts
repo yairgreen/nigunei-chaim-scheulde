@@ -4,44 +4,42 @@ import type { PrayerOverride } from '../types/prayers';
 import type { PrayerOverrideFormData } from '@/components/admin/PrayerOverrideForm';
 
 export async function getPrayerOverrides(): Promise<PrayerOverride[]> {
-  // Access table directly with explicit typing for the results
+  // Use the generic query method to avoid type errors
   const { data, error } = await supabase
     .from('prayer_overrides')
     .select('*')
-    .eq('is_active', true);
+    .eq('is_active', true) as any;
     
   if (error) {
     console.error('Error fetching prayer overrides:', error);
     return [];
   }
   
-  // Cast the data to the correct type
-  return data as unknown as PrayerOverride[];
+  return data as PrayerOverride[];
 }
 
 export async function addPrayerOverride(override: PrayerOverrideFormData): Promise<PrayerOverride | null> {
-  // Access table directly with an explicit cast for the inserted data
+  // Use the generic query method with 'as any' to avoid type errors
   const { data, error } = await supabase
     .from('prayer_overrides')
-    .insert([override as any])
+    .insert([override])
     .select()
-    .single();
+    .single() as any;
     
   if (error) {
     console.error('Error adding prayer override:', error);
     return null;
   }
   
-  // Cast the returned data to the correct type
-  return data as unknown as PrayerOverride;
+  return data as PrayerOverride;
 }
 
 export async function deletePrayerOverride(id: string): Promise<boolean> {
-  // Access table directly to update the is_active flag
+  // Use the generic query method with 'as any' to avoid type errors
   const { error } = await supabase
     .from('prayer_overrides')
-    .update({ is_active: false } as any)
-    .eq('id', id);
+    .update({ is_active: false })
+    .eq('id', id) as any;
     
   if (error) {
     console.error('Error deleting prayer override:', error);
