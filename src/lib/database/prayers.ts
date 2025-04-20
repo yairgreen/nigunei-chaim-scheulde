@@ -19,40 +19,26 @@ export const calculateWeeklyMinchaTime = (zmanimForWeek: {date: string, sunset: 
   if (earliestSunsetMinutes === Infinity) return "";
   
   // Calculate range between 11 and 16 minutes before sunset
-  const minchaTooEarly = earliestSunsetMinutes - 16; // 16 minutes before sunset
-  const minchaTooLate = earliestSunsetMinutes - 11; // 11 minutes before sunset
+  const rangeStart = earliestSunsetMinutes - 16;
+  const rangeEnd = earliestSunsetMinutes - 11;
   
   // Find the nearest 5-minute mark within the allowed range
-  let roundedMinutes;
-  
-  // If already at a 5-minute mark, keep it
-  if (minchaTooEarly % 5 === 0) {
-    roundedMinutes = minchaTooEarly;
-  } else if (minchaTooLate % 5 === 0) {
-    roundedMinutes = minchaTooLate;
-  } else {
-    // Find nearest 5-minute mark within range
-    const floorValue = Math.floor(minchaTooEarly / 5) * 5;
-    const ceilValue = Math.ceil(minchaTooLate / 5) * 5;
-    
-    // Choose the one that's within range
-    if (floorValue >= minchaTooEarly && floorValue <= minchaTooLate) {
-      roundedMinutes = floorValue;
-    } else if (ceilValue >= minchaTooEarly && ceilValue <= minchaTooLate) {
-      roundedMinutes = ceilValue;
-    } else {
-      // If neither is in range, choose closest to midpoint
-      const midpoint = (minchaTooEarly + minchaTooLate) / 2;
-      roundedMinutes = Math.abs(floorValue - midpoint) < Math.abs(ceilValue - midpoint) 
-        ? floorValue 
-        : ceilValue;
+  const possibleTimes = [];
+  for (let time = Math.floor(rangeStart / 5) * 5; time <= Math.ceil(rangeEnd / 5) * 5; time += 5) {
+    if (time >= rangeStart && time <= rangeEnd) {
+      possibleTimes.push(time);
     }
   }
+  
+  // Choose the time closest to the midpoint of the range
+  const midpoint = (rangeStart + rangeEnd) / 2;
+  const roundedMinutes = possibleTimes.reduce((closest, current) => 
+    Math.abs(current - midpoint) < Math.abs(closest - midpoint) ? current : closest
+  );
   
   // Convert back to HH:MM format
   const hours = Math.floor(roundedMinutes / 60);
   const minutes = roundedMinutes % 60;
-  
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
