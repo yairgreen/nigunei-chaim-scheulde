@@ -65,7 +65,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
 
     if (weekdayZmanim.length === 0) return "18:45"; // Fallback
 
-    // Find latest tzait hakochavim (beinHaShmashos field)
+    // Find latest tzait hakochavim
     const latestTzait = weekdayZmanim
       .map(z => z.beinHaShmashos)
       .filter(Boolean)
