@@ -70,13 +70,13 @@ export function PrayerOverrideForm({ isOpen, onClose, prayerName, currentTime, o
                   <FormLabel>יום בשבוע (אופציונלי)</FormLabel>
                   <Select 
                     onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
-                    value={field.value?.toString() ?? ''}
+                    value={field.value?.toString() ?? undefined}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="כל הימים" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">כל הימים</SelectItem>
+                      <SelectItem value="null">כל הימים</SelectItem>
                       <SelectItem value="0">ראשון</SelectItem>
                       <SelectItem value="1">שני</SelectItem>
                       <SelectItem value="2">שלישי</SelectItem>
