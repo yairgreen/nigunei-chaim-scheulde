@@ -1,125 +1,162 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PrayerOverrideForm, PrayerOverrideFormData } from './PrayerOverrideForm';
-import { PrayerOverrideDisplay } from './PrayerOverrideDisplay';
-import { getPrayerOverrides, addPrayerOverride, deletePrayerOverride, getActiveOverride } from '@/lib/database/prayers/overrides';
-import type { PrayerOverride } from '@/lib/database/types/prayers';
-import { useToast } from '@/hooks/use-toast';
 
 interface DailyPrayersTabProps {
-  prayers: { name: string; time: string }[];
-  handleUpdatePrayerTime: (index: number, time: string) => void;
+  prayers: {
+    id: string;
+    name: string;
+    defaultTime: string;
+    overrideTime?: string;
+    overrideInfo?: {
+      id: string;
+      startDate: string;
+      endDate: string;
+      dayOfWeek: string | null;
+    };
+  }[];
+  onAddOverride: (
+    prayerId: string,
+    data: {
+      time: string;
+      startDate: string;
+      endDate: string;
+      dayOfWeek?: string;
+    }
+  ) => Promise<void>;
+  onRemoveOverride: (prayerId: string, overrideId: string) => Promise<void>;
 }
 
-const DailyPrayersTab: React.FC<DailyPrayersTabProps> = ({ 
-  prayers, 
-  handleUpdatePrayerTime 
+type OverrideFormProps = {
+  onSubmit: (data: {
+    time: string;
+    startDate: string;
+    endDate: string;
+    dayOfWeek?: string;
+  }) => Promise<void>;
+  onCancel: () => void;
+};
+
+// טופס פשוט לדריסת זמן
+const OverrideForm: React.FC<OverrideFormProps> = ({ onSubmit, onCancel }) => {
+  const [time, setTime] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [dayOfWeek, setDayOfWeek] = useState<string>('');
+
+  return (
+    <form className="mt-4 space-y-2" onSubmit={e => {
+      e.preventDefault();
+      onSubmit({ time, startDate, endDate, dayOfWeek: dayOfWeek || undefined });
+    }}>
+      <div className="flex gap-2">
+        <Input type="time" value={time} onChange={e => setTime(e.target.value)} required />
+        <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+        <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required />
+        <select className="border rounded px-2" value={dayOfWeek} onChange={e => setDayOfWeek(e.target.value)}>
+          <option value="">כל הימים</option>
+          <option value="ראשון">ראשון</option>
+          <option value="שני">שני</option>
+          <option value="שלישי">שלישי</option>
+          <option value="רביעי">רביעי</option>
+          <option value="חמישי">חמישי</option>
+          <option value="שישי">שישי</option>
+          <option value="שבת">שבת</option>
+        </select>
+      </div>
+      <div className="flex gap-2 justify-end">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>ביטול</Button>
+        <Button type="submit" size="sm">שמירה</Button>
+      </div>
+    </form>
+  );
+};
+
+const DailyPrayersTab: React.FC<DailyPrayersTabProps> = ({
+  prayers,
+  onAddOverride,
+  onRemoveOverride
 }) => {
-  const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
-  const [selectedPrayer, setSelectedPrayer] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadOverrides();
-  }, []);
-
-  const loadOverrides = async () => {
-    const data = await getPrayerOverrides();
-    setOverrides(data);
-  };
-
-  const handleOpenOverrideForm = (prayerName: string, time: string) => {
-    setSelectedPrayer(prayerName);
-    setCurrentTime(time);
-  };
-
-  const handleCloseOverrideForm = () => {
-    setSelectedPrayer(null);
-  };
-
-  const handleAddOverride = async (data: PrayerOverrideFormData) => {
-    const override = await addPrayerOverride(data);
-    if (override) {
-      toast({
-        title: "דריסת זמן נוספה בהצלחה",
-        description: `הזמן ${data.override_time} נוסף עבור ${data.prayer_name}`,
-      });
-      loadOverrides();
-    }
-  };
-
-  const handleDeleteOverride = async (id: string) => {
-    const success = await deletePrayerOverride(id);
-    if (success) {
-      toast({
-        title: "דריסת זמן בוטלה",
-        description: "הזמן המקורי ישוחזר",
-      });
-      loadOverrides();
-    }
-  };
-
-  const getOverrideForPrayer = (prayerName: string): PrayerOverride | null => {
-    return getActiveOverride(prayerName, new Date(), overrides);
-  };
+  const [showOverrideForm, setShowOverrideForm] = useState<string | null>(null);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-medium mb-4">תפילות יומיות</h2>
-      <div className="space-y-4">
-        {prayers.map((prayer, index) => {
-          const activeOverride = getOverrideForPrayer(prayer.name);
-          
-          return (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center justify-between gap-4">
-                <span className="font-medium min-w-[120px]">{prayer.name}</span>
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    type="time"
-                    value={prayer.time}
-                    onChange={(e) => handleUpdatePrayerTime(index, e.target.value)}
-                    className="w-32 text-left bg-gray-50"
-                    readOnly
-                  />
-                  <Input
-                    type="time"
-                    value={activeOverride?.override_time || prayer.time}
-                    className="w-32 text-left"
-                    readOnly
-                  />
-                  <Button 
-                    variant="outline"
-                    onClick={() => handleOpenOverrideForm(prayer.name, prayer.time)}
-                  >
-                    הוסף דריסת זמן
-                  </Button>
-                </div>
-              </div>
-              
-              {activeOverride && (
-                <PrayerOverrideDisplay
-                  override={activeOverride}
-                  onDelete={() => handleDeleteOverride(activeOverride.id)}
-                />
+      <div className="space-y-6">
+        {prayers.map((prayer) => (
+          <div key={prayer.id} className="border p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-medium">{prayer.name}</h3>
+              {!prayer.overrideTime && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowOverrideForm(prayer.id)}
+                >
+                  הוסף דריסת זמן
+                </Button>
               )}
             </div>
-          );
-        })}
+            
+            <div className="grid grid-cols-2 gap-4">
+              {/* זמן מחושב */}
+              <div>
+                <label className="text-sm text-gray-500 block mb-1">זמן מחושב</label>
+                <Input
+                  type="time"
+                  value={prayer.defaultTime}
+                  readOnly
+                  className="w-full"
+                />
+              </div>
+              
+              {/* זמן נדרס */}
+              <div>
+                <label className="text-sm text-gray-500 block mb-1">
+                  {prayer.overrideTime ? 'זמן נדרס' : '\u00A0'}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="time"
+                    value={prayer.overrideTime || ''}
+                    readOnly
+                    className="w-full"
+                  />
+                  {prayer.overrideTime && prayer.overrideInfo && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onRemoveOverride(prayer.id, prayer.overrideInfo!.id)}
+                    >
+                      בטל
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {prayer.overrideInfo && (
+              <div className="mt-2 text-xs text-gray-600">
+                {prayer.overrideInfo.dayOfWeek ? 
+                  `יום ${prayer.overrideInfo.dayOfWeek} | ` : ''}
+                בתוקף: {new Date(prayer.overrideInfo.startDate).toLocaleDateString()} - 
+                {new Date(prayer.overrideInfo.endDate).toLocaleDateString()}
+              </div>
+            )}
+            
+            {showOverrideForm === prayer.id && (
+              <OverrideForm
+                onSubmit={async (data) => {
+                  await onAddOverride(prayer.id, data);
+                  setShowOverrideForm(null);
+                }}
+                onCancel={() => setShowOverrideForm(null)}
+              />
+            )}
+          </div>
+        ))}
       </div>
-
-      {selectedPrayer && (
-        <PrayerOverrideForm
-          isOpen={true}
-          onClose={handleCloseOverrideForm}
-          prayerName={selectedPrayer}
-          currentTime={currentTime}
-          onSubmit={handleAddOverride}
-        />
-      )}
     </div>
   );
 };

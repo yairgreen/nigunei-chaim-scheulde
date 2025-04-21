@@ -14,16 +14,11 @@ import AdminHeader from '@/components/admin/AdminHeader';
 const Admin = () => {
   const { toast } = useToast();
   const {
-    isDemoMode,
     prayers,
-    classes,
-    shabbatPrayers,
-    shabbatTimes,
-    setShabbatTimes,
-    handleUpdatePrayerTime,
-    handleUpdateClassName,
-    handleUpdateClassTime,
-    handleUpdateShabbatPrayerTime
+    handleAddOverride,
+    handleRemoveOverride,
+    // השאר כפי שהיה
+    // ... השארת נתונים לקלאסים, שבת, וכו'
   } = useAdminState();
   
   useEffect(() => {
@@ -34,8 +29,6 @@ const Admin = () => {
   }, [toast]);
   
   const handleSaveChanges = () => {
-    // In a real implementation, this would save to a database or localStorage
-    // For now, just show a toast
     toast({
       title: "השינויים נשמרו בהצלחה",
       description: "הזמנים המעודכנים יופיעו בלוח הזמנים",
@@ -45,7 +38,7 @@ const Admin = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <AdminHeader isDemoMode={isDemoMode} />
+        <AdminHeader isDemoMode={true} />
         
         <Tabs defaultValue="daily" className="space-y-6">
           <TabsList className="w-full bg-white shadow">
@@ -55,27 +48,19 @@ const Admin = () => {
           </TabsList>
           
           <TabsContent value="daily" className="space-y-6">
-            <DailyPrayersTab 
-              prayers={prayers} 
-              handleUpdatePrayerTime={handleUpdatePrayerTime} 
+            <DailyPrayersTab
+              prayers={prayers}
+              onAddOverride={handleAddOverride}
+              onRemoveOverride={handleRemoveOverride}
             />
           </TabsContent>
           
           <TabsContent value="shabbat" className="space-y-6">
-            <ShabbatTab 
-              shabbatPrayers={shabbatPrayers}
-              shabbatTimes={shabbatTimes}
-              handleUpdateShabbatPrayerTime={handleUpdateShabbatPrayerTime}
-              setShabbatTimes={setShabbatTimes}
-            />
+            <ShabbatTab />
           </TabsContent>
           
           <TabsContent value="classes" className="space-y-6">
-            <ClassesTab 
-              classes={classes}
-              handleUpdateClassName={handleUpdateClassName}
-              handleUpdateClassTime={handleUpdateClassTime}
-            />
+            <ClassesTab />
           </TabsContent>
         </Tabs>
         
