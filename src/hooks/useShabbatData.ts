@@ -84,7 +84,7 @@ export function useShabbatData(): ShabbatHookData {
             console.log(`Found override for Shabbat prayer ${prayer.name}: ${override.override_time}`);
             return {
               ...prayer,
-              time: override.override_time
+              time: override.override_time // עדכון זמן התפילה לזמן הנדרס
             };
           }
           
@@ -94,7 +94,7 @@ export function useShabbatData(): ShabbatHookData {
             console.log(`Found legacy override for Shabbat prayer ${prayer.name}: ${legacyOverride.override_time}`);
             return {
               ...prayer,
-              time: legacyOverride.override_time
+              time: legacyOverride.override_time // עדכון זמן התפילה לזמן הנדרס
             };
           }
           
@@ -102,6 +102,11 @@ export function useShabbatData(): ShabbatHookData {
         });
         
         setShabbatData({
+          ...processedData,
+          prayers: updatedPrayers
+        });
+        
+        console.log('Updated Shabbat data with overrides:', {
           ...processedData,
           prayers: updatedPrayers
         });

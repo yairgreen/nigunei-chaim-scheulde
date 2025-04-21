@@ -32,6 +32,18 @@ export function useShabbatState() {
     };
     
     loadOverrides();
+    
+    // הוסף האזנה לאירוע עדכון דריסות
+    const handlePrayerOverrideUpdate = () => {
+      console.log('Prayer override update detected in useShabbatState, reloading overrides...');
+      loadOverrides();
+    };
+    
+    window.addEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
+    
+    return () => {
+      window.removeEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
+    };
   }, []);
   
   useEffect(() => {
@@ -41,7 +53,7 @@ export function useShabbatState() {
       const prayers = shabbatData.prayers.map((prayer, index) => {
         // יצירת מזהה אחיד לתפילות שבת
         const id = `shabbat-${prayer.name.replace(/\s+/g, '-').toLowerCase()}`;
-        console.log(`Creating Shabbat prayer with ID: ${id}, name: ${prayer.name}`);
+        console.log(`Creating Shabbat prayer with ID: ${id}, name: ${prayer.name}, time: ${prayer.time}`);
         
         // בדיקת דריסה פעילה לתפילה זו
         const override = getActiveOverride(id, currentDate, overrides);
@@ -52,6 +64,9 @@ export function useShabbatState() {
         if (activeOverride) {
           console.log(`Found active override for ${id}: ${activeOverride.override_time}`);
         }
+        
+        // וודא שהזמן המוצג הוא הזמן הנדרס אם קיים
+        const displayTime = activeOverride ? activeOverride.override_time : prayer.time;
         
         return {
           id,
@@ -152,6 +167,9 @@ export function useShabbatState() {
   
   const saveShabbatChanges = async () => {
     try {
+      // Dispatch event to notify other components about changes
+      window.dispatchEvent(new CustomEvent('prayer-override-updated'));
+      
       // Here you would call an API to save the changes
       // For now, we'll just show a success toast
       toast({
