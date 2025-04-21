@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminState } from '@/hooks/useAdminState';
+import { useShabbatState } from '@/hooks/useShabbatState';
+import { useClassesState } from '@/hooks/useClassesState';
 import DailyPrayersTab from '@/components/admin/DailyPrayersTab';
 import ShabbatTab from '@/components/admin/ShabbatTab';
 import ClassesTab from '@/components/admin/ClassesTab';
@@ -17,9 +19,20 @@ const Admin = () => {
     prayers,
     handleAddOverride,
     handleRemoveOverride,
-    // השאר כפי שהיה
-    // ... השארת נתונים לקלאסים, שבת, וכו'
   } = useAdminState();
+  
+  const {
+    shabbatPrayers,
+    shabbatTimes,
+    setShabbatTimes,
+    handleUpdateShabbatPrayerTime
+  } = useShabbatState();
+  
+  const {
+    classes,
+    handleUpdateClassName,
+    handleUpdateClassTime
+  } = useClassesState();
   
   useEffect(() => {
     toast({
@@ -56,11 +69,20 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="shabbat" className="space-y-6">
-            <ShabbatTab />
+            <ShabbatTab
+              shabbatPrayers={shabbatPrayers}
+              shabbatTimes={shabbatTimes}
+              handleUpdateShabbatPrayerTime={handleUpdateShabbatPrayerTime}
+              setShabbatTimes={setShabbatTimes}
+            />
           </TabsContent>
           
           <TabsContent value="classes" className="space-y-6">
-            <ClassesTab />
+            <ClassesTab
+              classes={classes}
+              handleUpdateClassName={handleUpdateClassName}
+              handleUpdateClassTime={handleUpdateClassTime}
+            />
           </TabsContent>
         </Tabs>
         
