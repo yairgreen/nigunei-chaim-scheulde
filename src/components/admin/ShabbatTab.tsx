@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface ShabbatTabProps {
   shabbatPrayers: { name: string; time: string }[];
@@ -23,9 +24,21 @@ const ShabbatTab: React.FC<ShabbatTabProps> = ({
   handleUpdateShabbatPrayerTime,
   setShabbatTimes
 }) => {
+  const [editMode, setEditMode] = useState<boolean>(false);
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-medium mb-4">זמני שבת</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-medium">זמני שבת</h2>
+        <Button 
+          variant={editMode ? "default" : "outline"} 
+          size="sm"
+          onClick={() => setEditMode(!editMode)}
+        >
+          {editMode ? 'סיים עריכה' : 'ערוך זמנים'}
+        </Button>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div>
           <label className="block text-sm font-medium mb-1">הדלקת נרות (פ"ת)</label>
@@ -34,6 +47,7 @@ const ShabbatTab: React.FC<ShabbatTabProps> = ({
             value={shabbatTimes.candlesPT}
             onChange={(e) => setShabbatTimes({...shabbatTimes, candlesPT: e.target.value})}
             className="text-left"
+            readOnly={!editMode}
           />
         </div>
         <div>
@@ -43,6 +57,7 @@ const ShabbatTab: React.FC<ShabbatTabProps> = ({
             value={shabbatTimes.candlesTA}
             onChange={(e) => setShabbatTimes({...shabbatTimes, candlesTA: e.target.value})}
             className="text-left"
+            readOnly={!editMode}
           />
         </div>
         <div>
@@ -52,6 +67,7 @@ const ShabbatTab: React.FC<ShabbatTabProps> = ({
             value={shabbatTimes.havdala}
             onChange={(e) => setShabbatTimes({...shabbatTimes, havdala: e.target.value})}
             className="text-left"
+            readOnly={!editMode}
           />
         </div>
       </div>
@@ -66,6 +82,7 @@ const ShabbatTab: React.FC<ShabbatTabProps> = ({
               value={prayer.time}
               onChange={(e) => handleUpdateShabbatPrayerTime(index, e.target.value)}
               className="w-32 text-left"
+              readOnly={!editMode}
             />
           </div>
         ))}

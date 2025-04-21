@@ -25,7 +25,8 @@ const Admin = () => {
     shabbatPrayers,
     shabbatTimes,
     setShabbatTimes,
-    handleUpdateShabbatPrayerTime
+    handleUpdateShabbatPrayerTime,
+    saveShabbatChanges
   } = useShabbatState();
   
   const {
@@ -41,11 +42,16 @@ const Admin = () => {
     });
   }, [toast]);
   
-  const handleSaveChanges = () => {
-    toast({
-      title: "השינויים נשמרו בהצלחה",
-      description: "הזמנים המעודכנים יופיעו בלוח הזמנים",
-    });
+  const handleSaveChanges = async () => {
+    // Save all changes from different tabs
+    const shabbatSuccess = await saveShabbatChanges();
+    
+    if (shabbatSuccess) {
+      toast({
+        title: "השינויים נשמרו בהצלחה",
+        description: "הזמנים המעודכנים יופיעו בלוח הזמנים",
+      });
+    }
   };
   
   return (

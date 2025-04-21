@@ -2,6 +2,10 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 
 interface DailyPrayersTabProps {
   prayers: {
@@ -54,16 +58,21 @@ const OverrideForm: React.FC<OverrideFormProps> = ({ onSubmit, onCancel }) => {
         <Input type="time" value={time} onChange={e => setTime(e.target.value)} required />
         <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
         <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required />
-        <select className="border rounded px-2" value={dayOfWeek} onChange={e => setDayOfWeek(e.target.value)}>
-          <option value="">כל הימים</option>
-          <option value="ראשון">ראשון</option>
-          <option value="שני">שני</option>
-          <option value="שלישי">שלישי</option>
-          <option value="רביעי">רביעי</option>
-          <option value="חמישי">חמישי</option>
-          <option value="שישי">שישי</option>
-          <option value="שבת">שבת</option>
-        </select>
+        <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="כל הימים" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הימים</SelectItem>
+            <SelectItem value="ראשון">ראשון</SelectItem>
+            <SelectItem value="שני">שני</SelectItem>
+            <SelectItem value="שלישי">שלישי</SelectItem>
+            <SelectItem value="רביעי">רביעי</SelectItem>
+            <SelectItem value="חמישי">חמישי</SelectItem>
+            <SelectItem value="שישי">שישי</SelectItem>
+            <SelectItem value="שבת">שבת</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex gap-2 justify-end">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>ביטול</Button>
