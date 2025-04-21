@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { processShabbatData } from '@/services/shabbatService';
 import type { ShabbatHookData } from '@/types/shabbat';
+import { getPrayerOverrides, getActiveOverride } from '@/lib/database/prayers/overrides';
+import type { PrayerOverride } from '@/lib/database/types/prayers';
 
 export function useShabbatData(): ShabbatHookData {
   const [shabbatData, setShabbatData] = useState({
@@ -14,11 +16,17 @@ export function useShabbatData(): ShabbatHookData {
     prayers: [],
     classes: []
   });
+  const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
 
   const refreshShabbatData = async () => {
     try {
       // Get the current date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
+      
+      // Load prayer overrides
+      const prayerOverrides = await getPrayerOverrides();
+      setOverrides(prayerOverrides);
+      console.log('Loaded Shabbat prayer overrides:', prayerOverrides);
       
       // Query for the next Shabbat
       const { data: nextShabbat, error } = await supabase
@@ -60,7 +68,25 @@ export function useShabbatData(): ShabbatHookData {
         
         // Process the Shabbat data with the correct Friday sunset time
         const processedData = processShabbatData(nextShabbat, fridaySunset);
-        setShabbatData(processedData);
+        
+        // Apply any active prayer overrides to the Shabbat prayers
+        const shabbatDate = new Date(nextShabbat.date);
+        const updatedPrayers = processedData.prayers.map(prayer => {
+          const override = getActiveOverride(prayer.name, shabbatDate, overrides);
+          if (override) {
+            console.log(`Found override for Shabbat prayer ${prayer.name}: ${override.override_time}`);
+            return {
+              ...prayer,
+              time: override.override_time
+            };
+          }
+          return prayer;
+        });
+        
+        setShabbatData({
+          ...processedData,
+          prayers: updatedPrayers
+        });
       }
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
@@ -75,10 +101,17 @@ export function useShabbatData(): ShabbatHookData {
       refreshShabbatData();
     };
     
+    const handlePrayerOverrideUpdate = () => {
+      console.log('Prayer override update detected, refreshing Shabbat data...');
+      refreshShabbatData();
+    };
+    
     window.addEventListener('shabbat-updated', handleShabbatUpdate);
+    window.addEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     
     return () => {
       window.removeEventListener('shabbat-updated', handleShabbatUpdate);
+      window.removeEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     };
   }, []);
 

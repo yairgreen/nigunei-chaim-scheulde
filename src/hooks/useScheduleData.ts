@@ -29,6 +29,12 @@ export function useScheduleData(): ScheduleData {
       console.log('Manual refresh completed successfully');
       // Display success message to the user
       toast.success('הנתונים עודכנו בהצלחה');
+      
+      // Dispatch events to notify components of the update
+      window.dispatchEvent(new CustomEvent('zmanim-updated'));
+      window.dispatchEvent(new CustomEvent('shabbat-updated'));
+      window.dispatchEvent(new CustomEvent('prayers-updated'));
+      window.dispatchEvent(new CustomEvent('prayer-override-updated'));
     } catch (error) {
       console.error('Error during manual refresh:', error);
       // Display error message to the user
@@ -84,16 +90,21 @@ export function useScheduleData(): ScheduleData {
       setRefreshCounter(prev => prev + 1);
     };
     
+    const handlePrayerOverrideUpdate = () => {
+      console.log('Detected prayer override update event, refreshing data...');
+      setRefreshCounter(prev => prev + 1);
+    };
+    
     window.addEventListener('zmanim-updated', handleZmanimUpdate);
     window.addEventListener('shabbat-updated', handleShabbatUpdate);
     window.addEventListener('prayers-updated', handlePrayersUpdate);
-    
-    // Removed hourly refresh interval
+    window.addEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     
     return () => {
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
       window.removeEventListener('shabbat-updated', handleShabbatUpdate);
       window.removeEventListener('prayers-updated', handlePrayersUpdate);
+      window.removeEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     };
   }, []);
 

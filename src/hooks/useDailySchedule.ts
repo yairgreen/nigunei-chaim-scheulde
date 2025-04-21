@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   isRoshChodeshToday,
@@ -141,10 +142,17 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
     
     window.addEventListener('prayers-updated', handlePrayersUpdate);
     
-    // Removed hourly refresh interval
+    // Add event listener for prayer override updates
+    const handlePrayerOverrideUpdate = () => {
+      console.log('Prayer override update detected, refreshing schedule...');
+      refreshDailySchedule();
+    };
+    
+    window.addEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     
     return () => {
       window.removeEventListener('prayers-updated', handlePrayersUpdate);
+      window.removeEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     };
   }, [date]);
 
