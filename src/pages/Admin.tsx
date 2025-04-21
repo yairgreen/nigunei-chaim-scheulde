@@ -26,6 +26,8 @@ const Admin = () => {
     shabbatTimes,
     setShabbatTimes,
     handleUpdateShabbatPrayerTime,
+    handleAddOverride: handleAddShabbatOverride,
+    handleRemoveOverride: handleRemoveShabbatOverride,
     saveShabbatChanges
   } = useShabbatState();
   
@@ -80,6 +82,8 @@ const Admin = () => {
               shabbatTimes={shabbatTimes}
               handleUpdateShabbatPrayerTime={handleUpdateShabbatPrayerTime}
               setShabbatTimes={setShabbatTimes}
+              handleAddOverride={handleAddShabbatOverride}
+              handleRemoveOverride={handleRemoveShabbatOverride}
             />
           </TabsContent>
           

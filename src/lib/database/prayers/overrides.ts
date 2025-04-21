@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { PrayerOverride } from '../types/prayers';
-import type { PrayerOverrideFormData } from '@/components/admin/PrayerOverrideForm';
+import type { PrayerOverride, PrayerOverrideFormData } from '../types/prayers';
 
 // Get all active prayer overrides
 export async function getPrayerOverrides(): Promise<PrayerOverride[]> {

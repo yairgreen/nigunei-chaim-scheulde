@@ -1,30 +1,22 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getPrayerOverrides as fetchPrayerOverrides, addPrayerOverride, deletePrayerOverride } from '@/lib/database/prayers/overrides';
+import { getPrayerOverrides, addPrayerOverride, deletePrayerOverride, getActiveOverride } from '@/lib/database/prayers/overrides';
+import type { Prayer, PrayerOverride } from '@/lib/database/types/prayers';
 
 const DEFAULT_PRAYERS = [
-  { id: 'shacharit', name: 'שחרית' },
-  { id: 'mincha', name: 'מנחה' },
-  { id: 'arvit', name: 'ערבית' },
-  // ניתן להרחיב לפי הצורך...
+  { id: 'daily-shacharit-1', name: 'שחרית א׳', category: 'daily' as const },
+  { id: 'daily-shacharit-2', name: 'שחרית ב׳', category: 'daily' as const },
+  { id: 'daily-shacharit-3', name: 'שחרית ג׳', category: 'daily' as const },
+  { id: 'daily-mincha-gedola', name: 'מנחה גדולה', category: 'daily' as const },
+  { id: 'daily-mincha', name: 'מנחה', category: 'daily' as const },
+  { id: 'daily-arvit-1', name: 'ערבית א׳', category: 'daily' as const },
+  { id: 'daily-arvit-2', name: 'ערבית ב׳', category: 'daily' as const },
 ];
-
-type Prayer = {
-  id: string;
-  name: string;
-  defaultTime: string;
-  overrideTime?: string;
-  overrideInfo?: {
-    id: string;
-    startDate: string;
-    endDate: string;
-    dayOfWeek: string | null;
-  }
-};
 
 export function useAdminState() {
   const [prayers, setPrayers] = useState<Prayer[]>([]);
+  const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,29 +24,29 @@ export function useAdminState() {
   }, []);
 
   const getCalculatedTimes = async () => {
-    // חישוב דמו בלבד - בתכל'ס תמשוך מהלוגיקת החישוב הראשית
-    // כאן פשוט שחזור נתון זמני לצורך הדמו
+    // דמו זמנים מחושבים - בתכל'ס תמשוך מהלוגיקת החישוב הראשית
     return {
-      shacharit: '07:00',
-      mincha: '13:30',
-      arvit: '20:00',
+      'daily-shacharit-1': '06:15',
+      'daily-shacharit-2': '07:00',
+      'daily-shacharit-3': '08:00',
+      'daily-mincha-gedola': '12:30',
+      'daily-mincha': '17:15',
+      'daily-arvit-1': '18:15',
+      'daily-arvit-2': '20:45',
     };
-  };
-
-  const getActiveOverrides = async () => {
-    const overrides = await fetchPrayerOverrides();
-    return overrides.filter(o => o.is_active);
   };
 
   const loadPrayerTimes = async () => {
     try {
       const [calculatedTimes, activeOverrides] = await Promise.all([
         getCalculatedTimes(),
-        getActiveOverrides()
+        getPrayerOverrides()
       ]);
 
+      const currentDate = new Date();
       const updatedPrayers: Prayer[] = DEFAULT_PRAYERS.map(prayer => {
-        const override = activeOverrides.find(o => o.prayer_name === prayer.id);
+        const override = getActiveOverride(prayer.id, currentDate, activeOverrides);
+        
         return {
           ...prayer,
           defaultTime: calculatedTimes[prayer.id] || '',
@@ -64,16 +56,14 @@ export function useAdminState() {
                 id: override.id,
                 startDate: override.start_date,
                 endDate: override.end_date,
-                dayOfWeek:
-                  override.day_of_week !== null && override.day_of_week !== undefined
-                    ? ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][override.day_of_week]
-                    : null,
+                dayOfWeek: override.day_of_week
               }
             : undefined,
         };
       });
 
       setPrayers(updatedPrayers);
+      setOverrides(activeOverrides);
     } catch (error) {
       console.error('Error loading prayer times:', error);
       toast({
@@ -88,7 +78,7 @@ export function useAdminState() {
     time: string;
     startDate: string;
     endDate: string;
-    dayOfWeek?: string;
+    dayOfWeek?: number | null;
   }) => {
     try {
       await addPrayerOverride({
@@ -96,11 +86,10 @@ export function useAdminState() {
         override_time: data.time,
         start_date: data.startDate,
         end_date: data.endDate,
-        day_of_week:
-          data.dayOfWeek
-            ? ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].indexOf(data.dayOfWeek)
-            : null,
+        day_of_week: data.dayOfWeek ?? null,
       });
+      
+      // Refresh prayer data
       await loadPrayerTimes();
 
       toast({
@@ -117,9 +106,11 @@ export function useAdminState() {
     }
   };
 
-  const handleRemoveOverride = async (_prayerId: string, overrideId: string) => {
+  const handleRemoveOverride = async (prayerId: string, overrideId: string) => {
     try {
       await deletePrayerOverride(overrideId);
+      
+      // Refresh prayer data
       await loadPrayerTimes();
 
       toast({
