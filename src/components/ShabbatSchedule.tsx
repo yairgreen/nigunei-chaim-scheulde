@@ -28,8 +28,8 @@ const ShabbatSchedule: React.FC<ShabbatScheduleProps> = ({
   classes,
   className
 }) => {
-  // יומן לוגים של זמני התפילה המתקבלים
-  console.log('ShabbatSchedule rendering with prayers:', prayers);
+  // יומן לוגים מפורט של זמני התפילה המתקבלים
+  console.log('ShabbatSchedule rendering with prayers:', JSON.stringify(prayers, null, 2));
   
   return (
     <div className={cn('schedule-card bg-shabbat animate-fade-in-up', className)}>

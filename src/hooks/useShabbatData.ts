@@ -17,6 +17,7 @@ export function useShabbatData(): ShabbatHookData {
     classes: []
   });
   const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   const refreshShabbatData = async () => {
     try {
@@ -72,8 +73,7 @@ export function useShabbatData(): ShabbatHookData {
         // Apply any active prayer overrides to the Shabbat prayers
         const shabbatDate = new Date(nextShabbat.date);
         const updatedPrayers = processedData.prayers.map(prayer => {
-          // חשוב: בדיקת דריסות עבור תפילות שבת צריכה לחפש דריסה עם שם התפילה המלא
-          // עדכון: בוודא שמזהה התפילה כולל תחילית "shabbat-" לפני שם התפילה
+          // יוצר מזהה תפילה אחיד
           const prayerId = `shabbat-${prayer.name.replace(/\s+/g, '-').toLowerCase()}`;
           console.log(`Checking for override for Shabbat prayer: ${prayerId}`);
           
@@ -101,15 +101,15 @@ export function useShabbatData(): ShabbatHookData {
           return prayer;
         });
         
-        setShabbatData({
+        // יצירת אובייקט חדש לעדכון הסטייט כדי להבטיח רנדור מחדש
+        const updatedShabbatData = {
           ...processedData,
           prayers: updatedPrayers
-        });
+        };
         
-        console.log('Updated Shabbat data with overrides:', {
-          ...processedData,
-          prayers: updatedPrayers
-        });
+        setShabbatData(updatedShabbatData);
+        
+        console.log('Updated Shabbat data with overrides:', JSON.stringify(updatedShabbatData, null, 2));
       }
     } catch (error) {
       console.error('Error refreshing Shabbat data:', error);
@@ -118,15 +118,17 @@ export function useShabbatData(): ShabbatHookData {
 
   useEffect(() => {
     refreshShabbatData();
-    
+  }, [refreshCounter]);
+  
+  useEffect(() => {
     const handleShabbatUpdate = () => {
       console.log('Shabbat update detected, refreshing data...');
-      refreshShabbatData();
+      setRefreshCounter(prev => prev + 1);
     };
     
     const handlePrayerOverrideUpdate = () => {
-      console.log('Prayer override update detected, refreshing Shabbat data...');
-      refreshShabbatData();
+      console.log('Prayer override update detected in useShabbatData, refreshing data...');
+      setRefreshCounter(prev => prev + 1);
     };
     
     window.addEventListener('shabbat-updated', handleShabbatUpdate);

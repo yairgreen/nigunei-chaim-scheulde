@@ -91,7 +91,7 @@ export function useScheduleData(): ScheduleData {
     };
     
     const handlePrayerOverrideUpdate = () => {
-      console.log('Detected prayer override update event, refreshing data...');
+      console.log('Detected prayer override update event in useScheduleData, refreshing data...');
       setRefreshCounter(prev => prev + 1);
     };
     
@@ -107,6 +107,11 @@ export function useScheduleData(): ScheduleData {
       window.removeEventListener('prayer-override-updated', handlePrayerOverrideUpdate);
     };
   }, []);
+
+  useEffect(() => {
+    // Force a re-render when refreshCounter changes
+    console.log("Refresh counter changed, updating data...");
+  }, [refreshCounter]);
 
   return {
     currentDate,
