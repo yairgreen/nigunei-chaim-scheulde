@@ -72,7 +72,14 @@ export function useShabbatData(): ShabbatHookData {
         // Apply any active prayer overrides to the Shabbat prayers
         const shabbatDate = new Date(nextShabbat.date);
         const updatedPrayers = processedData.prayers.map(prayer => {
-          const override = getActiveOverride(prayer.name, shabbatDate, overrides);
+          // חשוב: בדיקת דריסות עבור תפילות שבת צריכה לחפש דריסה עם שם התפילה המלא
+          // עדכון: בוודא שמזהה התפילה כולל תחילית "shabbat-" לפני שם התפילה
+          const prayerId = `shabbat-${prayer.name.replace(/\s+/g, '-').toLowerCase()}`;
+          console.log(`Checking for override for Shabbat prayer: ${prayerId}`);
+          
+          // חפש דריסה פעילה עם מזהה התפילה המלא
+          const override = getActiveOverride(prayerId, shabbatDate, overrides);
+          
           if (override) {
             console.log(`Found override for Shabbat prayer ${prayer.name}: ${override.override_time}`);
             return {
@@ -80,6 +87,17 @@ export function useShabbatData(): ShabbatHookData {
               time: override.override_time
             };
           }
+          
+          // חפש דריסה גם לפי שם התפילה (לתאימות לאחור)
+          const legacyOverride = getActiveOverride(prayer.name, shabbatDate, overrides);
+          if (legacyOverride) {
+            console.log(`Found legacy override for Shabbat prayer ${prayer.name}: ${legacyOverride.override_time}`);
+            return {
+              ...prayer,
+              time: legacyOverride.override_time
+            };
+          }
+          
           return prayer;
         });
         

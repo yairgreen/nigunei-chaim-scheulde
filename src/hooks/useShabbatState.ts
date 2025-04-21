@@ -28,6 +28,7 @@ export function useShabbatState() {
     const loadOverrides = async () => {
       const prayerOverrides = await getPrayerOverrides();
       setOverrides(prayerOverrides);
+      console.log('Loaded prayer overrides in useShabbatState:', prayerOverrides);
     };
     
     loadOverrides();
@@ -38,20 +39,31 @@ export function useShabbatState() {
       // Transform shabbat prayers to the unified Prayer format
       const currentDate = new Date();
       const prayers = shabbatData.prayers.map((prayer, index) => {
+        // יצירת מזהה אחיד לתפילות שבת
         const id = `shabbat-${prayer.name.replace(/\s+/g, '-').toLowerCase()}`;
+        console.log(`Creating Shabbat prayer with ID: ${id}, name: ${prayer.name}`);
+        
+        // בדיקת דריסה פעילה לתפילה זו
         const override = getActiveOverride(id, currentDate, overrides);
+        // בדיקת דריסה גם לפי שם התפילה (לתאימות לאחור)
+        const legacyOverride = !override ? getActiveOverride(prayer.name, currentDate, overrides) : null;
+        const activeOverride = override || legacyOverride;
+        
+        if (activeOverride) {
+          console.log(`Found active override for ${id}: ${activeOverride.override_time}`);
+        }
         
         return {
           id,
           name: prayer.name,
           defaultTime: prayer.time,
           category: 'shabbat' as const,
-          overrideTime: override?.override_time,
-          overrideInfo: override ? {
-            id: override.id,
-            startDate: override.start_date,
-            endDate: override.end_date,
-            dayOfWeek: override.day_of_week
+          overrideTime: activeOverride?.override_time,
+          overrideInfo: activeOverride ? {
+            id: activeOverride.id,
+            startDate: activeOverride.start_date,
+            endDate: activeOverride.end_date,
+            dayOfWeek: activeOverride.day_of_week
           } : undefined
         };
       });
@@ -78,6 +90,7 @@ export function useShabbatState() {
     dayOfWeek?: number | null;
   }) => {
     try {
+      console.log(`Adding override for Shabbat prayer ID: ${prayerId}, time: ${data.time}`);
       const result = await addPrayerOverride({
         prayer_name: prayerId,
         override_time: data.time,
@@ -90,6 +103,9 @@ export function useShabbatState() {
         // Refresh overrides
         const prayerOverrides = await getPrayerOverrides();
         setOverrides(prayerOverrides);
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('prayer-override-updated'));
         
         toast({
           title: "דריסת זמן נוספה",
@@ -108,12 +124,16 @@ export function useShabbatState() {
   
   const handleRemoveOverride = async (prayerId: string, overrideId: string) => {
     try {
+      console.log(`Removing override ID: ${overrideId} for prayer: ${prayerId}`);
       const success = await deletePrayerOverride(overrideId);
       
       if (success) {
         // Refresh overrides
         const prayerOverrides = await getPrayerOverrides();
         setOverrides(prayerOverrides);
+        
+        // Dispatch event to notify other components
+        window.dispatchEvent(new CustomEvent('prayer-override-updated'));
         
         toast({
           title: "דריסת זמן בוטלה",
