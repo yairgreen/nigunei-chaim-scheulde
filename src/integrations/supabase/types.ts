@@ -93,6 +93,39 @@ export type Database = {
         }
         Relationships: []
       }
+      prayer_overrides: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          end_date: string
+          id: string
+          is_active: boolean
+          override_time: string
+          prayer_name: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          override_time: string
+          prayer_name: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          override_time?: string
+          prayer_name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       shabbat_times: {
         Row: {
           candle_lighting_petah_tikva: string | null
