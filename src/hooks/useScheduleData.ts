@@ -21,7 +21,7 @@ export function useScheduleData(): ScheduleData {
   const [refreshCounter, setRefreshCounter] = useState(0);
 
   const forceRefresh = async () => {
-    console.log('Manually forcing data refresh...');
+    console.log('Manually forcing data refresh from Supabase...');
     setDataLoaded(false);
     
     try {
@@ -51,16 +51,13 @@ export function useScheduleData(): ScheduleData {
     // Initialize app and load data
     const loadData = async () => {
       try {
-        console.log('Loading initial data...');
+        console.log('Loading initial data from Supabase...');
         setDataLoaded(false);
         await initDatabase();
         
-        // Trigger an immediate update after initialization
-        await forceUpdate();
-        
         // Set dataLoaded to true to display the UI
         setTimeout(() => {
-          console.log('Data loaded successfully');
+          console.log('Data loaded successfully from Supabase');
           setDataLoaded(true);
         }, 1000);
       } catch (error) {

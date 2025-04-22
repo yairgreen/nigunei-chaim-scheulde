@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
-import { formatToHHMM } from '@/lib/utils/timeFormatters';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
 export interface DailyTimesData {
@@ -45,7 +43,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   // Fetch zmanim data from the database
   const fetchZmanimData = async () => {
     try {
-      console.log('Fetching daily zmanim data...');
+      console.log('Fetching daily zmanim data from Supabase...');
       // If a specific date is provided, get zmanim for that date
       // Otherwise get today's zmanim
       const data = date 
@@ -57,7 +55,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         return;
       }
 
-      console.log('Zmanim data received:', data);
+      console.log('Zmanim data received from Supabase:', data);
       setZmanimData(data);
       
       // Process the data into times array with formatted times

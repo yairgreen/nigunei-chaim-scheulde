@@ -1,6 +1,7 @@
 
 import { format } from 'date-fns';
 import { formatTime } from './core';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ZmanimData {
   date: string;
@@ -21,242 +22,212 @@ export interface ZmanimData {
 // In-memory storage
 let zmanimDatabase: ZmanimData[] = [];
 
-// Fetch zmanim data from the API
+// Fetch zmanim data from Supabase
 export const fetchZmanim = async (): Promise<ZmanimData[]> => {
   try {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    console.log(`Fetching zmanim for today: ${today}`);
-    
-    // First, try to fetch today's specific zmanim
-    const todayResponse = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${today}`);
-    
-    if (todayResponse.ok) {
-      const todayData = await todayResponse.json();
-      console.log('API response for today:', todayData);
-      
-      if (todayData.times) {
-        const processedItem = processSingleDayZmanim(todayData, today);
-        if (processedItem) {
-          console.log('Processed zmanim for today:', processedItem);
-          zmanimDatabase = [processedItem];
-          return zmanimDatabase;
-        }
-      }
+    console.log('Fetching zmanim data from Supabase');
+    const { data, error } = await supabase
+      .from('daily_zmanim')
+      .select('*')
+      .order('gregorian_date');
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      console.log(`Retrieved ${data.length} zmanim records from Supabase`);
+      zmanimDatabase = data.map(item => mapSupabaseToZmanim(item));
+      return zmanimDatabase;
     }
     
-    // If today's specific data fails, fetch the range
-    const response = await fetch('https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&start=2025-03-01&end=2026-12-31');
-    const data = await response.json();
-    
-    if (data.times) {
-      zmanimDatabase = processZmanimData(data);
-    }
-    
-    return zmanimDatabase;
+    console.log('No zmanim data found in Supabase');
+    return [];
   } catch (error) {
     console.error('Error fetching zmanim data:', error);
     throw error;
   }
 };
 
-// Process zmanim data for a single day
-const processSingleDayZmanim = (data: any, date: string): ZmanimData | null => {
-  try {
-    const times = data.times;
-    if (!times) return null;
-    
-    // Extract time portion from ISO format
-    const extractTime = (isoTime: string): string => {
-      if (!isoTime) return '';
-      try {
-        // Parse the ISO time string
-        const timeObj = new Date(isoTime);
-        // Format as HH:MM
-        return timeObj.toLocaleTimeString('he-IL', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-      } catch (e) {
-        console.error('Error parsing time:', isoTime, e);
-        return '';
-      }
-    };
-    
-    return {
-      date,
-      alotHaShachar: extractTime(times.alotHaShachar || ''),
-      sunrise: extractTime(times.sunrise || ''),
-      misheyakir: extractTime(times.misheyakir || ''),
-      sofZmanShmaMGA: extractTime(times.sofZmanShmaMGA || ''),
-      sofZmanShma: extractTime(times.sofZmanShma || ''),
-      sofZmanTfillaMGA: extractTime(times.sofZmanTfillaMGA || ''),
-      sofZmanTfilla: extractTime(times.sofZmanTfilla || ''),
-      chatzot: extractTime(times.chatzot || ''),
-      minchaGedola: extractTime(times.minchaGedola || ''),
-      plagHaMincha: extractTime(times.plagHaMincha || ''),
-      sunset: extractTime(times.sunset || ''),
-      beinHaShmashos: extractTime(times.beinHaShmashos || '')
-    };
-  } catch (error) {
-    console.error('Error processing single day zmanim data:', error);
-    return null;
-  }
+// Map Supabase data to ZmanimData format
+const mapSupabaseToZmanim = (item: any): ZmanimData => {
+  return {
+    date: item.gregorian_date ? format(new Date(item.gregorian_date), 'yyyy-MM-dd') : '',
+    alotHaShachar: formatTimeFromSupabase(item.alot_hashachar),
+    sunrise: formatTimeFromSupabase(item.sunrise),
+    misheyakir: formatTimeFromSupabase(item.misheyakir),
+    sofZmanShmaMGA: formatTimeFromSupabase(item.sof_zman_shma_mga),
+    sofZmanShma: formatTimeFromSupabase(item.sof_zman_shma_gra),
+    sofZmanTfillaMGA: formatTimeFromSupabase(item.sof_zman_tfilla_mga),
+    sofZmanTfilla: formatTimeFromSupabase(item.sof_zman_tfilla_gra),
+    chatzot: formatTimeFromSupabase(item.chatzot),
+    minchaGedola: formatTimeFromSupabase(item.mincha_gedola),
+    plagHaMincha: formatTimeFromSupabase(item.plag_hamincha),
+    sunset: formatTimeFromSupabase(item.sunset),
+    beinHaShmashos: formatTimeFromSupabase(item.tzait_hakochavim)
+  };
 };
 
-// Process zmanim data for a range of dates
-const processZmanimData = (data: any): ZmanimData[] => {
-  const processed: ZmanimData[] = [];
-  const times = data.times;
-  if (!times || !times.sunrise) return processed;
+// Format time from Supabase to HH:mm format
+const formatTimeFromSupabase = (timeStr: string | null): string => {
+  if (!timeStr) return '';
   
-  // Get all the dates from the sunrise object as it should be present for all days
-  const dates = Object.keys(times.sunrise);
-  
-  for (const date of dates) {
-    try {
-      // Extract time portion from ISO format
-      const extractTime = (isoTime: string): string => {
-        if (!isoTime) return '';
-        try {
-          // Parse the ISO time string
-          const timeObj = new Date(isoTime);
-          // Format as HH:MM
-          return timeObj.toLocaleTimeString('he-IL', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          });
-        } catch (e) {
-          console.error('Error parsing time:', isoTime, e);
-          return '';
-        }
-      };
-      
-      processed.push({
-        date,
-        alotHaShachar: extractTime(times.alotHaShachar?.[date] || ''),
-        sunrise: extractTime(times.sunrise?.[date] || ''),
-        misheyakir: extractTime(times.misheyakir?.[date] || ''),
-        sofZmanShmaMGA: extractTime(times.sofZmanShmaMGA?.[date] || ''),
-        sofZmanShma: extractTime(times.sofZmanShma?.[date] || ''),
-        sofZmanTfillaMGA: extractTime(times.sofZmanTfillaMGA?.[date] || ''),
-        sofZmanTfilla: extractTime(times.sofZmanTfilla?.[date] || ''),
-        chatzot: extractTime(times.chatzot?.[date] || ''),
-        minchaGedola: extractTime(times.minchaGedola?.[date] || ''),
-        plagHaMincha: extractTime(times.plagHaMincha?.[date] || ''),
-        sunset: extractTime(times.sunset?.[date] || ''),
-        beinHaShmashos: extractTime(times.beinHaShmashos?.[date] || '')
-      });
-    } catch (error) {
-      console.error(`Error processing zmanim for date ${date}:`, error);
+  try {
+    // Check if already in HH:MM format
+    if (timeStr.match(/^\d{2}:\d{2}$/)) return timeStr;
+    
+    // Check if in HH:MM:SS format
+    const match = timeStr.match(/^(\d{2}):(\d{2}):\d{2}$/);
+    if (match) {
+      return `${match[1]}:${match[2]}`;
     }
+    
+    // Try to parse as date
+    const date = new Date(timeStr);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('he-IL', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+    
+    return timeStr;
+  } catch (error) {
+    console.error('Error formatting time from Supabase:', error);
+    return timeStr;
   }
-  
-  return processed;
 };
 
 // Get today's zmanim
 export const getTodayZmanim = async (): Promise<ZmanimData | null> => {
   const today = format(new Date(), 'yyyy-MM-dd');
   
-  // Always try to get fresh data from the API
   try {
-    // For today's specific date, we'll try to get real-time data
-    console.log(`Fetching fresh zmanim for today: ${today}`);
-    const response = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${today}`);
+    console.log(`Fetching zmanim for today (${today}) from Supabase`);
+    const { data, error } = await supabase
+      .from('daily_zmanim')
+      .select('*')
+      .eq('gregorian_date', today)
+      .single();
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Fresh zmanim API response:', data);
-      
-      if (data.times) {
-        // Process the zmanim data for today
-        const processedItem = processSingleDayZmanim(data, today);
-        if (processedItem) {
-          // Add it to our in-memory database
-          const existingIdx = zmanimDatabase.findIndex(item => item.date === today);
-          if (existingIdx >= 0) {
-            zmanimDatabase[existingIdx] = processedItem;
-          } else {
-            zmanimDatabase.push(processedItem);
-          }
-          console.log('Using fresh zmanim data:', processedItem);
-          return processedItem;
-        }
+    if (error) {
+      console.log('No data found for today, checking in-memory database');
+      // Try to get from in-memory database
+      const existingData = zmanimDatabase.find(item => item.date === today);
+      if (existingData) {
+        console.log('Found today\'s data in in-memory database');
+        return existingData;
       }
-    } else {
-      console.error('Failed to fetch fresh zmanim:', response.status, response.statusText);
+      
+      console.log('Using demo data for today');
+      // Provide demo data as fallback
+      return getDemoZmanimmData(today);
     }
+    
+    console.log('Found today\'s zmanim in Supabase');
+    const mappedData = mapSupabaseToZmanim(data);
+    
+    // Update in-memory database
+    const existingIdx = zmanimDatabase.findIndex(item => item.date === today);
+    if (existingIdx >= 0) {
+      zmanimDatabase[existingIdx] = mappedData;
+    } else {
+      zmanimDatabase.push(mappedData);
+    }
+    
+    return mappedData;
   } catch (error) {
-    console.error('Error fetching today\'s zmanim:', error);
+    console.error(`Error fetching zmanim for today (${today}):`, error);
+    return getDemoZmanimmData(today);
   }
-  
-  // If we couldn't get fresh data, look in our database
-  const existingData = zmanimDatabase.find(item => item.date === today);
-  if (existingData) {
-    console.log('Using cached zmanim data:', existingData);
-    return existingData;
-  }
-  
-  // If not in database, return demo data appropriate for April 15, 2025
-  console.log('Using demo zmanim data for today:', today);
-  return {
-    date: today,
-    alotHaShachar: '04:52',
-    sunrise: '06:08',
-    misheyakir: '05:15',
-    sofZmanShmaMGA: '08:48',
-    sofZmanShma: '09:24',
-    sofZmanTfillaMGA: '10:05',
-    sofZmanTfilla: '10:29',
-    chatzot: '12:40',
-    minchaGedola: '13:13',
-    plagHaMincha: '17:50',
-    sunset: '19:12',
-    beinHaShmashos: '19:29'
-  };
 };
 
 // Get zmanim for a specific date
 export const getZmanimForSpecificDate = async (date: Date): Promise<ZmanimData | null> => {
   const formattedDate = format(date, 'yyyy-MM-dd');
   
-  // Check if we already have this date in our database
-  const existingData = zmanimDatabase.find(item => item.date === formattedDate);
-  if (existingData) {
-    console.log('Using cached zmanim for specific date:', existingData);
-    return existingData;
-  }
-  
-  // If not, try to fetch it
   try {
-    console.log(`Fetching zmanim for date: ${formattedDate}`);
-    const response = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=293918&date=${formattedDate}`);
+    console.log(`Fetching zmanim for specific date (${formattedDate}) from Supabase`);
+    const { data, error } = await supabase
+      .from('daily_zmanim')
+      .select('*')
+      .eq('gregorian_date', formattedDate)
+      .single();
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Zmanim API response for specific date:', data);
-      
-      if (data.times) {
-        const processedItem = processSingleDayZmanim(data, formattedDate);
-        if (processedItem) {
-          zmanimDatabase.push(processedItem);
-          console.log('Using fresh zmanim for specific date:', processedItem);
-          return processedItem;
-        }
+    if (error) {
+      console.log('No data found for specific date, checking in-memory database');
+      // Try to get from in-memory database
+      const existingData = zmanimDatabase.find(item => item.date === formattedDate);
+      if (existingData) {
+        console.log('Found specific date data in in-memory database');
+        return existingData;
       }
-    } else {
-      console.error('Failed to fetch zmanim for specific date:', response.status, response.statusText);
+      
+      console.log('Using demo data for specific date');
+      // Provide demo data as fallback
+      return getDemoZmanimmData(formattedDate);
     }
+    
+    console.log('Found specific date zmanim in Supabase');
+    const mappedData = mapSupabaseToZmanim(data);
+    
+    // Update in-memory database
+    const existingIdx = zmanimDatabase.findIndex(item => item.date === formattedDate);
+    if (existingIdx >= 0) {
+      zmanimDatabase[existingIdx] = mappedData;
+    } else {
+      zmanimDatabase.push(mappedData);
+    }
+    
+    return mappedData;
   } catch (error) {
-    console.error(`Error fetching zmanim for date ${formattedDate}:`, error);
+    console.error(`Error fetching zmanim for specific date (${formattedDate}):`, error);
+    return getDemoZmanimmData(formattedDate);
   }
-  
-  // If we couldn't get data, create a default based on today's data
-  console.log('Using demo zmanim data for date:', formattedDate);
+};
+
+// Get zmanim for a week
+export const getZmanimForWeek = async (startDate: string, endDate: string): Promise<ZmanimData[]> => {
+  try {
+    console.log(`Fetching zmanim for week (${startDate} - ${endDate}) from Supabase`);
+    const { data, error } = await supabase
+      .from('daily_zmanim')
+      .select('*')
+      .gte('gregorian_date', startDate)
+      .lte('gregorian_date', endDate)
+      .order('gregorian_date');
+    
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      console.log('No weekly zmanim found, using demo data');
+      return [getDemoZmanimmData(startDate)];
+    }
+    
+    const mappedData = data.map(item => mapSupabaseToZmanim(item));
+    console.log(`Retrieved ${mappedData.length} zmanim records for the week`);
+    
+    // Update in-memory database
+    mappedData.forEach(item => {
+      const existingIdx = zmanimDatabase.findIndex(z => z.date === item.date);
+      if (existingIdx >= 0) {
+        zmanimDatabase[existingIdx] = item;
+      } else {
+        zmanimDatabase.push(item);
+      }
+    });
+    
+    return mappedData;
+  } catch (error) {
+    console.error(`Error fetching weekly zmanim (${startDate} - ${endDate}):`, error);
+    return [getDemoZmanimmData(startDate)];
+  }
+};
+
+// Generate demo zmanim data
+const getDemoZmanimmData = (date: string): ZmanimData => {
+  console.log(`Generating demo data for ${date}`);
   return {
-    date: formattedDate,
+    date: date,
     alotHaShachar: '04:52',
     sunrise: '06:08',
     misheyakir: '05:15',
