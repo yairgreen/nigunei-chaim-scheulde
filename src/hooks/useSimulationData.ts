@@ -1,8 +1,7 @@
 
-import { useScheduleData } from '@/hooks/useScheduleData';
+import { useEffect } from 'react';
 import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
-import { runHebrewDateTests } from './simulation/utils/hebrewDateTesting';
 import type { ShabbatDataResponse } from '@/types/shabbat';
 
 export interface SimulationData {
@@ -21,20 +20,30 @@ export interface SimulationData {
 }
 
 export function useSimulationData(date: Date): SimulationData {
-  const { shabbatData } = useScheduleData();
+  // Default shabbat data structure
+  const defaultShabbatData: ShabbatDataResponse = {
+    title: 'שבת',
+    subtitle: '',
+    candlesPT: '--:--',
+    candlesTA: '--:--',
+    havdala: '--:--',
+    prayers: [],
+    classes: []
+  };
+  
   const { 
     simulatedHebrewDate, 
-    simulatedGregorianDate, 
-    validationResult, 
-    isLoading,
-    simulatedTodayHoliday
+    simulatedGregorianDate,
+    simulatedTodayHoliday,
+    validationResult,
+    isLoading
   } = useHebrewDateSimulation(date);
   
   const { 
     simulatedDailyTimes, 
     simulatedDailyPrayers, 
     simulatedShabbatData 
-  } = useScheduleSimulation(date, shabbatData);
+  } = useScheduleSimulation(date, defaultShabbatData);
 
   return {
     simulatedDailyTimes,
@@ -42,23 +51,8 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedShabbatData,
     simulatedHebrewDate,
     simulatedGregorianDate,
-    simulatedTodayHoliday: simulatedTodayHoliday || "",
+    simulatedTodayHoliday,
     isLoading,
     validationResult
   };
 }
-
-// Import and re-export test functions directly from the utility file
-export { runHebrewDateTests };
-
-// Add a function to get database content from simulation/utils/hebrewDateTesting
-export const getDatabaseContent = async () => {
-  try {
-    const { getZmanimDatabase } = await import('@/lib/database/zmanim');
-    const zmanim = await getZmanimDatabase();
-    return { zmanim };
-  } catch (error) {
-    console.error("Error getting database content:", error);
-    return { zmanim: [] };
-  }
-};

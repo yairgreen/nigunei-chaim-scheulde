@@ -1,8 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { fetchRealHebrewDate, fetchHolidayForDate } from './services/hebrewDateApi';
-import { validateHebrewDate } from './services/hebrewDateValidation';
-import { runHebrewDateTests } from './utils/hebrewDateTesting';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HebrewDateSimulationResult {
   simulatedHebrewDate: string;
@@ -20,37 +19,48 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
   const [simulatedHebrewDate, setSimulatedHebrewDate] = useState<string>('');
   const [simulatedGregorianDate, setSimulatedGregorianDate] = useState<string>('');
   const [simulatedTodayHoliday, setSimulatedTodayHoliday] = useState<string>('');
-  const [validationResult, setValidationResult] = useState<{
-    isValid: boolean;
-    expectedDate: string;
-    actualDate: string;
-  } | undefined>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      
       try {
-        // Format gregorian date for display
-        const formattedGregorianDate = format(date, 'dd/MM/yyyy');
-        setSimulatedGregorianDate(formattedGregorianDate);
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        setSimulatedGregorianDate(format(date, 'dd/MM/yyyy'));
         
-        // Fetch hebrew date
-        const hebrewDate = await fetchRealHebrewDate(date);
-        setSimulatedHebrewDate(hebrewDate);
+        // Fetch hebrew date from daily_zmanim
+        const { data: zmanimData, error: zmanimError } = await supabase
+          .from('daily_zmanim')
+          .select('hebrew_date')
+          .eq('gregorian_date', formattedDate)
+          .single();
         
-        // Fetch holiday information
-        const holidayInfo = await fetchHolidayForDate(date);
-        setSimulatedTodayHoliday(holidayInfo);
+        if (zmanimError) throw zmanimError;
         
-        // Validate the hebrew date
-        const validationResults = await validateHebrewDate(date, hebrewDate);
-        setValidationResult(validationResults);
+        if (zmanimData?.hebrew_date) {
+          setSimulatedHebrewDate(zmanimData.hebrew_date);
+        }
+        
+        // Fetch holiday information from holidays table
+        const { data: holidayData, error: holidayError } = await supabase
+          .from('holidays')
+          .select('hebrew, title')
+          .eq('date', formattedDate)
+          .eq('category', 'holiday');
+        
+        if (holidayError) throw holidayError;
+        
+        if (holidayData && holidayData.length > 0) {
+          const holidayNames = holidayData
+            .map(holiday => holiday.hebrew || holiday.title)
+            .filter(Boolean)
+            .join(' | ');
+          setSimulatedTodayHoliday(holidayNames);
+        }
         
       } catch (error) {
         console.error('Error in Hebrew Date Simulation:', error);
-        setSimulatedHebrewDate('כ״ג אדר תשפ״ה');
+        setSimulatedHebrewDate('');
       } finally {
         setIsLoading(false);
       }
@@ -63,10 +73,7 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
     simulatedHebrewDate,
     simulatedGregorianDate,
     simulatedTodayHoliday,
-    validationResult,
-    isLoading
+    isLoading,
+    validationResult: undefined // Remove validation since we're using DB data
   };
 }
-
-// Export the test function so it can be imported elsewhere
-export { runHebrewDateTests };
