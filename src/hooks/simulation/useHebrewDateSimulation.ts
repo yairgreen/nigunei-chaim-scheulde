@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fetchRealHebrewDate, fetchHolidayForDate } from './services/hebrewDateApi';
 import { validateHebrewDate } from './services/hebrewDateValidation';
+import { runHebrewDateTests } from './utils/hebrewDateTesting';
 
 interface HebrewDateSimulationResult {
   simulatedHebrewDate: string;
@@ -67,3 +67,6 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
     isLoading
   };
 }
+
+// Export the test function so it can be imported elsewhere
+export { runHebrewDateTests };

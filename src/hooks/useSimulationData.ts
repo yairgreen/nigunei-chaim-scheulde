@@ -1,7 +1,8 @@
 
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { useHebrewDateSimulation, runHebrewDateTests } from './simulation/useHebrewDateSimulation';
+import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
+import { runHebrewDateTests } from './simulation/utils/hebrewDateTesting';
 import type { ShabbatDataResponse } from '@/types/shabbat';
 
 export interface SimulationData {
@@ -47,7 +48,7 @@ export function useSimulationData(date: Date): SimulationData {
   };
 }
 
-// Import and re-export test functions from useHebrewDateSimulation
+// Import and re-export test functions directly from the utility file
 export { runHebrewDateTests };
 
 // Add a function to get database content from simulation/utils/hebrewDateTesting
