@@ -3,12 +3,8 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import type { ShabbatDataResponse } from '@/types/shabbat';
-import { 
-  calculateWeeklyMinchaTime,
-  calculateWeeklyArvitTime,
-  calculateShabbatMinchaTime,
-  calculateShabbatKabalatTime
-} from '@/lib/database/prayers';
+import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from '@/lib/database/prayers';
+import { calculateShabbatMinchaTime, calculateShabbatKabalatTime } from '@/lib/database/utils/shabbatCalculations';
 
 interface ScheduleSimulationResult {
   simulatedDailyTimes: Array<{ name: string; time: string }>;
