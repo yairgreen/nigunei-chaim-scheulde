@@ -31,7 +31,7 @@ const Simulation = () => {
     simulatedGregorianDate,
     isLoading,
     validationResult,
-    simulatedTodayHoliday  // Add this to destructure the property from useSimulationData
+    simulatedTodayHoliday
   } = useSimulationData(appliedDate);
   
   const applyDate = () => {
@@ -176,7 +176,7 @@ const Simulation = () => {
             shabbatData={simulatedShabbatData}
             isRoshChodesh={isRoshChodesh}
             currentDate={appliedDate}
-            todayHoliday={simulatedTodayHoliday || ""}  // Added this line with fallback to empty string
+            todayHoliday={simulatedTodayHoliday || ""}
           />
         )}
       </div>

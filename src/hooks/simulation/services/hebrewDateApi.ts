@@ -66,3 +66,76 @@ export const fetchRealHebrewDate = async (gregorianDate: Date): Promise<string> 
     throw error;
   }
 };
+
+// Get holiday for a specific date from Supabase
+export const fetchHolidayForDate = async (date: Date): Promise<string> => {
+  try {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    console.log(`Fetching holiday data for: ${formattedDate} from Supabase`);
+    
+    const { data: holidays, error } = await supabase
+      .from('holidays')
+      .select('*')
+      .eq('date', formattedDate)
+      .eq('category', 'holiday')
+      .order('subcat', { ascending: true });  // 'major' comes before 'minor'
+    
+    if (error) {
+      console.error('Error fetching holiday data:', error);
+      return '';
+    }
+    
+    if (!holidays || holidays.length === 0) {
+      console.log(`No holidays found for date ${formattedDate}`);
+      return '';
+    }
+    
+    // Sort holidays: major first, then minor, then others
+    const sortedHolidays = holidays.sort((a, b) => {
+      if (a.subcat === 'major') return -1;
+      if (b.subcat === 'major') return 1;
+      if (a.subcat === 'minor') return -1;
+      if (b.subcat === 'minor') return 1;
+      return 0;
+    });
+    
+    // Combine holiday names with separator
+    const holidayString = sortedHolidays.map(holiday => holiday.hebrew).join(' | ');
+    console.log(`Found holidays for ${formattedDate}:`, holidayString);
+    
+    return holidayString;
+  } catch (error) {
+    console.error('Error fetching holidays:', error);
+    return '';
+  }
+};
+
+// Check if a specific date is Rosh Chodesh
+export const isRoshChodeshForDate = async (date: Date): Promise<boolean> => {
+  try {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    const { data, error } = await supabase
+      .from('holidays')
+      .select('*')
+      .eq('date', formattedDate)
+      .eq('category', 'roshchodesh');
+    
+    if (error) {
+      console.error('Error checking Rosh Chodesh status:', error);
+      return false;
+    }
+    
+    return data && data.length > 0;
+  } catch (error) {
+    console.error('Error checking Rosh Chodesh status:', error);
+    return false;
+  }
+};

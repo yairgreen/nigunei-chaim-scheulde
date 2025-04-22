@@ -8,7 +8,7 @@ interface SimulationDisplayProps {
   headerTitle: string;
   hebrewDate: string;
   gregorianDate: string;
-  todayHoliday: string;  // Added this line
+  todayHoliday: string;
   dailyTimes: Array<{ name: string; time: string; isNext?: boolean }>;
   dailyPrayers: Array<{ name: string; time: string }>;
   dailyClasses: Array<{ name: string; time: string }>;
@@ -21,7 +21,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
   headerTitle,
   hebrewDate,
   gregorianDate,
-  todayHoliday,  // Added this line
+  todayHoliday,
   dailyTimes,
   dailyPrayers,
   dailyClasses,
@@ -41,7 +41,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
         shabbatName={headerTitle}
         hebrewDate={hebrewDate}
         gregorianDate={gregorianDate}
-        todayHoliday={todayHoliday}  // Added this line
+        todayHoliday={todayHoliday}
       />
       
       <ScheduleDisplay 
@@ -55,7 +55,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
         currentDate={currentDate}
         dataLoaded={true}
         forceRefresh={mockForceRefresh}
-        todayHoliday={todayHoliday}  // Added this line
+        todayHoliday={todayHoliday}
       />
     </>
   );
