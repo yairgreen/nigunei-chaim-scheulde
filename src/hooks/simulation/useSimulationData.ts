@@ -22,6 +22,17 @@ export interface SimulationData {
 }
 
 export function useSimulationData(date: Date): SimulationData {
+  // Get the current shabbatData to pass to the simulation
+  const { shabbatData } = { shabbatData: {
+    title: 'שבת',
+    subtitle: '',
+    candlesPT: '--:--',
+    candlesTA: '--:--',
+    havdala: '--:--',
+    prayers: [],
+    classes: []
+  }}; // Default value to avoid undefined
+  
   const { 
     simulatedHebrewDate, 
     simulatedGregorianDate,
@@ -34,7 +45,7 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedDailyTimes, 
     simulatedDailyPrayers, 
     simulatedShabbatData 
-  } = useScheduleSimulation(date);
+  } = useScheduleSimulation(date, shabbatData); // Fixed: Added second parameter
 
   return {
     simulatedDailyTimes,
