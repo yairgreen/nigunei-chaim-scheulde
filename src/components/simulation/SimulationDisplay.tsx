@@ -3,6 +3,8 @@ import React from 'react';
 import Header from '@/components/Header';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import { ShabbatDataResponse } from '@/types/shabbat';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface SimulationDisplayProps {
   headerTitle: string;
@@ -36,7 +38,14 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
   };
 
   return (
-    <>
+    <div className="relative">
+      <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+        <AlertDescription className="text-yellow-800">
+          מצב סימולציה - צפייה מקדימה בנתונים עבור {gregorianDate}
+        </AlertDescription>
+      </Alert>
+      
       <Header 
         shabbatName={headerTitle}
         hebrewDate={hebrewDate}
@@ -57,7 +66,7 @@ const SimulationDisplay: React.FC<SimulationDisplayProps> = ({
         forceRefresh={mockForceRefresh}
         todayHoliday={todayHoliday}
       />
-    </>
+    </div>
   );
 };
 
