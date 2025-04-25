@@ -34,9 +34,18 @@ export function useWeeklyPrayers() {
         console.warn('No zmanim data available for prayer calculations');
         return;
       }
+
+      // Filter to include only Sunday through Thursday (0-4)
+      const weekdayZmanim = weeklyZmanim.filter(zmanim => {
+        const date = new Date(zmanim.date);
+        const day = date.getDay();
+        return day >= 0 && day <= 4; // Sunday (0) through Thursday (4)
+      });
+      
+      console.log('Filtered weekday zmanim:', weekdayZmanim);
       
       // Format data for calculations
-      const zmanimForCalc = weeklyZmanim.map(z => ({
+      const zmanimForCalc = weekdayZmanim.map(z => ({
         date: z.date,
         sunset: z.sunset,
         beinHaShmashos: z.beinHaShmashos
@@ -45,6 +54,8 @@ export function useWeeklyPrayers() {
       // Calculate prayer times
       const minchaTime = calculateWeeklyMinchaTime(zmanimForCalc);
       const arvitTime = calculateWeeklyArvitTime(zmanimForCalc);
+      
+      console.log('Calculated times:', { minchaTime, arvitTime });
       
       setWeeklyPrayers({
         minchaTime,
