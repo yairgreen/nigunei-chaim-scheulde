@@ -1,13 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
 export function useZmanimData(date?: Date) {
-  const [zmanimData, setZmanimData] = useState<ZmanimData | null>(null);
-
-  const fetchZmanimData = async () => {
-    try {
+  const { data: zmanimData, refetch: fetchZmanimData } = useQuery({
+    queryKey: ['zmanim', date?.toISOString() ?? 'today'],
+    queryFn: async () => {
       console.log('Fetching daily zmanim data from Supabase...');
       const data = date 
         ? await getZmanimForSpecificDate(date) 
@@ -15,19 +14,18 @@ export function useZmanimData(date?: Date) {
       
       if (!data) {
         console.error('No zmanim data available');
-        return;
+        return null;
       }
 
       console.log('Zmanim data received:', data);
-      setZmanimData(data);
-    } catch (error) {
-      console.error('Error fetching daily times:', error);
-    }
-  };
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: true,
+  });
 
-  useEffect(() => {
-    fetchZmanimData();
-    
+  // Listen for zmanim-updated events to trigger refetch
+  useEffect(() => {    
     const handleZmanimUpdate = () => {
       console.log('Zmanim update detected, refreshing...');
       fetchZmanimData();
@@ -38,7 +36,7 @@ export function useZmanimData(date?: Date) {
     return () => {
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
     };
-  }, [date]);
+  }, [fetchZmanimData]);
 
   return { zmanimData, fetchZmanimData };
 }
