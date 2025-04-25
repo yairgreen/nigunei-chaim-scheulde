@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
+import { useWeeklyPrayers } from './useWeeklyPrayers';
 import type { ZmanimData } from '@/lib/database/zmanim';
 
 export interface DailyTimesData {
@@ -9,6 +10,7 @@ export interface DailyTimesData {
 export function useDailyTimes(date?: Date): DailyTimesData {
   const [dailyTimes, setDailyTimes] = useState<{ name: string; time: string; isNext?: boolean }[]>([]);
   const [zmanimData, setZmanimData] = useState<ZmanimData | null>(null);
+  const weeklyPrayers = useWeeklyPrayers();
 
   // Format time to HH:MM format
   const formatToHHMM = (timeString: string): string => {
@@ -44,8 +46,6 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   const fetchZmanimData = async () => {
     try {
       console.log('Fetching daily zmanim data from Supabase...');
-      // If a specific date is provided, get zmanim for that date
-      // Otherwise get today's zmanim
       const data = date 
         ? await getZmanimForSpecificDate(date) 
         : await getTodayZmanim();
@@ -55,34 +55,48 @@ export function useDailyTimes(date?: Date): DailyTimesData {
         return;
       }
 
-      console.log('Zmanim data received from Supabase:', data);
+      console.log('Zmanim data received:', data);
       setZmanimData(data);
       
       // Process the data into times array with formatted times
-      updateTimesFromData(data);
+      const currentDate = date || new Date();
+      const currentDay = currentDate.getDay();
+      
+      // Skip Mincha and Arvit times on Friday and Saturday
+      const includePrayerTimes = currentDay !== 5 && currentDay !== 6;
+      
+      const times = [
+        { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar), isNext: false },
+        { name: 'הנץ החמה', time: formatToHHMM(data.sunrise), isNext: false },
+        { name: 'זמן טלית ותפילין', time: formatToHHMM(data.misheyakir), isNext: false },
+        { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(data.sofZmanShmaMGA), isNext: false },
+        { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(data.sofZmanShma), isNext: false },
+        { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(data.sofZmanTfillaMGA), isNext: false },
+        { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(data.sofZmanTfilla), isNext: false },
+        { name: 'חצות היום והלילה', time: formatToHHMM(data.chatzot), isNext: false },
+        { name: 'זמן מנחה גדולה', time: formatToHHMM(data.minchaGedola), isNext: false },
+        { name: 'פלג המנחה', time: formatToHHMM(data.plagHaMincha), isNext: false }
+      ];
+      
+      // Add weekly prayer times if not Friday/Saturday
+      if (includePrayerTimes) {
+        if (weeklyPrayers.minchaTime) {
+          times.push({ name: 'מנחה', time: weeklyPrayers.minchaTime, isNext: false });
+        }
+        if (weeklyPrayers.arvitTime) {
+          times.push({ name: 'ערבית', time: weeklyPrayers.arvitTime, isNext: false });
+        }
+      }
+      
+      times.push(
+        { name: 'שקיעה', time: formatToHHMM(data.sunset), isNext: false },
+        { name: 'צאת הכוכבים', time: formatToHHMM(data.beinHaShmashos), isNext: false }
+      );
+
+      updateNextTimeIndicator(times);
     } catch (error) {
       console.error('Error fetching daily times:', error);
     }
-  };
-
-  // Update the dailyTimes array based on zmanimData
-  const updateTimesFromData = (data: ZmanimData) => {
-    const times = [
-      { name: 'עלות השחר (72 ד\')', time: formatToHHMM(data.alotHaShachar), isNext: false },
-      { name: 'הנץ החמה', time: formatToHHMM(data.sunrise), isNext: false },
-      { name: 'זמן טלית ותפילין', time: formatToHHMM(data.misheyakir), isNext: false },
-      { name: 'סוף זמן ק"ש (מג״א)', time: formatToHHMM(data.sofZmanShmaMGA), isNext: false },
-      { name: 'סוף זמן ק"ש (גר״א)', time: formatToHHMM(data.sofZmanShma), isNext: false },
-      { name: 'סוף זמן תפילה (מג״א)', time: formatToHHMM(data.sofZmanTfillaMGA), isNext: false },
-      { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(data.sofZmanTfilla), isNext: false },
-      { name: 'חצות היום והלילה', time: formatToHHMM(data.chatzot), isNext: false },
-      { name: 'זמן מנחה גדולה', time: formatToHHMM(data.minchaGedola), isNext: false },
-      { name: 'פלג המנחה', time: formatToHHMM(data.plagHaMincha), isNext: false },
-      { name: 'שקיעה', time: formatToHHMM(data.sunset), isNext: false },
-      { name: 'צאת הכוכבים', time: formatToHHMM(data.beinHaShmashos), isNext: false }
-    ];
-
-    updateNextTimeIndicator(times);
   };
 
   // Update the "next" indicator based on current time
@@ -114,10 +128,8 @@ export function useDailyTimes(date?: Date): DailyTimesData {
   };
 
   useEffect(() => {
-    // Initial data fetch
     fetchZmanimData();
     
-    // Set up event listener for zmanim updates
     const handleZmanimUpdate = () => {
       console.log('Zmanim update detected in useDailyTimes, refreshing...');
       fetchZmanimData();
@@ -125,12 +137,15 @@ export function useDailyTimes(date?: Date): DailyTimesData {
     
     window.addEventListener('zmanim-updated', handleZmanimUpdate);
     
-    // Still keep the minute interval just to update the "next" indicator
-    // This doesn't fetch new data, only updates the UI based on current time
+    // Update the "next" indicator every minute
     const minuteInterval = setInterval(() => {
       if (zmanimData) {
-        // Just update the "next" indicator without fetching new data
+        const currentDate = date || new Date();
+        const currentDay = currentDate.getDay();
+        const includePrayerTimes = currentDay !== 5 && currentDay !== 6;
+        
         const times = [
+          // ... Base zmanim times
           { name: 'עלות השחר (72 ד\')', time: formatToHHMM(zmanimData.alotHaShachar), isNext: false },
           { name: 'הנץ החמה', time: formatToHHMM(zmanimData.sunrise), isNext: false },
           { name: 'זמן טלית ותפילין', time: formatToHHMM(zmanimData.misheyakir), isNext: false },
@@ -140,15 +155,29 @@ export function useDailyTimes(date?: Date): DailyTimesData {
           { name: 'סוף זמן תפילה (גר"א)', time: formatToHHMM(zmanimData.sofZmanTfilla), isNext: false },
           { name: 'חצות היום והלילה', time: formatToHHMM(zmanimData.chatzot), isNext: false },
           { name: 'זמן מנחה גדולה', time: formatToHHMM(zmanimData.minchaGedola), isNext: false },
-          { name: 'פלג המנחה', time: formatToHHMM(zmanimData.plagHaMincha), isNext: false },
+          { name: 'פלג המנחה', time: formatToHHMM(zmanimData.plagHaMincha), isNext: false }
+        ];
+        
+        // Add weekly prayer times if not Friday/Saturday
+        if (includePrayerTimes) {
+          if (weeklyPrayers.minchaTime) {
+            times.push({ name: 'מנחה', time: weeklyPrayers.minchaTime, isNext: false });
+          }
+          if (weeklyPrayers.arvitTime) {
+            times.push({ name: 'ערבית', time: weeklyPrayers.arvitTime, isNext: false });
+          }
+        }
+        
+        times.push(
           { name: 'שקיעה', time: formatToHHMM(zmanimData.sunset), isNext: false },
           { name: 'צאת הכוכבים', time: formatToHHMM(zmanimData.beinHaShmashos), isNext: false }
-        ];
+        );
+        
         updateNextTimeIndicator(times);
       }
-    }, 60 * 1000); // Update every minute
+    }, 60 * 1000);
     
-    // Full data refresh every day at midnight
+    // Set up daily refresh at midnight
     const setupDailyRefresh = () => {
       const now = new Date();
       const tomorrow = new Date(now);
@@ -168,7 +197,6 @@ export function useDailyTimes(date?: Date): DailyTimesData {
       }, msUntilMidnight);
     };
     
-    // Initialize the daily refresh scheduler
     const dailyRefreshTimeout = setupDailyRefresh();
     
     return () => {
@@ -176,7 +204,7 @@ export function useDailyTimes(date?: Date): DailyTimesData {
       clearTimeout(dailyRefreshTimeout);
       window.removeEventListener('zmanim-updated', handleZmanimUpdate);
     };
-  }, [date, zmanimData]);
+  }, [date, zmanimData, weeklyPrayers]);
 
   return { dailyTimes };
 }
