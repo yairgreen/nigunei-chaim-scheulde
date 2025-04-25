@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getTodayZmanim, getZmanimForSpecificDate } from '@/lib/database/index';
 import type { ZmanimData } from '@/lib/database/zmanim';
@@ -40,4 +41,3 @@ export function useZmanimData(date?: Date) {
 
   return { zmanimData, fetchZmanimData };
 }
-
