@@ -5,3 +5,10 @@ export { getZmanimForDate, getZmanimForWeek, getZmanimDatabase, getHolidaysDatab
 export * from './services/shabbatQueries';
 export * from './services/holidayQueries';
 export { formatTimeFromDB } from './utils/timeFormatting';
+
+// Direct implementation of getZmanimForWeek to fix path issues
+export const getZmanimForWeek = async (startDate: string, endDate: string) => {
+  // Import directly from the database module to ensure we're using the correct function
+  const { getZmanimForWeek: fetchWeeklyZmanim } = await import('@/lib/database/queries/weeklyZmanim');
+  return fetchWeeklyZmanim(startDate, endDate);
+};

@@ -21,6 +21,10 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
   const [dailyClasses, setDailyClasses] = useState<{ name: string; time: string }[]>([]);
   const [isRoshChodesh, setIsRoshChodesh] = useState(false);
   const [overrides, setOverrides] = useState<PrayerOverride[]>([]);
+  const [calculatedTimes, setCalculatedTimes] = useState<{ minchaTime: string; arvitTime: string }>({ 
+    minchaTime: '', 
+    arvitTime: '' 
+  });
 
   const refreshDailySchedule = async () => {
     try {
@@ -45,8 +49,12 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
       } else {
         // For current date, get calculated values
         const prayerTimes = await recalculatePrayerTimes();
+        console.log('Received prayer times from recalculation:', prayerTimes);
         minchaTime = prayerTimes.minchaTime;
         arvitTime = prayerTimes.arvitTime;
+        
+        // Store calculated times for reference
+        setCalculatedTimes({ minchaTime, arvitTime });
       }
       
       console.log('Calculated prayer times for daily schedule - Mincha:', minchaTime || 'Not available', 'Arvit:', arvitTime || 'Not available');
@@ -72,6 +80,7 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
           time: override?.override_time || minchaTime 
         });
       } else {
+        console.warn('No calculated Mincha time available, using default');
         prayers.push({ name: 'מנחה', time: '17:30' });
       }
       
@@ -83,6 +92,7 @@ export function useDailySchedule(date?: Date): DailyScheduleData {
           time: override?.override_time || arvitTime 
         });
       } else {
+        console.warn('No calculated Arvit time available, using default');
         prayers.push({ name: 'ערבית א׳', time: '18:30' });
       }
       
