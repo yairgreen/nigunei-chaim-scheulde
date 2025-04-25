@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getZmanimForWeek } from '@/lib/database/index';
+import { getZmanimForWeek } from '@/lib/supabase/zmanim';
 import { startOfWeek, addDays, format } from 'date-fns';
 import { calculateWeeklyMinchaTime, calculateWeeklyArvitTime } from '@/lib/database/prayers';
 import type { ZmanimData } from '@/lib/database/zmanim';
