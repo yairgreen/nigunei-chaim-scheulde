@@ -5,8 +5,8 @@ import {
   getZmanimForWeek, 
   getZmanimDatabase as getSupabaseZmanimDB, 
   getHolidaysDatabase as getSupabaseHolidaysDB,
-  getTodayZmanim,
-  getZmanimForSpecificDate 
+  getTodayZmanim as getSupabaseTodayZmanim,
+  getZmanimForSpecificDate as getSupabaseZmanimForDate
 } from '@/lib/supabase/zmanim';
 
 import type { ZmanimData } from './zmanim';
