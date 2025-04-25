@@ -1,51 +1,141 @@
 
-import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
+export const fetchRealHebrewDate = async (gregorianDate: Date): Promise<string> => {
+  try {
+    const year = gregorianDate.getFullYear();
+    const month = String(gregorianDate.getMonth() + 1).padStart(2, '0');
+    const day = String(gregorianDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    console.log(`Fetching Hebrew date for: ${formattedDate} from Supabase`);
+    
+    // First try to get the Hebrew date from Supabase
+    const { data, error } = await supabase
+      .from('daily_zmanim')
+      .select('hebrew_date')
+      .eq('gregorian_date', formattedDate)
+      .single();
+    
+    if (!error && data && data.hebrew_date) {
+      console.log(`Successfully found Hebrew date in Supabase: ${data.hebrew_date} for ${formattedDate}`);
+      return data.hebrew_date;
+    }
+    
+    // Fallback to external API if not in Supabase
+    console.log(`No Hebrew date found in Supabase, using external API for: ${formattedDate}`);
+    const url = `https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&start=${formattedDate}&end=${formattedDate}&c=on&ss=on&mf=on&c=on&b=40&d=on&geo=geoname&geonameid=293918&M=on&s=on`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Hebrew date: ${response.status} ${response.statusText}`);
+    }
+    
+    const apiData = await response.json();
+    console.log("Received Hebrew date data:", apiData);
+    
+    if (apiData.items && apiData.items.length > 0) {
+      const hebrewDateItem = apiData.items.find((item: any) => item.category === 'hebdate');
+      
+      if (hebrewDateItem && hebrewDateItem.hebrew) {
+        console.log(`Successfully found Hebrew date from API: ${hebrewDateItem.hebrew} for ${formattedDate}`);
+        
+        // Store this in Supabase for future use if the database has this date
+        try {
+          const { error: updateError } = await supabase
+            .from('daily_zmanim')
+            .update({ hebrew_date: hebrewDateItem.hebrew })
+            .eq('gregorian_date', formattedDate);
+            
+          if (!updateError) {
+            console.log(`Saved Hebrew date to Supabase for future use: ${hebrewDateItem.hebrew}`);
+          }
+        } catch (dbError) {
+          console.log('Could not update Supabase with Hebrew date', dbError);
+          // Non-critical error, continue
+        }
+        
+        return hebrewDateItem.hebrew;
+      }
+    }
+    
+    throw new Error("Could not extract Hebrew date from API response");
+  } catch (error) {
+    console.error("Error fetching real Hebrew date:", error);
+    throw error;
+  }
+};
+
+// Get holiday for a specific date from Supabase
 export const fetchHolidayForDate = async (date: Date): Promise<string> => {
   try {
-    const formattedDate = format(date, 'yyyy-MM-dd');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    console.log(`Fetching holiday data for: ${formattedDate} from Supabase`);
     
     const { data: holidays, error } = await supabase
       .from('holidays')
       .select('*')
       .eq('date', formattedDate)
       .eq('category', 'holiday')
-      .order('title', { ascending: true });
+      .order('subcat', { ascending: true });  // 'major' comes before 'minor'
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching holiday data:', error);
+      return '';
+    }
     
-    // If no holidays found, return empty string
-    if (!holidays || holidays.length === 0) return '';
+    if (!holidays || holidays.length === 0) {
+      console.log(`No holidays found for date ${formattedDate}`);
+      return '';
+    }
     
-    // Return all holiday names joined with separator
-    return holidays.map(holiday => holiday.hebrew || holiday.title).join(' | ');
+    // Sort holidays: major first, then minor, then others
+    const sortedHolidays = holidays.sort((a, b) => {
+      if (a.subcat === 'major') return -1;
+      if (b.subcat === 'major') return 1;
+      if (a.subcat === 'minor') return -1;
+      if (b.subcat === 'minor') return 1;
+      return 0;
+    });
     
+    // Combine holiday names with separator
+    const holidayString = sortedHolidays.map(holiday => holiday.hebrew).join(' | ');
+    console.log(`Found holidays for ${formattedDate}:`, holidayString);
+    
+    return holidayString;
   } catch (error) {
-    console.error('Error fetching holiday:', error);
+    console.error('Error fetching holidays:', error);
     return '';
   }
 };
 
-export const fetchRealHebrewDate = async (date: Date): Promise<string> => {
+// Check if a specific date is Rosh Chodesh
+export const isRoshChodeshForDate = async (date: Date): Promise<boolean> => {
   try {
-    const formattedDate = format(date, 'yyyy-MM-dd');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
     
-    const { data: zmanimData, error } = await supabase
-      .from('daily_zmanim')
-      .select('hebrew_date')
-      .eq('gregorian_date', formattedDate)
-      .single();
+    const { data, error } = await supabase
+      .from('holidays')
+      .select('*')
+      .eq('date', formattedDate)
+      .eq('category', 'roshchodesh');
     
-    if (error || !zmanimData?.hebrew_date) {
-      console.log('No Hebrew date found in database, using fallback');
-      return 'כ״ג אדר תשפ״ה';
+    if (error) {
+      console.error('Error checking Rosh Chodesh status:', error);
+      return false;
     }
     
-    return zmanimData.hebrew_date;
+    return data && data.length > 0;
   } catch (error) {
-    console.error('Error fetching Hebrew date:', error);
-    return 'כ״ג אדר תשפ״ה';
+    console.error('Error checking Rosh Chodesh status:', error);
+    return false;
   }
 };
-
