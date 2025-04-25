@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { TestTube, Database, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useSimulationData, runHebrewDateTests } from '@/hooks/useSimulationData';
+import { useSimulationData } from '@/hooks/useSimulationData';
 import SimulationControls from '@/components/simulation/SimulationControls';
 import SimulationDebugPanel from '@/components/simulation/SimulationDebugPanel';
 import SimulationDisplay from '@/components/simulation/SimulationDisplay';
@@ -30,8 +30,7 @@ const Simulation = () => {
     simulatedHebrewDate,
     simulatedGregorianDate,
     isLoading,
-    validationResult,
-    simulatedTodayHoliday  // Add this to destructure the property from useSimulationData
+    simulatedTodayHoliday
   } = useSimulationData(appliedDate);
   
   const applyDate = () => {
@@ -53,9 +52,18 @@ const Simulation = () => {
     setTestResults(null);
     
     try {
-      await runHebrewDateTests();
-      setTestStatus('success');
-      toast.success('בדיקות בוצעו בהצלחה');
+      // Test database connectivity
+      const { data, error } = await fetch('/api/test-db-connection').then(res => res.json());
+      
+      if (error) {
+        setTestResults(`Database connection error: ${error.message}`);
+        setTestStatus('error');
+        toast.error('שגיאה בחיבור למסד הנתונים');
+      } else {
+        setTestResults(`Database connection successful. Connected to Supabase project: ${data.projectId}`);
+        setTestStatus('success');
+        toast.success('בדיקת חיבור למסד הנתונים הצליחה');
+      }
     } catch (error) {
       setTestStatus('error');
       setTestResults(`Error running tests: ${error instanceof Error ? error.message : String(error)}`);
@@ -99,7 +107,7 @@ const Simulation = () => {
               disabled={testStatus === 'running'}
             >
               <TestTube className="h-4 w-4" />
-              {testStatus === 'running' ? 'מריץ בדיקות...' : 'הרץ בדיקות'}
+              {testStatus === 'running' ? 'בודק חיבור...' : 'בדוק חיבור לדאטהבייס'}
             </Button>
             <Button 
               variant="outline" 
@@ -120,20 +128,10 @@ const Simulation = () => {
           </div>
         </div>
 
-        {validationResult && !validationResult.isValid && (
-          <SimulationDebugPanel 
-            validationResult={validationResult}
-            testResults={testResults}
-            simulationData={{
-              date: appliedDate.toISOString(),
-              dayOfWeek: appliedDate.getDay(),
-              hebrewDate: simulatedHebrewDate,
-              gregorianDate: simulatedGregorianDate,
-              dailyTimesCount: simulatedDailyTimes.length,
-              dailyPrayersCount: simulatedDailyPrayers.length,
-              shabbatTitle: simulatedShabbatData.title
-            }}
-          />
+        {testResults && (
+          <div className={`p-4 mb-4 border ${testStatus === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} rounded-md`}>
+            <p className="text-sm">{testResults}</p>
+          </div>
         )}
         
         {showDatabase && <DatabaseViewer />}
@@ -141,7 +139,6 @@ const Simulation = () => {
         {showDebugInfo && (
           <SimulationDebugPanel 
             testResults={testResults}
-            validationResult={validationResult}
             simulationData={{
               date: appliedDate.toISOString(),
               dayOfWeek: appliedDate.getDay(),
@@ -176,7 +173,7 @@ const Simulation = () => {
             shabbatData={simulatedShabbatData}
             isRoshChodesh={isRoshChodesh}
             currentDate={appliedDate}
-            todayHoliday={simulatedTodayHoliday || ""}  // Added this line with fallback to empty string
+            todayHoliday={simulatedTodayHoliday || ""}
           />
         )}
       </div>

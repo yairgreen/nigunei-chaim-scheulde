@@ -1,22 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { HebrewDateSimulationResult } from './types/hebrewDateTypes';
-import { fetchRealHebrewDate } from './services/hebrewDateApi';
-import { validateHebrewDate } from './services/hebrewDateValidation';
-import { simulateHebrewDate } from './utils/hebrewDateUtils';
-import { runHebrewDateTests as _runHebrewDateTests } from './utils/hebrewDateTesting';
-
-// Re-export the runHebrewDateTests function
-export const runHebrewDateTests = _runHebrewDateTests;
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult {
   const [simulatedHebrewDate, setSimulatedHebrewDate] = useState<string>("");
   const [simulatedGregorianDate, setSimulatedGregorianDate] = useState<string>("");
-  const [validationResult, setValidationResult] = useState<{
-    isValid: boolean;
-    expectedDate: string;
-    actualDate: string;
-  } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [simulatedTodayHoliday, setSimulatedTodayHoliday] = useState<string>("");
 
@@ -27,34 +17,48 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
       setIsLoading(true);
       
       try {
-        const hebrewDate = await fetchRealHebrewDate(date);
-        setSimulatedHebrewDate(hebrewDate);
+        // Format date for Supabase query
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
         
-        const validation = await validateHebrewDate(date, hebrewDate);
-        setValidationResult(validation);
-        
-        if (!validation.isValid) {
-          console.warn("Hebrew date validation failed:", validation);
-        }
+        // Get Hebrew date from Supabase
+        const { data: dateData, error: dateError } = await supabase
+          .from('daily_zmanim')
+          .select('hebrew_date')
+          .eq('gregorian_date', formattedDate)
+          .single();
 
-        const month = date.getMonth();
-        const day = date.getDate();
-        
-        if (month === 2 && day === 15) {
-          setSimulatedTodayHoliday("פורים");
-        } else if (month === 3 && day === 15) {
-          setSimulatedTodayHoliday("פסח");
-        } else if (month === 8 && day === 25) {
-          setSimulatedTodayHoliday("ראש השנה");
+        if (dateError) {
+          console.error('Error fetching Hebrew date:', dateError.message);
+          setSimulatedHebrewDate('תאריך עברי לא זמין');
+        } else if (dateData && dateData.hebrew_date) {
+          setSimulatedHebrewDate(dateData.hebrew_date);
         } else {
-          setSimulatedTodayHoliday("");
+          setSimulatedHebrewDate('תאריך עברי לא זמין');
+        }
+        
+        // Get holiday info from Supabase
+        const { data: holidayData, error: holidayError } = await supabase
+          .from('holidays')
+          .select('hebrew, title')
+          .eq('date', formattedDate);
+          
+        if (!holidayError && holidayData && holidayData.length > 0) {
+          // If there are multiple holidays, join them with a separator
+          const holidayNames = holidayData.map(h => h.hebrew || h.title).filter(Boolean);
+          setSimulatedTodayHoliday(holidayNames.join(' | '));
+        } else {
+          setSimulatedTodayHoliday('');
         }
       } catch (error) {
-        const fallbackHebrewDate = simulateHebrewDate(date);
-        setSimulatedHebrewDate(fallbackHebrewDate);
-        setValidationResult(undefined);
+        console.error("Error fetching data:", error);
+        setSimulatedHebrewDate('תאריך עברי לא זמין');
+        setSimulatedTodayHoliday('');
       }
       
+      // Format Gregorian date
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const year = date.getFullYear();
@@ -70,7 +74,6 @@ export function useHebrewDateSimulation(date: Date): HebrewDateSimulationResult 
   return {
     simulatedHebrewDate,
     simulatedGregorianDate,
-    validationResult,
     isLoading,
     simulatedTodayHoliday
   };

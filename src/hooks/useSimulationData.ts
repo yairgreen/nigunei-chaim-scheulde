@@ -1,22 +1,19 @@
 
+import { useState, useEffect } from 'react';
 import { useScheduleData } from '@/hooks/useScheduleData';
-import { useHebrewDateSimulation, runHebrewDateTests } from './simulation/useHebrewDateSimulation';
+import { useHebrewDateSimulation } from './simulation/useHebrewDateSimulation';
 import { useScheduleSimulation } from './simulation/useScheduleSimulation';
 import type { ShabbatDataResponse } from '@/types/shabbat';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SimulationData {
-  simulatedDailyTimes: Array<{ name: string; time: string }>;
+  simulatedDailyTimes: Array<{ name: string; time: string; isNext?: boolean }>;
   simulatedDailyPrayers: Array<{ name: string; time: string }>;
   simulatedShabbatData: ShabbatDataResponse;
   simulatedHebrewDate: string;
   simulatedGregorianDate: string;
-  simulatedTodayHoliday: string;  // Added this line
+  simulatedTodayHoliday: string;
   isLoading: boolean;
-  validationResult?: {
-    isValid: boolean;
-    expectedDate: string;
-    actualDate: string;
-  };
 }
 
 export function useSimulationData(date: Date): SimulationData {
@@ -24,9 +21,8 @@ export function useSimulationData(date: Date): SimulationData {
   const { 
     simulatedHebrewDate, 
     simulatedGregorianDate, 
-    validationResult, 
     isLoading,
-    simulatedTodayHoliday  // Added this line
+    simulatedTodayHoliday
   } = useHebrewDateSimulation(date);
   
   const { 
@@ -41,23 +37,44 @@ export function useSimulationData(date: Date): SimulationData {
     simulatedShabbatData,
     simulatedHebrewDate,
     simulatedGregorianDate,
-    simulatedTodayHoliday: simulatedTodayHoliday || "",  // Added fallback to empty string
-    isLoading,
-    validationResult
+    simulatedTodayHoliday: simulatedTodayHoliday || "",
+    isLoading
   };
 }
 
-// Import and re-export test functions from useHebrewDateSimulation
-export { runHebrewDateTests };
-
-// Add a function to get database content from simulation/utils/hebrewDateTesting
+// Export function to get database content
 export const getDatabaseContent = async () => {
   try {
-    const { getZmanimDatabase } = await import('@/lib/database/zmanim');
-    const zmanim = await getZmanimDatabase();
-    return { zmanim };
+    const { data: zmanim, error: zmanimError } = await supabase
+      .from('daily_zmanim')
+      .select('*')
+      .order('gregorian_date');
+      
+    const { data: holidays, error: holidaysError } = await supabase
+      .from('holidays')
+      .select('*')
+      .order('date');
+      
+    const { data: shabbatTimes, error: shabbatError } = await supabase
+      .from('shabbat_times')
+      .select('*')
+      .order('date');
+    
+    if (zmanimError) console.error("Error getting zmanim database:", zmanimError);
+    if (holidaysError) console.error("Error getting holidays database:", holidaysError);
+    if (shabbatError) console.error("Error getting shabbat_times database:", shabbatError);
+    
+    return { 
+      zmanim: zmanim || [], 
+      holidays: holidays || [],
+      shabbatTimes: shabbatTimes || []
+    };
   } catch (error) {
     console.error("Error getting database content:", error);
-    return { zmanim: [] };
+    return { 
+      zmanim: [], 
+      holidays: [],
+      shabbatTimes: []
+    };
   }
 };

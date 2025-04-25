@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { getTodayHoliday } from '@/lib/database/holidays';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface DateInfo {
   currentDate: Date;
@@ -12,7 +13,7 @@ export interface DateInfo {
 
 export function useDateInfo(): DateInfo {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [hebrewDate, setHebrewDate] = useState('כ״ג אדר תשפ״ה');
+  const [hebrewDate, setHebrewDate] = useState('');
   const [gregorianDate, setGregorianDate] = useState('');
   const [todayHoliday, setTodayHoliday] = useState('');
 
@@ -20,41 +21,43 @@ export function useDateInfo(): DateInfo {
     try {
       const today = new Date();
       const formattedDate = format(today, 'yyyy-MM-dd');
-      const response = await fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=on&start=${formattedDate}&end=${formattedDate}&c=on&ss=on&mf=on&c=on&b=40&d=on&geo=geoname&geonameid=293918&M=on&s=on`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch Hebrew date');
+      // Get Hebrew date from Supabase
+      const { data: dateData, error: dateError } = await supabase
+        .from('daily_zmanim')
+        .select('hebrew_date')
+        .eq('gregorian_date', formattedDate)
+        .single();
+
+      if (dateError) {
+        console.error('Failed to fetch Hebrew date:', dateError.message);
+        setHebrewDate('תאריך עברי לא זמין');
+      } else if (dateData && dateData.hebrew_date) {
+        setHebrewDate(dateData.hebrew_date);
+      } else {
+        setHebrewDate('תאריך עברי לא זמין');
       }
       
-      const data = await response.json();
-      
-      // Get holiday info
-      const holidayInfo = await getTodayHoliday();
-      setTodayHoliday(holidayInfo);
-      
-      if (data.items && data.items.length > 0) {
-        // Find the Hebrew date from the items array
-        const hebrewDateItem = data.items.find((item: any) => item.category === 'hebdate');
+      // Get holiday info from Supabase
+      const { data: holidayData, error: holidayError } = await supabase
+        .from('holidays')
+        .select('hebrew, title')
+        .eq('date', formattedDate);
         
-        if (hebrewDateItem && hebrewDateItem.hebrew) {
-          setHebrewDate(hebrewDateItem.hebrew);
-        } else {
-          // Use the correct fixed date if API doesn't return the expected format
-          setHebrewDate('כ״ג אדר תשפ״ה');
-        }
+      if (!holidayError && holidayData && holidayData.length > 0) {
+        // If there are multiple holidays, join them with a separator
+        const holidayNames = holidayData.map(h => h.hebrew || h.title).filter(Boolean);
+        setTodayHoliday(holidayNames.join(' | '));
       } else {
-        // Use the correct fixed date if API returns empty items
-        setHebrewDate('כ״ג אדר תשפ״ה');
+        setTodayHoliday('');
       }
       
       // Format the Gregorian date
-      setGregorianDate(format(today, 'dd MMMM yyyy', { locale: he }));
-      
+      setGregorianDate(format(today, 'dd/MM/yyyy', { locale: he }));
     } catch (error) {
       console.error('Error fetching date info:', error);
-      // Fallback to known correct date
-      setHebrewDate('כ״ג אדר תשפ״ה');
-      setGregorianDate(format(new Date(), 'dd MMMM yyyy', { locale: he }));
+      setHebrewDate('תאריך עברי לא זמין');
+      setGregorianDate(format(new Date(), 'dd/MM/yyyy', { locale: he }));
     }
   };
 
