@@ -1,6 +1,14 @@
 
 import { getLastUpdated, setLastUpdated } from './core';
-import { getZmanimForDate, getZmanimForWeek, getShabbatTimes, getHolidays, getZmanimDatabase as getSupabaseZmanimDB, getHolidaysDatabase as getSupabaseHolidaysDB } from '@/lib/supabase/zmanim';
+import { 
+  getZmanimForDate, 
+  getZmanimForWeek, 
+  getZmanimDatabase as getSupabaseZmanimDB, 
+  getHolidaysDatabase as getSupabaseHolidaysDB,
+  getTodayZmanim,
+  getZmanimForSpecificDate 
+} from '@/lib/supabase/zmanim';
+
 import type { ZmanimData } from './zmanim';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { getThisWeekShabbat, fetchShabbat, getFridaySunsetTime } from './shabbat';
